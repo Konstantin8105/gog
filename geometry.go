@@ -5,6 +5,13 @@ import (
 	"math"
 )
 
+//go:generate echo "# gog"
+//go:generate echo "golang geometry library between point and segments"
+//go:generate echo "```\n"
+//go:generate go doc -all .
+//go:generate echo "\n```"
+
+
 type Point struct {
 	X, Y float64
 }
