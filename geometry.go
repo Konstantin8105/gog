@@ -13,8 +13,14 @@ import (
 //go:generate go doc -all .
 //go:generate echo "\n```"
 
+// Point is store of point coordinates
 type Point struct {
 	X, Y float64
+}
+
+// String is implementation of Stringer implementation for formating output
+func (p Point) String() string {
+	return fmt.Sprintf("[%.5e,%.5e]", p.X, p.Y)
 }
 
 // State is result of intersection

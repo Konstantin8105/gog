@@ -8,29 +8,56 @@ package gog // import "github.com/Konstantin8105/gog"
 
 FUNCTIONS
 
+func Check(pps *[]Point) error
+    Check - check input data
+
 func Distance(p0, p1 Point) float64
     Distance between two points
 
-func Intersection(b0, b1 Segment, ps *[]Point) (
-	p Point,
-	t State,
+func SegmentAnalisys(
+	ipa0, ipa1 int,
+	ipb0, ipb1 int,
+	pps *[]Point,
+) (
+	pi Point,
+	st State,
 )
+    SegmentAnalisys return analisys of two segments
+
+    Design of segments:
+
+                                                    //
+        <-- rb00 -- pb0*==========*pb1 -- rb11 -->  // Segment B
+                                                    //
+        <-- ra00 -- pa0*==========*pa1 -- ra11 -->  // Segment A
+        {   ray   }{      segment     }{   ray   }  //
+                                                    //
+
+    Input data:
+
+        ipa0, ipa1 - point indexes of segment A
+        ipb0, ipb1 - point indexes of segment B
+        pps      - pointer of point slice
+
+    Output data:
+
+        pi - intersection point
+        st - states of analisys
+
+    Reference:
+
+        [1]  https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+
 
 TYPES
 
 type Point struct {
 	X, Y float64
 }
+    Point is store of point coordinates
 
-type Segment struct {
-	P0, P1 int // indexes of point
-}
-    Segment is part of line
-
-    Design of segment:
-
-        -- P00 -- P0*==========*P1 -- P11 --
-        {  ray  }   {  segment }   {  ray  }
+func (p Point) String() string
+    String is implementation of Stringer implementation for formating output
 
 type State int64
     State is result of intersection

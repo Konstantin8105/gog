@@ -3,6 +3,7 @@ package gog
 import (
 	"fmt"
 	"math"
+	"os"
 	"testing"
 )
 
@@ -11,6 +12,56 @@ type TestCase struct {
 	ps   []Point
 	it   State
 	pi   Point
+}
+
+func Example() {
+	// *2   *0  //
+	//  \  /    //
+	//    X     //
+	//  /  \    //
+	// *1   *3  //
+	pps := []Point{
+		Point{X: 1, Y: 1}, // 0
+		Point{X: 4, Y: 4}, // 1
+		Point{X: 0, Y: 5}, // 2
+		Point{X: 5, Y: 0}, // 3
+	}
+
+	if err := Check(&pps); err != nil {
+		panic(err)
+	}
+	pi, st := SegmentAnalisys(
+		0, 1,
+		2, 3,
+		&pps,
+	)
+	fmt.Fprintf(os.Stdout, "Intersection point: %s\n", pi)
+	fmt.Fprintf(os.Stdout, "Intersection state:\n%s\n", st)
+	// Output:
+	// Intersection point: [2.50000e+00,2.50000e+00]
+	// Intersection state:
+	//  1	                            10	not found
+	//  2	                           100	not found
+	//  3	                          1000	not found
+	//  4	                         10000	not found
+	//  5	                        100000	not found
+	//  6	                       1000000	not found
+	//  7	                      10000000	not found
+	//  8	                     100000000	not found
+	//  9	                    1000000000	not found
+	// 10	                   10000000000	not found
+	// 11	                  100000000000	not found
+	// 12	                 1000000000000	not found
+	// 13	                10000000000000	not found
+	// 14	               100000000000000	not found
+	// 15	              1000000000000000	not found
+	// 16	             10000000000000000	found
+	// 17	            100000000000000000	found
+	// 18	           1000000000000000000	not found
+	// 19	          10000000000000000000	not found
+	// 20	         100000000000000000000	not found
+	// 21	        1000000000000000000000	not found
+	// 22	       10000000000000000000000	not found
 }
 
 var tcs = []TestCase{
@@ -379,6 +430,9 @@ func Test(t *testing.T) {
 	var types [64]int
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
+			if err := Check(&tc.ps); err != nil {
+				t.Fatal(err)
+			}
 			pi, it := SegmentAnalisys(0, 1, 2, 3, &tc.ps)
 			if it != tc.it {
 				t.Error("Not same types")
@@ -429,4 +483,18 @@ func Test(t *testing.T) {
 	}
 	t.Logf("full amount = %d", sum)
 	t.Logf("amount fail = %d", amountFail)
+}
+
+func TestCheckError(t *testing.T) {
+	tcs := [][]Point{
+		[]Point{Point{X: 1.0, Y: math.NaN()}},
+		[]Point{Point{X: math.NaN(), Y: 1.0}},
+		[]Point{Point{X: math.Inf(1), Y: 1.0}},
+		[]Point{Point{X: 1.0, Y: math.Inf(1)}},
+	}
+	for i := range tcs {
+		if err := Check(&tcs[i]); err == nil {
+			t.Errorf("Not valid error in case %d", i)
+		}
+	}
 }
