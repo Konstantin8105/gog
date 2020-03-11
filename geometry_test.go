@@ -48,15 +48,15 @@ func Example() {
 	//  6	                       1000000	not found
 	//  7	                      10000000	not found
 	//  8	                     100000000	not found
-	//  9	                    1000000000	not found
-	// 10	                   10000000000	not found
+	//  9	                    1000000000	found
+	// 10	                   10000000000	found
 	// 11	                  100000000000	not found
 	// 12	                 1000000000000	not found
 	// 13	                10000000000000	not found
 	// 14	               100000000000000	not found
 	// 15	              1000000000000000	not found
-	// 16	             10000000000000000	found
-	// 17	            100000000000000000	found
+	// 16	             10000000000000000	not found
+	// 17	            100000000000000000	not found
 	// 18	           1000000000000000000	not found
 	// 19	          10000000000000000000	not found
 	// 20	         100000000000000000000	not found
@@ -241,7 +241,7 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 5}, // 3
 			Point{X: 5, Y: 0}, // 4
 		},
-		it: IntersectOnSegmentA | IntersectOnSegmentB,
+		it: OnSegmentA | OnSegmentB,
 		pi: Point{X: 2.5, Y: 2.5},
 	},
 	{ // 11
@@ -302,7 +302,7 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 5, Y: 9}, // 4
 		},
-		it: VerticalSegmentB | IntersectSegmentARay11 | IntersectOnSegmentB,
+		it: VerticalSegmentB | OnRay11SegmentA | OnSegmentB,
 		pi: Point{X: 5, Y: 5},
 	},
 	{ // 15
@@ -318,7 +318,7 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 5, Y: 9}, // 4
 		},
-		it: VerticalSegmentB | IntersectSegmentARay00 | IntersectOnSegmentB,
+		it: VerticalSegmentB | OnRay00SegmentA | OnSegmentB,
 		pi: Point{X: 5, Y: 5},
 	},
 	{ // 16
@@ -334,7 +334,7 @@ var tcs = []TestCase{
 			Point{X: 1, Y: 1}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it: VerticalSegmentA | IntersectSegmentBRay11 | IntersectOnSegmentA,
+		it: VerticalSegmentA | OnRay11SegmentB | OnSegmentA,
 		pi: Point{X: 5, Y: 5},
 	},
 	{ // 17
@@ -350,7 +350,7 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 2}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it: VerticalSegmentA | IntersectSegmentBRay00 | IntersectOnSegmentA,
+		it: VerticalSegmentA | OnRay00SegmentB | OnSegmentA,
 		pi: Point{X: 5, Y: 5},
 	},
 	{ // 18 : Test data - no intersection
@@ -360,7 +360,7 @@ var tcs = []TestCase{
 			Point{X: 1.2, Y: 2},
 			Point{X: 5, Y: 5},
 		},
-		it: IntersectSegmentBRay00 | IntersectOnSegmentA,
+		it: OnRay00SegmentB | OnSegmentA,
 		pi: Point{X: 0.7509280607532581, Y: 1.6454695216473094},
 	},
 	{ // 19 : Test data - no intersection
@@ -370,7 +370,7 @@ var tcs = []TestCase{
 			Point{X: 9, Y: 2},
 			Point{X: 5, Y: 5},
 		},
-		it: IntersectOnSegmentA | IntersectOnSegmentB,
+		it: OnSegmentA | OnSegmentB,
 		pi: Point{X: 5.9627881085877945, Y: 4.277908918559155},
 	},
 }

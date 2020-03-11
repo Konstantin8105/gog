@@ -36,6 +36,13 @@ const (
 	ZeroLengthSegmentA // zero length segment A
 	ZeroLengthSegmentB // zero length segment B
 	Parallel           // segment A and segment B are parallel
+	Collinear          // segment A and segment B are collinear
+	OnSegmentA         // intersection point on segment A
+	OnSegmentB         // intersection point on segment B
+	OnRay00SegmentA    // intersection point on ray 00 segment A
+	OnRay11SegmentA    // intersection point on ray 11 segment A
+	OnRay00SegmentB    // intersection point on ray 00 segment B
+	OnRay11SegmentB    // intersection point on ray 11 segment B
 
 	// intersection types
 	Point0SegmentAonPoint0SegmentB
@@ -47,17 +54,6 @@ const (
 	Point1SegmentAinSegmentB
 	Point0SegmentBinSegmentA
 	Point1SegmentBinSegmentA
-
-	IntersectOnSegmentA
-	IntersectOnSegmentB
-
-	IntersectSegmentARay00
-	IntersectSegmentARay11
-	IntersectSegmentBRay00
-	IntersectSegmentBRay11
-
-	// overlapping
-	Collinear
 
 	// TODO: Overlapping
 
@@ -231,14 +227,14 @@ func SegmentAnalisys(
 				math.Min(y1, y2)-eps <= pi.Y && pi.Y <= math.Max(y1, y2)+eps &&
 				st.Not(Point0SegmentAinSegmentB) && st.Not(Point1SegmentAinSegmentB) &&
 				st.Not(Point0SegmentBinSegmentA) && st.Not(Point1SegmentBinSegmentA),
-			ti: IntersectOnSegmentA,
+			ti: OnSegmentA,
 		},
 		{
 			isTrue: math.Min(x3, x4)-eps <= pi.X && pi.X <= math.Max(x3, x4)+eps &&
 				math.Min(y3, y4)-eps <= pi.Y && pi.Y <= math.Max(y3, y4)+eps &&
 				st.Not(Point0SegmentAinSegmentB) && st.Not(Point1SegmentAinSegmentB) &&
 				st.Not(Point0SegmentBinSegmentA) && st.Not(Point1SegmentBinSegmentA),
-			ti: IntersectOnSegmentB,
+			ti: OnSegmentB,
 		},
 	} {
 		if c.isTrue {
@@ -262,19 +258,19 @@ func SegmentAnalisys(
 	}{
 		{
 			isTrue: disB0P0p < disB0P1p && disB0 < disB0P1p,
-			ti:     IntersectSegmentARay00,
+			ti:     OnRay00SegmentA,
 		},
 		{
 			isTrue: disB0P1p < disB0P0p && disB0 < disB0P0p,
-			ti:     IntersectSegmentARay11,
+			ti:     OnRay11SegmentA,
 		},
 		{
 			isTrue: disB1P0p < disB1P1p && disB1 < disB1P1p,
-			ti:     IntersectSegmentBRay00,
+			ti:     OnRay00SegmentB,
 		},
 		{
 			isTrue: disB1P1p < disB1P0p && disB1 < disB1P0p,
-			ti:     IntersectSegmentBRay11},
+			ti:     OnRay11SegmentB},
 	} {
 		if c.isTrue {
 			st |= c.ti
