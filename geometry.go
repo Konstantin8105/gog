@@ -73,6 +73,7 @@ func (s State) Not(si State) bool {
 	return s&si == 0
 }
 
+// String is implementation of Stringer implementation for formating output
 func (s State) String() string {
 	var out string
 	var size int
@@ -95,7 +96,8 @@ func (s State) String() string {
 	return out
 }
 
-var eps float64 = 1e-6
+// eps is epsilon - precision of intersection
+const eps float64 = 1e-6
 
 func Intersection(b0, b1 Segment, ps *[]Point) (
 	p Point,
@@ -104,7 +106,7 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 
 	// TODO: check inout data
 
-	// TODO: check output intersection poinrt
+	// TODO: check output intersection point
 
 	// see https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 	var (
