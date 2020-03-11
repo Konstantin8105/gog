@@ -250,37 +250,22 @@ func SegmentAnalisys(
 	}
 
 	// is intersect point on ray?
-	var (
-		disB0    = Distance((*pps)[ipa0], (*pps)[ipa1])
-		disB0P0p = Distance((*pps)[ipa0], pi)
-		disB0P1p = Distance((*pps)[ipa1], pi)
-
-		disB1    = Distance((*pps)[ipb0], (*pps)[ipb1])
-		disB1P0p = Distance((*pps)[ipb0], pi)
-		disB1P1p = Distance((*pps)[ipb1], pi)
-	)
-	for _, c := range [...]struct {
-		isTrue bool
-		ti     State
-	}{
-		{
-			isTrue: disB0P0p < disB0P1p && disB0 < disB0P1p,
-			ti:     OnRay00SegmentA,
-		},
-		{
-			isTrue: disB0P1p < disB0P0p && disB0 < disB0P0p,
-			ti:     OnRay11SegmentA,
-		},
-		{
-			isTrue: disB1P0p < disB1P1p && disB1 < disB1P1p,
-			ti:     OnRay00SegmentB,
-		},
-		{
-			isTrue: disB1P1p < disB1P0p && disB1 < disB1P0p,
-			ti:     OnRay11SegmentB},
-	} {
-		if c.isTrue {
-			st |= c.ti
+	if st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) && st.Not(OnSegmentA) {
+		disB0P0p := Distance((*pps)[ipa0], pi)
+		disB0P1p := Distance((*pps)[ipa1], pi)
+		if disB0P0p < disB0P1p {
+			st |= OnRay00SegmentA
+		} else {
+			st |= OnRay11SegmentA
+		}
+	}
+	if st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) && st.Not(OnSegmentB) {
+		disB1P0p := Distance((*pps)[ipb0], pi)
+		disB1P1p := Distance((*pps)[ipb1], pi)
+		if disB1P0p < disB1P1p {
+			st |= OnRay00SegmentB
+		} else {
+			st |= OnRay11SegmentB
 		}
 	}
 
