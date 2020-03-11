@@ -28,16 +28,14 @@ type State int64
 
 const (
 	empty State = 1 << iota
-	// property of single segment
-	VerticalSegmentA
-	VerticalSegmentB
-	HorizontalSegmentA
-	HorizontalSegmentB
-	ZeroLengthSegmentA
-	ZeroLengthSegmentB
 
-	// property of both segments
-	Parallel
+	VerticalSegmentA   // vertical segment A
+	VerticalSegmentB   // vertical segment B
+	HorizontalSegmentA // horizontal segment A
+	HorizontalSegmentB // horizontal segment B
+	ZeroLengthSegmentA // zero length segment A
+	ZeroLengthSegmentB // zero length segment B
+	Parallel           // segment A and segment B are parallel
 
 	// intersection types
 	Point0SegmentAonPoint0SegmentB
