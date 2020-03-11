@@ -29,34 +29,34 @@ type State int64
 const (
 	empty State = 1 << iota
 	// property of single segment
-	VerticalSegment0
-	VerticalSegment1
-	HorizontalSegment0
-	HorizontalSegment1
-	ZeroLengthSegment0
-	ZeroLengthSegment1
+	VerticalSegmentA
+	VerticalSegmentB
+	HorizontalSegmentA
+	HorizontalSegmentB
+	ZeroLengthSegmentA
+	ZeroLengthSegmentB
 
 	// property of both segments
 	Parallel
 
 	// intersection types
-	Point0Segment0onPoint0Segment1
-	Point1Segment0onPoint0Segment1
-	Point0Segment0onPoint1Segment1
-	Point1Segment0onPoint1Segment1
+	Point0SegmentAonPoint0SegmentB
+	Point1SegmentAonPoint0SegmentB
+	Point0SegmentAonPoint1SegmentB
+	Point1SegmentAonPoint1SegmentB
 
-	Point0Segment0inSegment1 // 12
-	Point1Segment0inSegment1
-	Point0Segment1inSegment0
-	Point1Segment1inSegment0
+	Point0SegmentAinSegmentB
+	Point1SegmentAinSegmentB
+	Point0SegmentBinSegmentA
+	Point1SegmentBinSegmentA
 
-	IntersectOnSegment0 // 16
-	IntersectOnSegment1
+	IntersectOnSegmentA
+	IntersectOnSegmentB
 
-	IntersectSegment0Ray00
-	IntersectSegment0Ray11
-	IntersectSegment1Ray00
-	IntersectSegment1Ray11
+	IntersectSegmentARay00
+	IntersectSegmentARay11
+	IntersectSegmentBRay00
+	IntersectSegmentBRay11
 
 	// overlapping
 	Collinear
@@ -169,16 +169,16 @@ func SegmentAnalisys(
 		isTrue bool
 		ti     State
 	}{
-		{isTrue: math.Abs(x1-x3) < eps && math.Abs(y1-y3) < eps, ti: Point0Segment0onPoint0Segment1},
-		{isTrue: math.Abs(x1-x4) < eps && math.Abs(y1-y4) < eps, ti: Point0Segment0onPoint1Segment1},
-		{isTrue: math.Abs(x2-x3) < eps && math.Abs(y2-y3) < eps, ti: Point1Segment0onPoint0Segment1},
-		{isTrue: math.Abs(x2-x4) < eps && math.Abs(y2-y4) < eps, ti: Point1Segment0onPoint1Segment1},
-		{isTrue: math.Abs(x1-x2) < eps, ti: VerticalSegment0},
-		{isTrue: math.Abs(x3-x4) < eps, ti: VerticalSegment1},
-		{isTrue: math.Abs(y1-y2) < eps, ti: HorizontalSegment0},
-		{isTrue: math.Abs(y3-y4) < eps, ti: HorizontalSegment1},
-		{isTrue: math.Abs(x1-x2) < eps && math.Abs(y1-y2) < eps, ti: ZeroLengthSegment0},
-		{isTrue: math.Abs(x3-x4) < eps && math.Abs(y3-y4) < eps, ti: ZeroLengthSegment1},
+		{isTrue: math.Abs(x1-x3) < eps && math.Abs(y1-y3) < eps, ti: Point0SegmentAonPoint0SegmentB},
+		{isTrue: math.Abs(x1-x4) < eps && math.Abs(y1-y4) < eps, ti: Point0SegmentAonPoint1SegmentB},
+		{isTrue: math.Abs(x2-x3) < eps && math.Abs(y2-y3) < eps, ti: Point1SegmentAonPoint0SegmentB},
+		{isTrue: math.Abs(x2-x4) < eps && math.Abs(y2-y4) < eps, ti: Point1SegmentAonPoint1SegmentB},
+		{isTrue: math.Abs(x1-x2) < eps, ti: VerticalSegmentA},
+		{isTrue: math.Abs(x3-x4) < eps, ti: VerticalSegmentB},
+		{isTrue: math.Abs(y1-y2) < eps, ti: HorizontalSegmentA},
+		{isTrue: math.Abs(y3-y4) < eps, ti: HorizontalSegmentB},
+		{isTrue: math.Abs(x1-x2) < eps && math.Abs(y1-y2) < eps, ti: ZeroLengthSegmentA},
+		{isTrue: math.Abs(x3-x4) < eps && math.Abs(y3-y4) < eps, ti: ZeroLengthSegmentB},
 	} {
 		if c.isTrue {
 			st |= c.ti
@@ -186,15 +186,15 @@ func SegmentAnalisys(
 	}
 
 	switch {
-	case st.Has(Point0Segment0onPoint0Segment1) || st.Has(Point0Segment0onPoint1Segment1):
+	case st.Has(Point0SegmentAonPoint0SegmentB) || st.Has(Point0SegmentAonPoint1SegmentB):
 		pi = (*pps)[ipa0]
-	case st.Has(Point1Segment0onPoint0Segment1) || st.Has(Point1Segment0onPoint1Segment1):
+	case st.Has(Point1SegmentAonPoint0SegmentB) || st.Has(Point1SegmentAonPoint1SegmentB):
 		pi = (*pps)[ipa1]
 	}
 
 	// if zero, then vertical/horizontal
 	B := (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
-	if math.Abs(B) < eps || st.Has(ZeroLengthSegment0) || st.Has(ZeroLengthSegment1) {
+	if math.Abs(B) < eps || st.Has(ZeroLengthSegmentA) || st.Has(ZeroLengthSegmentB) {
 		if math.Abs((x3-x1)*(y2-y1)-(x2-x1)*(y3-y1)) < eps {
 			st |= Collinear
 		} else {
@@ -214,10 +214,10 @@ func SegmentAnalisys(
 		isTrue bool
 		ti     State
 	}{
-		{isTrue: math.Abs(x1-pi.X) < eps && math.Abs(y1-pi.Y) < eps, ti: Point0Segment0inSegment1},
-		{isTrue: math.Abs(x2-pi.X) < eps && math.Abs(y2-pi.Y) < eps, ti: Point1Segment0inSegment1},
-		{isTrue: math.Abs(x3-pi.X) < eps && math.Abs(y3-pi.Y) < eps, ti: Point0Segment1inSegment0},
-		{isTrue: math.Abs(x4-pi.X) < eps && math.Abs(y4-pi.Y) < eps, ti: Point1Segment1inSegment0},
+		{isTrue: math.Abs(x1-pi.X) < eps && math.Abs(y1-pi.Y) < eps, ti: Point0SegmentAinSegmentB},
+		{isTrue: math.Abs(x2-pi.X) < eps && math.Abs(y2-pi.Y) < eps, ti: Point1SegmentAinSegmentB},
+		{isTrue: math.Abs(x3-pi.X) < eps && math.Abs(y3-pi.Y) < eps, ti: Point0SegmentBinSegmentA},
+		{isTrue: math.Abs(x4-pi.X) < eps && math.Abs(y4-pi.Y) < eps, ti: Point1SegmentBinSegmentA},
 	} {
 		if c.isTrue {
 			st |= c.ti
@@ -231,16 +231,16 @@ func SegmentAnalisys(
 		{
 			isTrue: math.Min(x1, x2)-eps <= pi.X && pi.X <= math.Max(x1, x2)+eps &&
 				math.Min(y1, y2)-eps <= pi.Y && pi.Y <= math.Max(y1, y2)+eps &&
-				st.Not(Point0Segment0inSegment1) && st.Not(Point1Segment0inSegment1) &&
-				st.Not(Point0Segment1inSegment0) && st.Not(Point1Segment1inSegment0),
-			ti: IntersectOnSegment0,
+				st.Not(Point0SegmentAinSegmentB) && st.Not(Point1SegmentAinSegmentB) &&
+				st.Not(Point0SegmentBinSegmentA) && st.Not(Point1SegmentBinSegmentA),
+			ti: IntersectOnSegmentA,
 		},
 		{
 			isTrue: math.Min(x3, x4)-eps <= pi.X && pi.X <= math.Max(x3, x4)+eps &&
 				math.Min(y3, y4)-eps <= pi.Y && pi.Y <= math.Max(y3, y4)+eps &&
-				st.Not(Point0Segment0inSegment1) && st.Not(Point1Segment0inSegment1) &&
-				st.Not(Point0Segment1inSegment0) && st.Not(Point1Segment1inSegment0),
-			ti: IntersectOnSegment1,
+				st.Not(Point0SegmentAinSegmentB) && st.Not(Point1SegmentAinSegmentB) &&
+				st.Not(Point0SegmentBinSegmentA) && st.Not(Point1SegmentBinSegmentA),
+			ti: IntersectOnSegmentB,
 		},
 	} {
 		if c.isTrue {
@@ -264,19 +264,19 @@ func SegmentAnalisys(
 	}{
 		{
 			isTrue: disB0P0p < disB0P1p && disB0 < disB0P1p,
-			ti:     IntersectSegment0Ray00,
+			ti:     IntersectSegmentARay00,
 		},
 		{
 			isTrue: disB0P1p < disB0P0p && disB0 < disB0P0p,
-			ti:     IntersectSegment0Ray11,
+			ti:     IntersectSegmentARay11,
 		},
 		{
 			isTrue: disB1P0p < disB1P1p && disB1 < disB1P1p,
-			ti:     IntersectSegment1Ray00,
+			ti:     IntersectSegmentBRay00,
 		},
 		{
 			isTrue: disB1P1p < disB1P0p && disB1 < disB1P0p,
-			ti:     IntersectSegment1Ray11},
+			ti:     IntersectSegmentBRay11},
 	} {
 		if c.isTrue {
 			st |= c.ti
