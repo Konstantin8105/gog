@@ -5,6 +5,8 @@ import (
 	"math"
 	"os"
 	"testing"
+
+	"github.com/Konstantin8105/cs"
 )
 
 type TestCase struct {
@@ -498,5 +500,29 @@ func TestCheckError(t *testing.T) {
 		if err := Check(&tcs[i]); err == nil {
 			t.Errorf("Not valid error in case %d", i)
 		}
+	}
+}
+
+func TestCodeStyle(t *testing.T) {
+	cs.All(t)
+}
+
+func Benchmark(b *testing.B) {
+	pps := []Point{
+		Point{X: 1, Y: 1}, // 0
+		Point{X: 4, Y: 4}, // 1
+		Point{X: 0, Y: 5}, // 2
+		Point{X: 5, Y: 0}, // 3
+	}
+
+	if err := Check(&pps); err != nil {
+		panic(err)
+	}
+	for n := 0; n < b.N; n++ {
+		SegmentAnalisys(
+			0, 1,
+			2, 3,
+			&pps,
+		)
 	}
 }
