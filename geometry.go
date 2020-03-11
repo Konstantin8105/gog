@@ -11,19 +11,8 @@ import (
 //go:generate go doc -all .
 //go:generate echo "\n```"
 
-
 type Point struct {
 	X, Y float64
-}
-
-// Segment is part of line
-//
-// Design of segment:
-//
-//	-- P00 -- P0*==========*P1 -- P11 --
-//	{  ray  }   {  segment }   {  ray  }
-type Segment struct {
-	P0, P1 int // indexes of point
 }
 
 // State is result of intersection
@@ -106,12 +95,35 @@ func (s State) String() string {
 // eps is epsilon - precision of intersection
 const eps float64 = 1e-6
 
-func Intersection(b0, b1 Segment, ps *[]Point) (
-	p Point,
-	t State,
+// SegmentAnalisys return analisys of two segments
+//
+// Design of segment:
+//
+//	                                            //
+//	<-- rb00 -- pb0*==========*pb1 -- rb11 -->  // Segment B
+//	                                            //
+//	<-- ra00 -- pa0*==========*pa1 -- ra11 -->  // Segment A
+//	{   ray   }{      segment     }{   ray   }  //
+//	                                            //
+//
+// Input data:
+//	pa0, pa1 - point indexes of segment A
+//	pb0, pb1 - point indexes of segment B
+//	pps      - pointer of point slice
+//
+// Output data:
+//	pi - intersection point
+//	st - states of analisys
+func SegmentAnalisys(
+	pa0, pa1 int,
+	pb0, pb1 int,
+	pps *[]Point,
+) (
+	pi Point,
+	st State,
 ) {
 
-	// TODO: check inout data
+	// TODO: check input data
 
 	// TODO: check output intersection point
 
@@ -247,6 +259,8 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 			t |= c.ti
 		}
 	}
+
+	// TODO: perpendicular
 
 	return
 }
