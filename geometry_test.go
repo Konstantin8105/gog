@@ -379,7 +379,7 @@ func Test(t *testing.T) {
 	var types [64]int
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			pi, it := Intersection(Segment{P0: 0, P1: 1}, Segment{P0: 2, P1: 3}, &tc.ps)
+			pi, it := SegmentAnalisys(0, 1, 2, 3, &tc.ps)
 			if it != tc.it {
 				t.Error("Not same types")
 				t.Logf("Expected : %30b", tc.it)

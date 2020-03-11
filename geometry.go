@@ -3,6 +3,8 @@ package gog
 import (
 	"fmt"
 	"math"
+
+	"github.com/Konstantin8105/errors"
 )
 
 //go:generate echo "# gog"
@@ -95,10 +97,24 @@ func (s State) String() string {
 // eps is epsilon - precision of intersection
 const eps float64 = 1e-6
 
+// Check - check input data
+func Check(pps *[]Point) error {
+	et := errors.New("Check points")
+	for i := range *pps {
+		if x, y := (*pps)[i].X, (*pps)[i].Y; math.IsNaN(x) || math.IsInf(x, 0) ||
+			math.IsNaN(y) || math.IsInf(y, 0) {
+			et.Add(fmt.Errorf("Not valid point #%d: (%.5e,%.5e)", i, x, y))
+		}
+	}
+	if et.IsError() {
+		return et
+	}
+	return nil
+}
+
 // SegmentAnalisys return analisys of two segments
 //
-// Design of segment:
-//
+// Design of segments:
 //	                                            //
 //	<-- rb00 -- pb0*==========*pb1 -- rb11 -->  // Segment B
 //	                                            //
@@ -107,39 +123,40 @@ const eps float64 = 1e-6
 //	                                            //
 //
 // Input data:
-//	pa0, pa1 - point indexes of segment A
-//	pb0, pb1 - point indexes of segment B
+//	ipa0, ipa1 - point indexes of segment A
+//	ipb0, ipb1 - point indexes of segment B
 //	pps      - pointer of point slice
 //
 // Output data:
 //	pi - intersection point
 //	st - states of analisys
+//
+// Reference:
+//	[1]  https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 func SegmentAnalisys(
-	pa0, pa1 int,
-	pb0, pb1 int,
+	ipa0, ipa1 int,
+	ipb0, ipb1 int,
 	pps *[]Point,
 ) (
 	pi Point,
 	st State,
 ) {
-
-	// TODO: check input data
+	// check input data of points is outside of that function
 
 	// TODO: check output intersection point
 
-	// see https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 	var (
-		x1 = (*ps)[b0.P0].X
-		y1 = (*ps)[b0.P0].Y
+		x1 = (*pps)[ipa0].X
+		y1 = (*pps)[ipa0].Y
 
-		x2 = (*ps)[b0.P1].X
-		y2 = (*ps)[b0.P1].Y
+		x2 = (*pps)[ipa1].X
+		y2 = (*pps)[ipa1].Y
 
-		x3 = (*ps)[b1.P0].X
-		y3 = (*ps)[b1.P0].Y
+		x3 = (*pps)[ipb0].X
+		y3 = (*pps)[ipb0].Y
 
-		x4 = (*ps)[b1.P1].X
-		y4 = (*ps)[b1.P1].Y
+		x4 = (*pps)[ipb1].X
+		y4 = (*pps)[ipb1].Y
 	)
 
 	for _, c := range [...]struct {
@@ -158,24 +175,24 @@ func SegmentAnalisys(
 		{isTrue: math.Abs(x3-x4) < eps && math.Abs(y3-y4) < eps, ti: ZeroLengthSegment1},
 	} {
 		if c.isTrue {
-			t |= c.ti
+			st |= c.ti
 		}
 	}
 
 	switch {
-	case t.Has(Point0Segment0onPoint0Segment1) || t.Has(Point0Segment0onPoint1Segment1):
-		p = (*ps)[b0.P0]
-	case t.Has(Point1Segment0onPoint0Segment1) || t.Has(Point1Segment0onPoint1Segment1):
-		p = (*ps)[b0.P1]
+	case st.Has(Point0Segment0onPoint0Segment1) || st.Has(Point0Segment0onPoint1Segment1):
+		pi = (*pps)[ipa0]
+	case st.Has(Point1Segment0onPoint0Segment1) || st.Has(Point1Segment0onPoint1Segment1):
+		pi = (*pps)[ipa1]
 	}
 
 	// if zero, then vertical/horizontal
 	B := (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
-	if math.Abs(B) < eps || t.Has(ZeroLengthSegment0) || t.Has(ZeroLengthSegment1) {
+	if math.Abs(B) < eps || st.Has(ZeroLengthSegment0) || st.Has(ZeroLengthSegment1) {
 		if math.Abs((x3-x1)*(y2-y1)-(x2-x1)*(y3-y1)) < eps {
-			t |= Collinear
+			st |= Collinear
 		} else {
-			t |= Parallel
+			st |= Parallel
 		}
 		return
 	}
@@ -183,21 +200,21 @@ func SegmentAnalisys(
 	// intersection point
 	A12 := x1*y2 - y1*x2
 	A34 := x3*y4 - y3*x4
-	p.X = (A12*(x3-x4) - (x1-x2)*A34) / B
-	p.Y = (A12*(y3-y4) - (y1-y2)*A34) / B
+	pi.X = (A12*(x3-x4) - (x1-x2)*A34) / B
+	pi.Y = (A12*(y3-y4) - (y1-y2)*A34) / B
 
 	// is intersect point on line?
 	for _, c := range [...]struct {
 		isTrue bool
 		ti     State
 	}{
-		{isTrue: math.Abs(x1-p.X) < eps && math.Abs(y1-p.Y) < eps, ti: Point0Segment0inSegment1},
-		{isTrue: math.Abs(x2-p.X) < eps && math.Abs(y2-p.Y) < eps, ti: Point1Segment0inSegment1},
-		{isTrue: math.Abs(x3-p.X) < eps && math.Abs(y3-p.Y) < eps, ti: Point0Segment1inSegment0},
-		{isTrue: math.Abs(x4-p.X) < eps && math.Abs(y4-p.Y) < eps, ti: Point1Segment1inSegment0},
+		{isTrue: math.Abs(x1-pi.X) < eps && math.Abs(y1-pi.Y) < eps, ti: Point0Segment0inSegment1},
+		{isTrue: math.Abs(x2-pi.X) < eps && math.Abs(y2-pi.Y) < eps, ti: Point1Segment0inSegment1},
+		{isTrue: math.Abs(x3-pi.X) < eps && math.Abs(y3-pi.Y) < eps, ti: Point0Segment1inSegment0},
+		{isTrue: math.Abs(x4-pi.X) < eps && math.Abs(y4-pi.Y) < eps, ti: Point1Segment1inSegment0},
 	} {
 		if c.isTrue {
-			t |= c.ti
+			st |= c.ti
 		}
 	}
 
@@ -206,34 +223,34 @@ func SegmentAnalisys(
 		ti     State
 	}{
 		{
-			isTrue: math.Min(x1, x2)-eps <= p.X && p.X <= math.Max(x1, x2)+eps &&
-				math.Min(y1, y2)-eps <= p.Y && p.Y <= math.Max(y1, y2)+eps &&
-				t.Not(Point0Segment0inSegment1) && t.Not(Point1Segment0inSegment1) &&
-				t.Not(Point0Segment1inSegment0) && t.Not(Point1Segment1inSegment0),
+			isTrue: math.Min(x1, x2)-eps <= pi.X && pi.X <= math.Max(x1, x2)+eps &&
+				math.Min(y1, y2)-eps <= pi.Y && pi.Y <= math.Max(y1, y2)+eps &&
+				st.Not(Point0Segment0inSegment1) && st.Not(Point1Segment0inSegment1) &&
+				st.Not(Point0Segment1inSegment0) && st.Not(Point1Segment1inSegment0),
 			ti: IntersectOnSegment0,
 		},
 		{
-			isTrue: math.Min(x3, x4)-eps <= p.X && p.X <= math.Max(x3, x4)+eps &&
-				math.Min(y3, y4)-eps <= p.Y && p.Y <= math.Max(y3, y4)+eps &&
-				t.Not(Point0Segment0inSegment1) && t.Not(Point1Segment0inSegment1) &&
-				t.Not(Point0Segment1inSegment0) && t.Not(Point1Segment1inSegment0),
+			isTrue: math.Min(x3, x4)-eps <= pi.X && pi.X <= math.Max(x3, x4)+eps &&
+				math.Min(y3, y4)-eps <= pi.Y && pi.Y <= math.Max(y3, y4)+eps &&
+				st.Not(Point0Segment0inSegment1) && st.Not(Point1Segment0inSegment1) &&
+				st.Not(Point0Segment1inSegment0) && st.Not(Point1Segment1inSegment0),
 			ti: IntersectOnSegment1,
 		},
 	} {
 		if c.isTrue {
-			t |= c.ti
+			st |= c.ti
 		}
 	}
 
 	// is intersect point on ray?
 	var (
-		disB0    = Distance((*ps)[b0.P0], (*ps)[b0.P1])
-		disB0P0p = Distance((*ps)[b0.P0], p)
-		disB0P1p = Distance((*ps)[b0.P1], p)
+		disB0    = Distance((*pps)[ipa0], (*pps)[ipa1])
+		disB0P0p = Distance((*pps)[ipa0], pi)
+		disB0P1p = Distance((*pps)[ipa1], pi)
 
-		disB1    = Distance((*ps)[b1.P0], (*ps)[b1.P1])
-		disB1P0p = Distance((*ps)[b1.P0], p)
-		disB1P1p = Distance((*ps)[b1.P1], p)
+		disB1    = Distance((*pps)[ipb0], (*pps)[ipb1])
+		disB1P0p = Distance((*pps)[ipb0], pi)
+		disB1P1p = Distance((*pps)[ipb1], pi)
 	)
 	for _, c := range [...]struct {
 		isTrue bool
@@ -256,7 +273,7 @@ func SegmentAnalisys(
 			ti:     IntersectSegment1Ray11},
 	} {
 		if c.isTrue {
-			t |= c.ti
+			st |= c.ti
 		}
 	}
 
