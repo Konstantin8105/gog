@@ -377,6 +377,22 @@ var tcs = []TestCase{
 		it: OnSegmentA | OnSegmentB,
 		pi: Point{X: 5.9627881085877945, Y: 4.277908918559155},
 	},
+	{ // 20
+		// *1  //
+		// |   //
+		// *3  //
+		// |   //
+		// *2  //
+		// |   //
+		// *4  //
+		ps: []Point{
+			Point{X: 5, Y: 5}, // 1
+			Point{X: 3, Y: 3}, // 2
+			Point{X: 4, Y: 4}, // 3
+			Point{X: 2, Y: 2}, // 4
+		},
+		it: Collinear,
+	},
 }
 
 func init() {

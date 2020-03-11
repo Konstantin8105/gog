@@ -64,8 +64,6 @@ const (
 	OverlapP1AP0B // overlapping point 1 segment A and point 0 segment B
 	OverlapP1AP1B // overlapping point 1 segment A and point 1 segment B
 
-	// TODO: Overlapping
-
 	// last unused type
 	endType
 )
@@ -151,8 +149,6 @@ func SegmentAnalisys(
 	st State,
 ) {
 	// check input data of points is outside of that function
-
-	// TODO: check output intersection point
 
 	var (
 		x1 = (*pps)[ipa0].X
@@ -268,8 +264,6 @@ func SegmentAnalisys(
 			st |= OnRay11SegmentB
 		}
 	}
-
-	// TODO: perpendicular
 
 	return
 }
