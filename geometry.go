@@ -9,19 +9,21 @@ type Point struct {
 	X, Y float64
 }
 
-// Design:
+// Segment is part of line
+//
+// Design of segment:
 //
 //	-- P00 -- P0*==========*P1 -- P11 --
 //	{  ray  }   {  segment }   {  ray  }
-//
 type Segment struct {
-	P0, P1 int // index of point
+	P0, P1 int // indexes of point
 }
 
-type IntersectionType int64
+// State is result of intersection
+type State int64
 
 const (
-	empty IntersectionType = 1 << iota
+	empty State = 1 << iota
 	// property of single segment
 	VerticalSegment0
 	VerticalSegment1
@@ -61,14 +63,14 @@ const (
 	endType
 )
 
-func is(t, ti IntersectionType) bool {
-	return t&ti != 0
+func (s State) Has(si State) bool {
+	return s&si != 0
 }
-func not(t, ti IntersectionType) bool {
-	return t&ti == 0
+func (s State) Not(si State) bool {
+	return s&si == 0
 }
 
-func (t IntersectionType) String() string {
+func (t State) String() string {
 	var out string
 	var size int
 	for i := 0; i < 64; i++ {
@@ -78,9 +80,9 @@ func (t IntersectionType) String() string {
 		}
 	}
 	for i := 1; i < size; i++ {
-		ti := IntersectionType(1 << i)
+		ti := State(1 << i)
 		out += fmt.Sprintf("%2d\t%30b\t", i, int(ti))
-		if is(t, ti) {
+		if t.Has( ti) {
 			out += "found"
 		} else {
 			out += "not found"
@@ -94,7 +96,7 @@ var eps float64 = 1e-6
 
 func Intersection(b0, b1 Segment, ps *[]Point) (
 	p Point,
-	t IntersectionType,
+	t State,
 ) {
 
 	// TODO: check inout data
@@ -118,7 +120,7 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 
 	for _, c := range [...]struct {
 		isTrue bool
-		ti     IntersectionType
+		ti     State
 	}{
 		{isTrue: math.Abs(x1-x3) < eps && math.Abs(y1-y3) < eps, ti: Point0Segment0onPoint0Segment1},
 		{isTrue: math.Abs(x1-x4) < eps && math.Abs(y1-y4) < eps, ti: Point0Segment0onPoint1Segment1},
@@ -137,15 +139,15 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 	}
 
 	switch {
-	case is(t, Point0Segment0onPoint0Segment1) || is(t, Point0Segment0onPoint1Segment1):
+	case t.Has( Point0Segment0onPoint0Segment1) || t.Has( Point0Segment0onPoint1Segment1):
 		p = (*ps)[b0.P0]
-	case is(t, Point1Segment0onPoint0Segment1) || is(t, Point1Segment0onPoint1Segment1):
+	case t.Has( Point1Segment0onPoint0Segment1) || t.Has( Point1Segment0onPoint1Segment1):
 		p = (*ps)[b0.P1]
 	}
 
 	// if zero, then vertical/horizontal
 	B := (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
-	if math.Abs(B) < eps || is(t, ZeroLengthSegment0) || is(t, ZeroLengthSegment1) {
+	if math.Abs(B) < eps || t.Has( ZeroLengthSegment0) || t.Has( ZeroLengthSegment1) {
 		if math.Abs((x3-x1)*(y2-y1)-(x2-x1)*(y3-y1)) < eps {
 			t |= Collinear
 		} else {
@@ -163,7 +165,7 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 	// is intersect point on line?
 	for _, c := range [...]struct {
 		isTrue bool
-		ti     IntersectionType
+		ti     State
 	}{
 		{isTrue: math.Abs(x1-p.X) < eps && math.Abs(y1-p.Y) < eps, ti: Point0Segment0inSegment1},
 		{isTrue: math.Abs(x2-p.X) < eps && math.Abs(y2-p.Y) < eps, ti: Point1Segment0inSegment1},
@@ -177,20 +179,20 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 
 	for _, c := range [...]struct {
 		isTrue bool
-		ti     IntersectionType
+		ti     State
 	}{
 		{
 			isTrue: math.Min(x1, x2)-eps <= p.X && p.X <= math.Max(x1, x2)+eps &&
 				math.Min(y1, y2)-eps <= p.Y && p.Y <= math.Max(y1, y2)+eps &&
-				not(t, Point0Segment0inSegment1) && not(t, Point1Segment0inSegment1) &&
-				not(t, Point0Segment1inSegment0) && not(t, Point1Segment1inSegment0),
+				t.Not( Point0Segment0inSegment1) && t.Not( Point1Segment0inSegment1) &&
+				t.Not( Point0Segment1inSegment0) && t.Not( Point1Segment1inSegment0),
 			ti: IntersectOnSegment0,
 		},
 		{
 			isTrue: math.Min(x3, x4)-eps <= p.X && p.X <= math.Max(x3, x4)+eps &&
 				math.Min(y3, y4)-eps <= p.Y && p.Y <= math.Max(y3, y4)+eps &&
-				not(t, Point0Segment0inSegment1) && not(t, Point1Segment0inSegment1) &&
-				not(t, Point0Segment1inSegment0) && not(t, Point1Segment1inSegment0),
+				t.Not( Point0Segment0inSegment1) && t.Not( Point1Segment0inSegment1) &&
+				t.Not( Point0Segment1inSegment0) && t.Not( Point1Segment1inSegment0),
 			ti: IntersectOnSegment1,
 		},
 	} {
@@ -211,7 +213,7 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 	)
 	for _, c := range [...]struct {
 		isTrue bool
-		ti     IntersectionType
+		ti     State
 	}{
 		{
 			isTrue: disB0P0p < disB0P1p && disB0 < disB0P1p,
@@ -237,6 +239,7 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 	return
 }
 
+// Distance between two points
 func Distance(p0, p1 Point) float64 {
 	return math.Hypot(p0.X-p1.X, p0.Y-p1.Y)
 }

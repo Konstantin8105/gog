@@ -9,7 +9,7 @@ import (
 type TestCase struct {
 	name string
 	ps   []Point
-	it   IntersectionType
+	it   State
 	pi   Point
 }
 
@@ -393,7 +393,7 @@ func Test(t *testing.T) {
 			}
 			// store
 			for i := 0; i < len(types); i++ {
-				if it&IntersectionType(1<<i) != 0 {
+				if it&State(1<<i) != 0 {
 					types[i]++
 				}
 			}
@@ -419,11 +419,11 @@ func Test(t *testing.T) {
 			break
 		}
 		if types[i] > 0 {
-			t.Logf("%2d : %40b : %3d", i, IntersectionType(1<<i), types[i])
+			t.Logf("%2d : %40b : %3d", i, State(1<<i), types[i])
 		} else {
 			t.Errorf("need checking for type: %2d", i)
 			amountFail++
-			t.Logf("%2d : %40b : %3d fail", i, IntersectionType(1<<i), types[i])
+			t.Logf("%2d : %40b : %3d fail", i, State(1<<i), types[i])
 		}
 		sum += types[i]
 	}
