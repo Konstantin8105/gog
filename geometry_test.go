@@ -78,8 +78,8 @@ var tcs = []TestCase{
 		},
 		it: ZeroLengthSegmentB |
 			VerticalSegmentA |
-			Point0SegmentAonPoint0SegmentB |
-			Point0SegmentAonPoint1SegmentB |
+			OverlapP0AP0B |
+			OverlapP0AP1B |
 			HorizontalSegmentB | VerticalSegmentB |
 			Collinear,
 		pi: Point{X: 0, Y: 8},
@@ -96,7 +96,8 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 2}, // 4
 		},
 		it: VerticalSegmentA | VerticalSegmentB |
-			Point0SegmentAonPoint0SegmentB | Point1SegmentAonPoint1SegmentB |
+			OverlapP0AP0B |
+			OverlapP1AP1B |
 			Collinear,
 		pi: Point{X: 0, Y: 8},
 	},
@@ -111,7 +112,8 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 8}, // 3
 			Point{X: 0, Y: 2}, // 4
 		},
-		it: Point0SegmentAonPoint0SegmentB | Point1SegmentAonPoint1SegmentB |
+		it: OverlapP0AP0B |
+			OverlapP1AP1B |
 			Collinear,
 		pi: Point{X: 2, Y: 8},
 	},
@@ -173,7 +175,7 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 5}, // 4
 		},
 		it: VerticalSegmentA | VerticalSegmentB |
-			Point1SegmentAonPoint0SegmentB |
+			OverlapP1AP0B |
 			Collinear,
 		pi: Point{X: 2, Y: 6},
 	},
@@ -189,7 +191,7 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it: Point1SegmentAonPoint0SegmentB |
+		it: OverlapP1AP0B |
 			Collinear,
 		pi: Point{X: 4, Y: 4},
 	},
@@ -207,10 +209,10 @@ var tcs = []TestCase{
 			HorizontalSegmentB |
 			ZeroLengthSegmentA |
 			ZeroLengthSegmentB |
-			Point0SegmentAonPoint0SegmentB |
-			Point1SegmentAonPoint0SegmentB |
-			Point0SegmentAonPoint1SegmentB |
-			Point1SegmentAonPoint1SegmentB |
+			OverlapP0AP0B |
+			OverlapP0AP1B |
+			OverlapP1AP0B |
+			OverlapP1AP1B |
 			Collinear,
 		pi: Point{X: 5, Y: 5},
 	},
@@ -226,7 +228,7 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 2}, // 3
 			Point{X: 5, Y: 0}, // 4
 		},
-		it: Point0SegmentBinSegmentA,
+		it: OnPoint0SegmentB | OnSegmentA,
 		pi: Point{X: 2, Y: 2},
 	},
 	{ // 10
@@ -256,7 +258,7 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it: Point1SegmentBinSegmentA,
+		it: OnPoint1SegmentB | OnSegmentA,
 		pi: Point{X: 2, Y: 2},
 	},
 	{ // 12
@@ -271,7 +273,7 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it: Point0SegmentAinSegmentB,
+		it: OnPoint0SegmentA | OnSegmentB,
 		pi: Point{X: 2, Y: 2},
 	},
 	{ // 13
@@ -286,7 +288,7 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it: Point1SegmentAinSegmentB,
+		it: OnPoint1SegmentA | OnSegmentB,
 		pi: Point{X: 2, Y: 2},
 	},
 	{ // 14
