@@ -63,14 +63,17 @@ const (
 	endType
 )
 
+// Has is mean s-State has si-State
 func (s State) Has(si State) bool {
 	return s&si != 0
 }
+
+// Not mean s-State have not si-State
 func (s State) Not(si State) bool {
 	return s&si == 0
 }
 
-func (t State) String() string {
+func (s State) String() string {
 	var out string
 	var size int
 	for i := 0; i < 64; i++ {
@@ -80,9 +83,9 @@ func (t State) String() string {
 		}
 	}
 	for i := 1; i < size; i++ {
-		ti := State(1 << i)
-		out += fmt.Sprintf("%2d\t%30b\t", i, int(ti))
-		if t.Has( ti) {
+		si := State(1 << i)
+		out += fmt.Sprintf("%2d\t%30b\t", i, int(si))
+		if s.Has(si) {
 			out += "found"
 		} else {
 			out += "not found"
@@ -139,15 +142,15 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 	}
 
 	switch {
-	case t.Has( Point0Segment0onPoint0Segment1) || t.Has( Point0Segment0onPoint1Segment1):
+	case t.Has(Point0Segment0onPoint0Segment1) || t.Has(Point0Segment0onPoint1Segment1):
 		p = (*ps)[b0.P0]
-	case t.Has( Point1Segment0onPoint0Segment1) || t.Has( Point1Segment0onPoint1Segment1):
+	case t.Has(Point1Segment0onPoint0Segment1) || t.Has(Point1Segment0onPoint1Segment1):
 		p = (*ps)[b0.P1]
 	}
 
 	// if zero, then vertical/horizontal
 	B := (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
-	if math.Abs(B) < eps || t.Has( ZeroLengthSegment0) || t.Has( ZeroLengthSegment1) {
+	if math.Abs(B) < eps || t.Has(ZeroLengthSegment0) || t.Has(ZeroLengthSegment1) {
 		if math.Abs((x3-x1)*(y2-y1)-(x2-x1)*(y3-y1)) < eps {
 			t |= Collinear
 		} else {
@@ -184,15 +187,15 @@ func Intersection(b0, b1 Segment, ps *[]Point) (
 		{
 			isTrue: math.Min(x1, x2)-eps <= p.X && p.X <= math.Max(x1, x2)+eps &&
 				math.Min(y1, y2)-eps <= p.Y && p.Y <= math.Max(y1, y2)+eps &&
-				t.Not( Point0Segment0inSegment1) && t.Not( Point1Segment0inSegment1) &&
-				t.Not( Point0Segment1inSegment0) && t.Not( Point1Segment1inSegment0),
+				t.Not(Point0Segment0inSegment1) && t.Not(Point1Segment0inSegment1) &&
+				t.Not(Point0Segment1inSegment0) && t.Not(Point1Segment1inSegment0),
 			ti: IntersectOnSegment0,
 		},
 		{
 			isTrue: math.Min(x3, x4)-eps <= p.X && p.X <= math.Max(x3, x4)+eps &&
 				math.Min(y3, y4)-eps <= p.Y && p.Y <= math.Max(y3, y4)+eps &&
-				t.Not( Point0Segment0inSegment1) && t.Not( Point1Segment0inSegment1) &&
-				t.Not( Point0Segment1inSegment0) && t.Not( Point1Segment1inSegment0),
+				t.Not(Point0Segment0inSegment1) && t.Not(Point1Segment0inSegment1) &&
+				t.Not(Point0Segment1inSegment0) && t.Not(Point1Segment1inSegment0),
 			ti: IntersectOnSegment1,
 		},
 	} {
