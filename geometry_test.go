@@ -25,11 +25,11 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 8}, // 3
 			Point{X: 0, Y: 8}, // 4
 		},
-		it: ZeroLengthBeam1 |
-			VerticalBeam0 |
-			Point0Beam0onPoint0Beam1 |
-			Point0Beam0onPoint1Beam1 |
-			HorizontalBeam1 | VerticalBeam1 |
+		it: ZeroLengthSegment1 |
+			VerticalSegment0 |
+			Point0Segment0onPoint0Segment1 |
+			Point0Segment0onPoint1Segment1 |
+			HorizontalSegment1 | VerticalSegment1 |
 			Collinear,
 		pi: Point{X: 0, Y: 8},
 	},
@@ -44,8 +44,8 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 8}, // 3
 			Point{X: 0, Y: 2}, // 4
 		},
-		it: VerticalBeam0 | VerticalBeam1 |
-			Point0Beam0onPoint0Beam1 | Point1Beam0onPoint1Beam1 |
+		it: VerticalSegment0 | VerticalSegment1 |
+			Point0Segment0onPoint0Segment1 | Point1Segment0onPoint1Segment1 |
 			Collinear,
 		pi: Point{X: 0, Y: 8},
 	},
@@ -60,7 +60,7 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 8}, // 3
 			Point{X: 0, Y: 2}, // 4
 		},
-		it: Point0Beam0onPoint0Beam1 | Point1Beam0onPoint1Beam1 |
+		it: Point0Segment0onPoint0Segment1 | Point1Segment0onPoint1Segment1 |
 			Collinear,
 		pi: Point{X: 2, Y: 8},
 	},
@@ -75,7 +75,7 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 8}, // 3
 			Point{X: 4, Y: 2}, // 4
 		},
-		it: VerticalBeam0 | VerticalBeam1 | Parallel,
+		it: VerticalSegment0 | VerticalSegment1 | Parallel,
 	},
 	{ // 4
 		// *1  //
@@ -91,7 +91,7 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 6}, // 3
 			Point{X: 2, Y: 5}, // 4
 		},
-		it: VerticalBeam0 | VerticalBeam1 | Collinear,
+		it: VerticalSegment0 | VerticalSegment1 | Collinear,
 	},
 	{ // 5
 		// *1  //
@@ -121,8 +121,8 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 6}, // 3
 			Point{X: 2, Y: 5}, // 4
 		},
-		it: VerticalBeam0 | VerticalBeam1 |
-			Point1Beam0onPoint0Beam1 |
+		it: VerticalSegment0 | VerticalSegment1 |
+			Point1Segment0onPoint0Segment1 |
 			Collinear,
 		pi: Point{X: 2, Y: 6},
 	},
@@ -138,7 +138,7 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it: Point1Beam0onPoint0Beam1 |
+		it: Point1Segment0onPoint0Segment1 |
 			Collinear,
 		pi: Point{X: 4, Y: 4},
 	},
@@ -150,16 +150,16 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 5}, // 3
 			Point{X: 5, Y: 5}, // 4
 		},
-		it: VerticalBeam0 |
-			VerticalBeam1 |
-			HorizontalBeam0 |
-			HorizontalBeam1 |
-			ZeroLengthBeam0 |
-			ZeroLengthBeam1 |
-			Point0Beam0onPoint0Beam1 |
-			Point1Beam0onPoint0Beam1 |
-			Point0Beam0onPoint1Beam1 |
-			Point1Beam0onPoint1Beam1 |
+		it: VerticalSegment0 |
+			VerticalSegment1 |
+			HorizontalSegment0 |
+			HorizontalSegment1 |
+			ZeroLengthSegment0 |
+			ZeroLengthSegment1 |
+			Point0Segment0onPoint0Segment1 |
+			Point1Segment0onPoint0Segment1 |
+			Point0Segment0onPoint1Segment1 |
+			Point1Segment0onPoint1Segment1 |
 			Collinear,
 		pi: Point{X: 5, Y: 5},
 	},
@@ -175,7 +175,7 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 2}, // 3
 			Point{X: 5, Y: 0}, // 4
 		},
-		it: Point0Beam1inBeam0,
+		it: Point0Segment1inSegment0,
 		pi: Point{X: 2, Y: 2},
 	},
 	{ // 10
@@ -190,7 +190,7 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 5}, // 3
 			Point{X: 5, Y: 0}, // 4
 		},
-		it: IntersectOnBeam0 | IntersectOnBeam1,
+		it: IntersectOnSegment0 | IntersectOnSegment1,
 		pi: Point{X: 2.5, Y: 2.5},
 	},
 	{ // 11
@@ -205,7 +205,7 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it: Point1Beam1inBeam0,
+		it: Point1Segment1inSegment0,
 		pi: Point{X: 2, Y: 2},
 	},
 	{ // 12
@@ -220,7 +220,7 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it: Point0Beam0inBeam1,
+		it: Point0Segment0inSegment1,
 		pi: Point{X: 2, Y: 2},
 	},
 	{ // 13
@@ -235,7 +235,7 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it: Point1Beam0inBeam1,
+		it: Point1Segment0inSegment1,
 		pi: Point{X: 2, Y: 2},
 	},
 	{ // 14
@@ -251,7 +251,7 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 5, Y: 9}, // 4
 		},
-		it: VerticalBeam1 | IntersectBeam0Ray11 | IntersectOnBeam1,
+		it: VerticalSegment1 | IntersectSegment0Ray11 | IntersectOnSegment1,
 		pi: Point{X: 5, Y: 5},
 	},
 	{ // 15
@@ -267,7 +267,7 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 5, Y: 9}, // 4
 		},
-		it: VerticalBeam1 | IntersectBeam0Ray00 | IntersectOnBeam1,
+		it: VerticalSegment1 | IntersectSegment0Ray00 | IntersectOnSegment1,
 		pi: Point{X: 5, Y: 5},
 	},
 	{ // 16
@@ -283,7 +283,7 @@ var tcs = []TestCase{
 			Point{X: 1, Y: 1}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it: VerticalBeam0 | IntersectBeam1Ray11 | IntersectOnBeam0,
+		it: VerticalSegment0 | IntersectSegment1Ray11 | IntersectOnSegment0,
 		pi: Point{X: 5, Y: 5},
 	},
 	{ // 17
@@ -299,7 +299,7 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 2}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it: VerticalBeam0 | IntersectBeam1Ray00 | IntersectOnBeam0,
+		it: VerticalSegment0 | IntersectSegment1Ray00 | IntersectOnSegment0,
 		pi: Point{X: 5, Y: 5},
 	},
 	{ // 18 : Test data - no intersection
@@ -309,7 +309,7 @@ var tcs = []TestCase{
 			Point{X: 1.2, Y: 2},
 			Point{X: 5, Y: 5},
 		},
-		it: IntersectBeam1Ray00 | IntersectOnBeam0,
+		it: IntersectSegment1Ray00 | IntersectOnSegment0,
 		pi: Point{X: 0.7509280607532581, Y: 1.6454695216473094},
 	},
 	{ // 19 : Test data - no intersection
@@ -319,7 +319,7 @@ var tcs = []TestCase{
 			Point{X: 9, Y: 2},
 			Point{X: 5, Y: 5},
 		},
-		it: IntersectOnBeam0 | IntersectOnBeam1,
+		it: IntersectOnSegment0 | IntersectOnSegment1,
 		pi: Point{X: 5.9627881085877945, Y: 4.277908918559155},
 	},
 }
@@ -379,7 +379,7 @@ func Test(t *testing.T) {
 	var types [64]int
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			pi, it := Intersection(Beam{P0: 0, P1: 1}, Beam{P0: 2, P1: 3}, &tc.ps)
+			pi, it := Intersection(Segment{P0: 0, P1: 1}, Segment{P0: 2, P1: 3}, &tc.ps)
 			if it != tc.it {
 				t.Error("Not same types")
 				t.Logf("Expected : %30b", tc.it)
