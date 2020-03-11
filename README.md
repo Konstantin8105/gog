@@ -63,39 +63,41 @@ type State int64
     State is result of intersection
 
 const (
+	VerticalSegmentA State // vertical segment A
+	VerticalSegmentB       // vertical segment B
 
-	// property of single segment
-	VerticalSegment0 State
-	VerticalSegment1
-	HorizontalSegment0
-	HorizontalSegment1
-	ZeroLengthSegment0
-	ZeroLengthSegment1
+	HorizontalSegmentA // horizontal segment A
+	HorizontalSegmentB // horizontal segment B
 
-	// property of both segments
+	ZeroLengthSegmentA // zero length segment A
+	ZeroLengthSegmentB // zero length segment B
+
+	// Segment A and segment B are parallel.
+	// Intersection point data is not valid.
 	Parallel
 
-	// intersection types
-	Point0Segment0onPoint0Segment1
-	Point1Segment0onPoint0Segment1
-	Point0Segment0onPoint1Segment1
-	Point1Segment0onPoint1Segment1
-
-	Point0Segment0inSegment1 // 12
-	Point1Segment0inSegment1
-	Point0Segment1inSegment0
-	Point1Segment1inSegment0
-
-	IntersectOnSegment0 // 16
-	IntersectOnSegment1
-
-	IntersectSegment0Ray00
-	IntersectSegment0Ray11
-	IntersectSegment1Ray00
-	IntersectSegment1Ray11
-
-	// overlapping
+	// Segment A and segment B are collinear.
+	// Intersection point data is not valid.
 	Collinear
+
+	OnSegmentA // intersection point on segment A
+	OnSegmentB // intersection point on segment B
+
+	OnRay00SegmentA // intersection point on ray 00 segment A
+	OnRay11SegmentA // intersection point on ray 11 segment A
+	OnRay00SegmentB // intersection point on ray 00 segment B
+	OnRay11SegmentB // intersection point on ray 11 segment B
+
+	OnPoint0SegmentA // intersection point on point 0 segment A
+	OnPoint1SegmentA // intersection point on point 1 segment A
+	OnPoint0SegmentB // intersection point on point 0 segment B
+	OnPoint1SegmentB // intersection point on point 1 segment B
+
+	OverlapP0AP0B // overlapping point 0 segment A and point 0 segment B
+	OverlapP0AP1B // overlapping point 0 segment A and point 1 segment B
+	OverlapP1AP0B // overlapping point 1 segment A and point 0 segment B
+	OverlapP1AP1B // overlapping point 1 segment A and point 1 segment B
+
 )
 func (s State) Has(si State) bool
     Has is mean s-State has si-State
