@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/Konstantin8105/errors"
+	"github.com/Konstantin8105/pow"
 )
 
 //go:generate echo "# gog"
@@ -265,6 +266,41 @@ func SegmentAnalisys(
 		}
 	}
 
+	return
+}
+
+// LinePointDistance return distance between line and point
+//
+// Equation of line:
+//	(y2-y1)*(x-x1) = (x2-x1)(y-y1)
+//	dy*(x-x1) = dx*(y-y1)
+//	dy*x-dy*x1-dx*y+dx*y1 = 0
+//	Ax+By+C = 0
+//	A = dy
+//	B = -dx
+//	C = -dy*x1+dx*y1
+//
+// Distance from point (xm,ym) to line:
+//	d = |(A*xm+B*ym+C)/sqrt(A^2+B^2)|
+func LinePointDistance(
+	ip0, ip1 int,
+	ipc int,
+	pps *[]Point,
+) (distance float64) {
+	var (
+		dy = (*pps)[ip1].Y - (*pps)[ip0].Y
+		dx = (*pps)[ip1].X - (*pps)[ip0].X
+		x1 = (*pps)[ip0].X
+		y1 = (*pps)[ip0].Y
+		// parameters of line
+		A = dy
+		B = -dx
+		C = -dy*x1 + dx*y1
+		// coordinates of point
+		xm = (*pps)[ipc].X
+		ym = (*pps)[ipc].Y
+	)
+	distance = math.Abs((A*xm + B*ym + C) / math.Sqrt(pow.E2(A)+pow.E2(B)))
 	return
 }
 
