@@ -36,9 +36,8 @@ func Example() {
 		panic(err)
 	}
 	pi, st := SegmentAnalisys(
-		0, 1,
-		2, 3,
-		&pps,
+		pps[0], pps[1],
+		pps[2], pps[3],
 	)
 	fmt.Fprintf(os.Stdout, "Intersection point: %s\n", pi)
 	fmt.Fprintf(os.Stdout, "Intersection state:\n%s\n", st)
@@ -483,7 +482,7 @@ func Test(t *testing.T) {
 			if err := Check(&tc.ps); err != nil {
 				t.Fatal(err)
 			}
-			pi, it := SegmentAnalisys(0, 1, 2, 3, &tc.ps)
+			pi, it := SegmentAnalisys(tc.ps[0], tc.ps[1], tc.ps[2], tc.ps[3])
 			if it != tc.it {
 				t.Error("Not same types")
 				t.Logf("Expected : %30b", tc.it)
@@ -566,9 +565,8 @@ func Benchmark(b *testing.B) {
 	}
 	for n := 0; n < b.N; n++ {
 		SegmentAnalisys(
-			0, 1,
-			2, 3,
-			&pps,
+			pps[0], pps[1],
+			pps[2], pps[3],
 		)
 	}
 }

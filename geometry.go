@@ -142,9 +142,8 @@ func Check(pps *[]Point) error {
 // Reference:
 //	[1]  https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 func SegmentAnalisys(
-	ipa0, ipa1 int,
-	ipb0, ipb1 int,
-	pps *[]Point,
+	pa0, pa1 Point,
+	pb0, pb1 Point,
 ) (
 	pi Point,
 	st State,
@@ -152,17 +151,17 @@ func SegmentAnalisys(
 	// check input data of points is outside of that function
 
 	var (
-		x1 = (*pps)[ipa0].X
-		y1 = (*pps)[ipa0].Y
+		x1 = pa0.X
+		y1 = pa0.Y
 
-		x2 = (*pps)[ipa1].X
-		y2 = (*pps)[ipa1].Y
+		x2 = pa1.X
+		y2 = pa1.Y
 
-		x3 = (*pps)[ipb0].X
-		y3 = (*pps)[ipb0].Y
+		x3 = pb0.X
+		y3 = pb0.Y
 
-		x4 = (*pps)[ipb1].X
-		y4 = (*pps)[ipb1].Y
+		x4 = pb1.X
+		y4 = pb1.Y
 	)
 
 	for _, c := range [...]struct {
@@ -187,9 +186,9 @@ func SegmentAnalisys(
 
 	switch {
 	case st.Has(OverlapP0AP0B) || st.Has(OverlapP0AP1B):
-		pi = (*pps)[ipa0]
+		pi = pa0
 	case st.Has(OverlapP1AP0B) || st.Has(OverlapP1AP1B):
-		pi = (*pps)[ipa1]
+		pi = pa1
 	}
 
 	// if zero, then vertical/horizontal
@@ -248,8 +247,8 @@ func SegmentAnalisys(
 
 	// is intersect point on ray?
 	if st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) && st.Not(OnSegmentA) {
-		disB0P0p := Distance((*pps)[ipa0], pi)
-		disB0P1p := Distance((*pps)[ipa1], pi)
+		disB0P0p := Distance(pa0, pi)
+		disB0P1p := Distance(pa1, pi)
 		if disB0P0p < disB0P1p {
 			st |= OnRay00SegmentA
 		} else {
@@ -257,8 +256,8 @@ func SegmentAnalisys(
 		}
 	}
 	if st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) && st.Not(OnSegmentB) {
-		disB1P0p := Distance((*pps)[ipb0], pi)
-		disB1P1p := Distance((*pps)[ipb1], pi)
+		disB1P0p := Distance(pb0, pi)
+		disB1P1p := Distance(pb1, pi)
 		if disB1P0p < disB1P1p {
 			st |= OnRay00SegmentB
 		} else {
