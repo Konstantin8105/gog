@@ -307,3 +307,10 @@ func LinePointDistance(
 func Distance(p0, p1 Point) float64 {
 	return math.Hypot(p0.X-p1.X, p0.Y-p1.Y)
 }
+
+// Rotate point about (0,0) on angle
+func Rotate(angle float64, point Point) (p Point) {
+	p.X = math.Cos(angle)*point.X - math.Sin(angle)*point.Y
+	p.Y = math.Sin(angle)*point.X + math.Cos(angle)*point.Y
+	return
+}

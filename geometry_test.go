@@ -587,3 +587,24 @@ func TestLinePointDistance(t *testing.T) {
 		})
 	}
 }
+
+func TestRotate(t *testing.T) {
+	angles := []float64{0.01, math.Pi / 4, math.Pi / 2, 2, 5, -0.1}
+	eps := 0.001
+	for _, tc := range tcs {
+		for _, angle := range angles {
+			t.Run(fmt.Sprintf("%s:%+.2f", tc.name, angle), func(t *testing.T) {
+				for index, p := range tc.ps {
+					pw := Rotate(angle, p)
+					if Distance(p, pw) < eps {
+						t.Errorf("No change %d: %v %v", index, p, pw)
+					}
+					pw = Rotate(-angle, pw)
+					if Distance(p, pw) > eps {
+						t.Errorf("Some change %d: %v %v", index, p, pw)
+					}
+				}
+			})
+		}
+	}
+}
