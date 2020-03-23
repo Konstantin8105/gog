@@ -578,7 +578,7 @@ func TestLinePointDistance(t *testing.T) {
 			if err := Check(&tc.ps); err != nil {
 				t.Fatal(err)
 			}
-			d := LinePointDistance(0, 1, 4, &tc.ps)
+			d := LinePointDistance(tc.ps[0], tc.ps[1], tc.ps[4])
 			if eps := 1e-6; math.Abs(d-tc.dbp) > eps {
 				t.Errorf("Not valid distance: %.10e != expected %.2e",
 					d, tc.dbp,

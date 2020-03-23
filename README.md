@@ -15,9 +15,8 @@ func Distance(p0, p1 Point) float64
     Distance between two points
 
 func LinePointDistance(
-	ip0, ip1 int,
-	ipc int,
-	pps *[]Point,
+	p0, p1 Point,
+	pc Point,
 ) (distance float64)
     LinePointDistance return distance between line and point
 

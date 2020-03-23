@@ -282,22 +282,21 @@ func SegmentAnalisys(
 // Distance from point (xm,ym) to line:
 //	d = |(A*xm+B*ym+C)/sqrt(A^2+B^2)|
 func LinePointDistance(
-	ip0, ip1 int,
-	ipc int,
-	pps *[]Point,
+	p0, p1 Point,
+	pc Point,
 ) (distance float64) {
 	var (
-		dy = (*pps)[ip1].Y - (*pps)[ip0].Y
-		dx = (*pps)[ip1].X - (*pps)[ip0].X
-		x1 = (*pps)[ip0].X
-		y1 = (*pps)[ip0].Y
+		dy = p1.Y - p0.Y
+		dx = p1.X - p0.X
+		x1 = p0.X
+		y1 = p0.Y
 		// parameters of line
 		A = dy
 		B = -dx
 		C = -dy*x1 + dx*y1
 		// coordinates of point
-		xm = (*pps)[ipc].X
-		ym = (*pps)[ipc].Y
+		xm = pc.X
+		ym = pc.Y
 	)
 	distance = math.Abs((A*xm + B*ym + C) / math.Sqrt(pow.E2(A)+pow.E2(B)))
 	return
