@@ -608,3 +608,44 @@ func TestRotate(t *testing.T) {
 		}
 	}
 }
+
+func TestMirrorLine(t *testing.T) {
+	tcs := []struct {
+		segment [2]Point
+		mirror  [2]Point
+		expect  []Point
+	}{
+		{
+			segment: [2]Point{Point{X: 4, Y: 4}, Point{X: -4, Y: -4}},
+			mirror:  [2]Point{Point{X: -1, Y: 0}, Point{X: 5, Y: 0}},
+			expect:  []Point{Point{0,0},Point{X:-4,Y:4}},
+		},
+		{
+			segment: [2]Point{Point{X: 4, Y: 5}, Point{X: -4, Y: -3}},
+			mirror:  [2]Point{Point{X: -1, Y: 1}, Point{X: 5, Y: 1}},
+			expect:  []Point{Point{0,1},Point{X:-4,Y:5}},
+		},
+		{
+			segment: [2]Point{Point{X: 4, Y: 10}, Point{X: 4, Y: 0}},
+			mirror:  [2]Point{Point{X: 0, Y: 0}, Point{X: 1, Y: 1}},
+			expect:  []Point{Point{4,4},Point{X:0,Y:4}},
+		},
+	}
+	eps := 0.001
+	for index, tc := range tcs {
+		t.Run(fmt.Sprintf("%d", index), func(t *testing.T) {
+			ml0, ml1, err := MirrorLine(
+				tc.segment[0],
+				tc.segment[1],
+				tc.mirror[0],
+				tc.mirror[1],
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if Distance(tc.expect[0], ml0) > eps || Distance(tc.expect[1], ml1) > eps {
+				t.Errorf("Not valid points: %v %v", ml0,ml1)
+			}
+		})
+	}
+}

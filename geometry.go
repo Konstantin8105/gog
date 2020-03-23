@@ -285,20 +285,27 @@ func LinePointDistance(
 	p0, p1 Point,
 	pc Point,
 ) (distance float64) {
+	A, B, C := line(p0, p1)
 	var (
-		dy = p1.Y - p0.Y
-		dx = p1.X - p0.X
-		x1 = p0.X
-		y1 = p0.Y
-		// parameters of line
-		A = dy
-		B = -dx
-		C = -dy*x1 + dx*y1
 		// coordinates of point
 		xm = pc.X
 		ym = pc.Y
 	)
 	distance = math.Abs((A*xm + B*ym + C) / math.Sqrt(pow.E2(A)+pow.E2(B)))
+	return
+}
+
+func line(p0, p1 Point) (A, B, C float64) {
+	var (
+		dy = p1.Y - p0.Y
+		dx = p1.X - p0.X
+		x1 = p0.X
+		y1 = p0.Y
+	)
+	// parameters of line
+	A = dy
+	B = -dx
+	C = -dy*x1 + dx*y1
 	return
 }
 
@@ -311,5 +318,40 @@ func Distance(p0, p1 Point) float64 {
 func Rotate(angle float64, point Point) (p Point) {
 	p.X = math.Cos(angle)*point.X - math.Sin(angle)*point.Y
 	p.Y = math.Sin(angle)*point.X + math.Cos(angle)*point.Y
+	return
+}
+
+// MirrorLine return intersection point and second mirrored point from mirror
+// line (mp0-mp1) and ray (sp0-sp1)
+func MirrorLine(
+	sp0, sp1 Point,
+	mp0, mp1 Point,
+) (
+	ml0, ml1 Point,
+	err error,
+) {
+	pi, ti := SegmentAnalisys(
+		sp0, sp1,
+		mp0, mp1,
+	)
+	if ti.Has(Parallel) || ti.Has(Collinear) {
+		err = fmt.Errorf("Segment and mirror is not intersect")
+		return
+	}
+	// Image of Point sp0 with respect to a line ax+bx+c=0 is line mirror mp0-mp1
+	var (
+		A, B, C = line(mp0, mp1)
+		x1      = sp1.X
+		y1      = sp1.Y
+		common  = -2.0 * (A*x1 + B*y1 + C) / (pow.E2(A) + pow.E2(B))
+	)
+	ml0 = pi
+	ml1.X = A*common + x1
+	ml1.Y = B*common + y1
+	if Distance(ml0,ml1) == 0.0 {
+		sp1.X += (sp1.X - sp0.X) * 2.0
+		sp1.Y += (sp1.Y - sp0.Y) * 2.0
+		return MirrorLine(sp0,sp1,mp0,mp1)
+	}
 	return
 }

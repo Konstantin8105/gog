@@ -75,6 +75,16 @@ type Point struct {
 }
     Point is store of point coordinates
 
+func MirrorLine(
+	sp0, sp1 Point,
+	mp0, mp1 Point,
+) (
+	ml0, ml1 Point,
+	err error,
+)
+    MirrorLine return intersection point and second mirrored point from mirror
+    line (mp0-mp1) and ray (sp0-sp1)
+
 func Rotate(angle float64, point Point) (p Point)
     Rotate point about (0,0) on angle
 
