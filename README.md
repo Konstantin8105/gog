@@ -36,9 +36,8 @@ func LinePointDistance(
         d = |(A*xm+B*ym+C)/sqrt(A^2+B^2)|
 
 func SegmentAnalisys(
-	ipa0, ipa1 int,
-	ipb0, ipb1 int,
-	pps *[]Point,
+	pa0, pa1 Point,
+	pb0, pb1 Point,
 ) (
 	pi Point,
 	st State,
@@ -76,6 +75,9 @@ type Point struct {
 	X, Y float64
 }
     Point is store of point coordinates
+
+func Rotate(angle float64, point Point) (p Point)
+    Rotate point about (0,0) on angle
 
 func (p Point) String() string
     String is implementation of Stringer implementation for formating output
