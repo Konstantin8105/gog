@@ -618,17 +618,17 @@ func TestMirrorLine(t *testing.T) {
 		{
 			segment: [2]Point{Point{X: 4, Y: 4}, Point{X: -4, Y: -4}},
 			mirror:  [2]Point{Point{X: -1, Y: 0}, Point{X: 5, Y: 0}},
-			expect:  []Point{Point{0,0},Point{X:-4,Y:4}},
+			expect:  []Point{Point{0, 0}, Point{X: -4, Y: 4}},
 		},
 		{
 			segment: [2]Point{Point{X: 4, Y: 5}, Point{X: -4, Y: -3}},
 			mirror:  [2]Point{Point{X: -1, Y: 1}, Point{X: 5, Y: 1}},
-			expect:  []Point{Point{0,1},Point{X:-4,Y:5}},
+			expect:  []Point{Point{0, 1}, Point{X: -4, Y: 5}},
 		},
 		{
 			segment: [2]Point{Point{X: 4, Y: 10}, Point{X: 4, Y: 0}},
 			mirror:  [2]Point{Point{X: 0, Y: 0}, Point{X: 1, Y: 1}},
-			expect:  []Point{Point{4,4},Point{X:0,Y:4}},
+			expect:  []Point{Point{4, 4}, Point{X: 0, Y: 4}},
 		},
 	}
 	eps := 0.001
@@ -644,8 +644,37 @@ func TestMirrorLine(t *testing.T) {
 				t.Fatal(err)
 			}
 			if Distance(tc.expect[0], ml0) > eps || Distance(tc.expect[1], ml1) > eps {
-				t.Errorf("Not valid points: %v %v", ml0,ml1)
+				t.Errorf("Not valid points: %v %v", ml0, ml1)
 			}
 		})
+	}
+}
+
+func TestOrientation(t *testing.T) {
+	tcs := []struct {
+		ps [3]Point
+		or OrientationPoints
+	}{
+		{
+			ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, 2}},
+			or: CollinearPoints,
+		},
+		{
+			ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, 20}},
+			or: CounterClockwisePoints,
+		},
+		{
+			ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, -2}},
+			or: ClockwisePoints,
+		},
+	}
+	for _, tc := range tcs {
+		p0 := tc.ps[0]
+		p1 := tc.ps[1]
+		p2 := tc.ps[2]
+		or := Orientation(p0, p1, p2)
+		if or != tc.or {
+			t.Errorf("Not valid: %v", tc)
+		}
 	}
 }

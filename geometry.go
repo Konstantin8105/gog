@@ -348,10 +348,29 @@ func MirrorLine(
 	ml0 = pi
 	ml1.X = A*common + x1
 	ml1.Y = B*common + y1
-	if Distance(ml0,ml1) == 0.0 {
+	if Distance(ml0, ml1) == 0.0 {
 		sp1.X += (sp1.X - sp0.X) * 2.0
 		sp1.Y += (sp1.Y - sp0.Y) * 2.0
-		return MirrorLine(sp0,sp1,mp0,mp1)
+		return MirrorLine(sp0, sp1, mp0, mp1)
 	}
 	return
+}
+
+type OrientationPoints int8
+
+const (
+	CollinearPoints        OrientationPoints = -1
+	ClockwisePoints                          = 0
+	CounterClockwisePoints                   = 1
+)
+
+func Orientation(p1, p2, p3 Point) OrientationPoints {
+	v := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
+	switch {
+	case math.Abs(v) < 1e-6:
+		return CollinearPoints
+	case v > 0:
+		return ClockwisePoints
+	}
+	return CounterClockwisePoints
 }
