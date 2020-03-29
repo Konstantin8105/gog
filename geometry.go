@@ -120,6 +120,12 @@ func Check(pps *[]Point) error {
 	return nil
 }
 
+var (
+	// FindRayIntersection is global variable for switch off finding
+	// intersection point on segments rays
+	FindRayIntersection = true
+)
+
 // SegmentAnalisys return analisys of two segments
 //
 // Design of segments:
@@ -246,6 +252,7 @@ func SegmentAnalisys(
 	}
 
 	// is intersect point on ray?
+	if FindRayIntersection {
 	if st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) && st.Not(OnSegmentA) {
 		disB0P0p := Distance(pa0, pi)
 		disB0P1p := Distance(pa1, pi)
@@ -264,6 +271,7 @@ func SegmentAnalisys(
 			st |= OnRay11SegmentB
 		}
 	}
+}
 
 	return
 }

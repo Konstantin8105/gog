@@ -6,6 +6,22 @@ golang geometry library between point and segments
 package gog // import "github.com/Konstantin8105/gog"
 
 
+CONSTANTS
+
+const (
+	CollinearPoints        OrientationPoints = -1
+	ClockwisePoints                          = 0
+	CounterClockwisePoints                   = 1
+)
+
+VARIABLES
+
+var (
+	// FindRayIntersection is global variable for switch off finding
+	// intersection point on segments rays
+	FindRayIntersection = true
+)
+
 FUNCTIONS
 
 func Check(pps *[]Point) error
@@ -69,6 +85,10 @@ func SegmentAnalisys(
 
 
 TYPES
+
+type OrientationPoints int8
+
+func Orientation(p1, p2, p3 Point) OrientationPoints
 
 type Point struct {
 	X, Y float64
