@@ -102,9 +102,6 @@ func (s State) String() string {
 	return out
 }
 
-// eps is epsilon - precision of intersection
-const eps float64 = 1e-6
-
 // Check - check input data
 func Check(pps *[]Point) error {
 	et := errors.New("Check points")
@@ -122,8 +119,11 @@ func Check(pps *[]Point) error {
 
 var (
 	// FindRayIntersection is global variable for switch off finding
-	// intersection point on segments rays
-	FindRayIntersection = true
+	// intersection point on segments ray
+	FindRayIntersection bool = true
+
+	// Eps is epsilon - precision of intersection
+	Eps float64 = 1e-6
 )
 
 // SegmentAnalisys return analisys of two segments
@@ -174,16 +174,16 @@ func SegmentAnalisys(
 		isTrue bool
 		ti     State
 	}{
-		{isTrue: math.Abs(x1-x3) < eps && math.Abs(y1-y3) < eps, ti: OverlapP0AP0B},
-		{isTrue: math.Abs(x1-x4) < eps && math.Abs(y1-y4) < eps, ti: OverlapP0AP1B},
-		{isTrue: math.Abs(x2-x3) < eps && math.Abs(y2-y3) < eps, ti: OverlapP1AP0B},
-		{isTrue: math.Abs(x2-x4) < eps && math.Abs(y2-y4) < eps, ti: OverlapP1AP1B},
-		{isTrue: math.Abs(x1-x2) < eps, ti: VerticalSegmentA},
-		{isTrue: math.Abs(x3-x4) < eps, ti: VerticalSegmentB},
-		{isTrue: math.Abs(y1-y2) < eps, ti: HorizontalSegmentA},
-		{isTrue: math.Abs(y3-y4) < eps, ti: HorizontalSegmentB},
-		{isTrue: math.Abs(x1-x2) < eps && math.Abs(y1-y2) < eps, ti: ZeroLengthSegmentA},
-		{isTrue: math.Abs(x3-x4) < eps && math.Abs(y3-y4) < eps, ti: ZeroLengthSegmentB},
+		{isTrue: math.Abs(x1-x3) < Eps && math.Abs(y1-y3) < Eps, ti: OverlapP0AP0B},
+		{isTrue: math.Abs(x1-x4) < Eps && math.Abs(y1-y4) < Eps, ti: OverlapP0AP1B},
+		{isTrue: math.Abs(x2-x3) < Eps && math.Abs(y2-y3) < Eps, ti: OverlapP1AP0B},
+		{isTrue: math.Abs(x2-x4) < Eps && math.Abs(y2-y4) < Eps, ti: OverlapP1AP1B},
+		{isTrue: math.Abs(x1-x2) < Eps, ti: VerticalSegmentA},
+		{isTrue: math.Abs(x3-x4) < Eps, ti: VerticalSegmentB},
+		{isTrue: math.Abs(y1-y2) < Eps, ti: HorizontalSegmentA},
+		{isTrue: math.Abs(y3-y4) < Eps, ti: HorizontalSegmentB},
+		{isTrue: math.Abs(x1-x2) < Eps && math.Abs(y1-y2) < Eps, ti: ZeroLengthSegmentA},
+		{isTrue: math.Abs(x3-x4) < Eps && math.Abs(y3-y4) < Eps, ti: ZeroLengthSegmentB},
 	} {
 		if c.isTrue {
 			st |= c.ti
@@ -199,8 +199,8 @@ func SegmentAnalisys(
 
 	// if zero, then vertical/horizontal
 	B := (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
-	if math.Abs(B) < eps || st.Has(ZeroLengthSegmentA) || st.Has(ZeroLengthSegmentB) {
-		if math.Abs((x3-x1)*(y2-y1)-(x2-x1)*(y3-y1)) < eps {
+	if math.Abs(B) < Eps || st.Has(ZeroLengthSegmentA) || st.Has(ZeroLengthSegmentB) {
+		if math.Abs((x3-x1)*(y2-y1)-(x2-x1)*(y3-y1)) < Eps {
 			st |= Collinear
 		} else {
 			st |= Parallel
@@ -219,10 +219,10 @@ func SegmentAnalisys(
 		isTrue bool
 		ti     State
 	}{
-		{isTrue: math.Abs(x1-pi.X) < eps && math.Abs(y1-pi.Y) < eps, ti: OnPoint0SegmentA},
-		{isTrue: math.Abs(x2-pi.X) < eps && math.Abs(y2-pi.Y) < eps, ti: OnPoint1SegmentA},
-		{isTrue: math.Abs(x3-pi.X) < eps && math.Abs(y3-pi.Y) < eps, ti: OnPoint0SegmentB},
-		{isTrue: math.Abs(x4-pi.X) < eps && math.Abs(y4-pi.Y) < eps, ti: OnPoint1SegmentB},
+		{isTrue: math.Abs(x1-pi.X) < Eps && math.Abs(y1-pi.Y) < Eps, ti: OnPoint0SegmentA},
+		{isTrue: math.Abs(x2-pi.X) < Eps && math.Abs(y2-pi.Y) < Eps, ti: OnPoint1SegmentA},
+		{isTrue: math.Abs(x3-pi.X) < Eps && math.Abs(y3-pi.Y) < Eps, ti: OnPoint0SegmentB},
+		{isTrue: math.Abs(x4-pi.X) < Eps && math.Abs(y4-pi.Y) < Eps, ti: OnPoint1SegmentB},
 	} {
 		if c.isTrue {
 			st |= c.ti
@@ -235,14 +235,14 @@ func SegmentAnalisys(
 	}{
 		{
 			isTrue: st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) &&
-				math.Min(x1, x2)-eps <= pi.X && pi.X <= math.Max(x1, x2)+eps &&
-				math.Min(y1, y2)-eps <= pi.Y && pi.Y <= math.Max(y1, y2)+eps,
+				math.Min(x1, x2)-Eps <= pi.X && pi.X <= math.Max(x1, x2)+Eps &&
+				math.Min(y1, y2)-Eps <= pi.Y && pi.Y <= math.Max(y1, y2)+Eps,
 			ti: OnSegmentA,
 		},
 		{
 			isTrue: st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) &&
-				math.Min(x3, x4)-eps <= pi.X && pi.X <= math.Max(x3, x4)+eps &&
-				math.Min(y3, y4)-eps <= pi.Y && pi.Y <= math.Max(y3, y4)+eps,
+				math.Min(x3, x4)-Eps <= pi.X && pi.X <= math.Max(x3, x4)+Eps &&
+				math.Min(y3, y4)-Eps <= pi.Y && pi.Y <= math.Max(y3, y4)+Eps,
 			ti: OnSegmentB,
 		},
 	} {
@@ -253,25 +253,25 @@ func SegmentAnalisys(
 
 	// is intersect point on ray?
 	if FindRayIntersection {
-	if st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) && st.Not(OnSegmentA) {
-		disB0P0p := Distance(pa0, pi)
-		disB0P1p := Distance(pa1, pi)
-		if disB0P0p < disB0P1p {
-			st |= OnRay00SegmentA
-		} else {
-			st |= OnRay11SegmentA
+		if st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) && st.Not(OnSegmentA) {
+			disB0P0p := Distance(pa0, pi)
+			disB0P1p := Distance(pa1, pi)
+			if disB0P0p < disB0P1p {
+				st |= OnRay00SegmentA
+			} else {
+				st |= OnRay11SegmentA
+			}
+		}
+		if st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) && st.Not(OnSegmentB) {
+			disB1P0p := Distance(pb0, pi)
+			disB1P1p := Distance(pb1, pi)
+			if disB1P0p < disB1P1p {
+				st |= OnRay00SegmentB
+			} else {
+				st |= OnRay11SegmentB
+			}
 		}
 	}
-	if st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) && st.Not(OnSegmentB) {
-		disB1P0p := Distance(pb0, pi)
-		disB1P1p := Distance(pb1, pi)
-		if disB1P0p < disB1P1p {
-			st |= OnRay00SegmentB
-		} else {
-			st |= OnRay11SegmentB
-		}
-	}
-}
 
 	return
 }
