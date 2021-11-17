@@ -32,7 +32,7 @@ func Example() {
 		Point{X: 5, Y: 0}, // 3
 	}
 
-	if err := Check(&pps); err != nil {
+	if err := Check(pps...); err != nil {
 		panic(err)
 	}
 	pi, st := SegmentAnalisys(
@@ -479,7 +479,7 @@ func Test(t *testing.T) {
 	var types [64]int
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := Check(&tc.ps); err != nil {
+			if err := Check(tc.ps...); err != nil {
 				t.Fatal(err)
 			}
 			pi, it := SegmentAnalisys(tc.ps[0], tc.ps[1], tc.ps[2], tc.ps[3])
@@ -542,7 +542,7 @@ func TestCheckError(t *testing.T) {
 		[]Point{Point{X: 1.0, Y: math.Inf(1)}},
 	}
 	for i := range tcs {
-		if err := Check(&tcs[i]); err == nil {
+		if err := Check(tcs[i]...); err == nil {
 			t.Errorf("Not valid error in case %d", i)
 		}
 	}
@@ -560,7 +560,7 @@ func Benchmark(b *testing.B) {
 		Point{X: 5, Y: 0}, // 3
 	}
 
-	if err := Check(&pps); err != nil {
+	if err := Check(pps...); err != nil {
 		panic(err)
 	}
 	for n := 0; n < b.N; n++ {
@@ -575,7 +575,7 @@ func TestLinePointDistance(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.ps = append(tc.ps, tc.bp)
-			if err := Check(&tc.ps); err != nil {
+			if err := Check(tc.ps...); err != nil {
 				t.Fatal(err)
 			}
 			d := LinePointDistance(tc.ps[0], tc.ps[1], tc.ps[4])

@@ -103,10 +103,10 @@ func (s State) String() string {
 }
 
 // Check - check input data
-func Check(pps *[]Point) error {
+func Check(pps ...Point) error {
 	et := errors.New("Check points")
-	for i := range *pps {
-		if x, y := (*pps)[i].X, (*pps)[i].Y; math.IsNaN(x) || math.IsInf(x, 0) ||
+	for i := range pps {
+		if x, y := pps[i].X, pps[i].Y; math.IsNaN(x) || math.IsInf(x, 0) ||
 			math.IsNaN(y) || math.IsInf(y, 0) {
 			et.Add(fmt.Errorf("Not valid point #%d: (%.5e,%.5e)", i, x, y))
 		}
@@ -381,4 +381,11 @@ func Orientation(p1, p2, p3 Point) OrientationPoints {
 		return ClockwisePoints
 	}
 	return CounterClockwisePoints
+}
+
+func ArcLineAnalisys(line [2]Point, Arc [3]Point) (
+	pi Point,
+	st State,
+){
+	return
 }
