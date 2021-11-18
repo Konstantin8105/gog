@@ -614,6 +614,22 @@ func Test(t *testing.T) {
 			it: OnRay00SegmentA | OnRay11SegmentB | HorizontalSegmentA |
 			 ArcIsLine | Arc01indentical,
 		},
+		{ // 4
+			Line: [2]Point{{-2, 4}, {2, 4}},
+			Arc:  [3]Point{{1, 0}, {0, 1}, {0, 1}},
+
+			pi: []Point{{-3,4}},
+			it: OnRay00SegmentA | OnRay11SegmentB | HorizontalSegmentA |
+			 ArcIsLine | Arc12indentical,
+		},
+		{ // 5
+			Line: [2]Point{{-2, 4}, {2, 4}},
+			Arc:  [3]Point{{0, 1}, {0, 1}, {0, 1}},
+
+			pi: []Point{},
+			it:  HorizontalSegmentA | ArcIsPoint |
+				Arc01indentical | Arc02indentical | Arc12indentical,
+		},
 	}
 	for i, tc := range tcs {
 		t.Run(fmt.Sprintf("ARC%02d", i), func(t *testing.T) {

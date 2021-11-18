@@ -69,7 +69,7 @@ const (
 	Arc12indentical
 	Arc02indentical
 	ArcIsLine
-	ArcOnePoint
+	ArcIsPoint
 	LineFromArcCenter
 	LineOutside
 
@@ -434,7 +434,7 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 	if st.Has(Arc01indentical) || st.Has(Arc12indentical) || st.Has(Arc02indentical){
 		switch {
 		case st.Has(Arc01indentical) && st.Has(Arc12indentical):
-			st |= ArcOnePoint
+			st |= ArcIsPoint
 			return
 		case st.Has(Arc01indentical):
 			pi2, st2 := SegmentAnalisys(Line[0], Line[1], Arc[0], Arc[2])
