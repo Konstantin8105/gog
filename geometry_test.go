@@ -131,7 +131,7 @@ func Example() {
 	// 26	   100000000000000000000000000	not found
 	// 27	  1000000000000000000000000000	not found
 	// 28	 10000000000000000000000000000	not found
-// 29	100000000000000000000000000000	not found
+	// 29	100000000000000000000000000000	not found
 }
 
 var tcs = []TestCase{
@@ -603,32 +603,68 @@ func Test(t *testing.T) {
 			Arc:  [3]Point{{0, -1}, {0, 0}, {0, 1}},
 
 			pi: []Point{},
- 			it: HorizontalSegmentA | LineOutside,
+			it: HorizontalSegmentA | LineOutside,
 			// ArcOneLine | OnSegmentA | OnRay11SegmentB | VerticalSegmentB,
 		},
 		{ // 3
 			Line: [2]Point{{-2, 4}, {2, 4}},
 			Arc:  [3]Point{{1, 0}, {1, 0}, {0, 1}},
 
-			pi: []Point{{-3,4}},
+			pi: []Point{{-3, 4}},
 			it: OnRay00SegmentA | OnRay11SegmentB | HorizontalSegmentA |
-			 ArcIsLine | Arc01indentical,
+				ArcIsLine | Arc01indentical,
 		},
 		{ // 4
 			Line: [2]Point{{-2, 4}, {2, 4}},
 			Arc:  [3]Point{{1, 0}, {0, 1}, {0, 1}},
 
-			pi: []Point{{-3,4}},
+			pi: []Point{{-3, 4}},
 			it: OnRay00SegmentA | OnRay11SegmentB | HorizontalSegmentA |
-			 ArcIsLine | Arc12indentical,
+				ArcIsLine | Arc12indentical,
 		},
 		{ // 5
 			Line: [2]Point{{-2, 4}, {2, 4}},
 			Arc:  [3]Point{{0, 1}, {0, 1}, {0, 1}},
 
 			pi: []Point{},
-			it:  HorizontalSegmentA | ArcIsPoint |
+			it: HorizontalSegmentA | ArcIsPoint |
 				Arc01indentical | Arc02indentical | Arc12indentical,
+		},
+		{ // 6
+			Line: [2]Point{{-2, 1}, {2, 1}},
+			Arc:  [3]Point{{0, -1}, {1, 0}, {0, 1}},
+
+			pi: []Point{{0, 1}},
+			it: HorizontalSegmentA | OnSegmentA | OnSegmentB,
+		},
+		{ // 7
+			Line: [2]Point{{0, 1}, {2, 1}},
+			Arc:  [3]Point{{0, -1}, {1, 0}, {0, 1}},
+
+			pi: []Point{{0, 1}},
+			it: HorizontalSegmentA | OnSegmentB | OnPoint0SegmentA,
+		},
+		{ // 8
+			Line: [2]Point{{0, 1}, {0, -1}},
+			Arc:  [3]Point{{0, -1}, {1, 0}, {0, 1}},
+
+			pi: []Point{{0, 1}, {0,-1}},
+			it: VerticalSegmentA | OnPoint0SegmentA | OnPoint1SegmentA |
+				OnSegmentB | LineFromArcCenter,
+		},
+		{ // 9
+			Line: [2]Point{{1, 1}, {1, -1}},
+			Arc:  [3]Point{{0, -1}, {1, 0}, {0, 1}},
+
+			pi: []Point{{1, 0}},
+			it: VerticalSegmentA | OnSegmentA | OnSegmentB,
+		},
+		{ // 10
+			Line: [2]Point{{2, 1}, {2, -1}},
+			Arc:  [3]Point{{0, -1}, {1, 0}, {0, 1}},
+
+			pi: []Point{},
+			it: VerticalSegmentA | LineOutside,
 		},
 	}
 	for i, tc := range tcs {
