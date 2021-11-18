@@ -648,7 +648,7 @@ func Test(t *testing.T) {
 			Line: [2]Point{{0, 1}, {0, -1}},
 			Arc:  [3]Point{{0, -1}, {1, 0}, {0, 1}},
 
-			pi: []Point{{0, 1}, {0,-1}},
+			pi: []Point{{0, 1}, {0, -1}},
 			it: VerticalSegmentA | OnPoint0SegmentA | OnPoint1SegmentA |
 				OnSegmentB | LineFromArcCenter,
 		},
@@ -671,7 +671,7 @@ func Test(t *testing.T) {
 			Arc:  [3]Point{{0, 0}, {1, 1}, {0, 2}},
 
 			pi: []Point{{1, 1}},
-			it: VerticalSegmentA | OnPoint0SegmentA| OnSegmentB,
+			it: VerticalSegmentA | OnPoint0SegmentA | OnSegmentB,
 		},
 		{ // 12
 			Line: [2]Point{{-1, 1}, {3, 1}},
@@ -679,6 +679,27 @@ func Test(t *testing.T) {
 
 			pi: []Point{{2, 1}},
 			it: HorizontalSegmentA | OnSegmentA | OnSegmentB | LineFromArcCenter,
+		},
+		{ // 13
+			Line: [2]Point{{2, 4}, {4, 2}},
+			Arc:  [3]Point{{2, 3}, {3, 2}, {2, 1}},
+
+			pi: []Point{},
+			it: LineOutside,
+		},
+		{ // 14
+			Line: [2]Point{{2, 3}, {3, 2}},
+			Arc:  [3]Point{{2, 3}, {3, 2}, {2, 1}},
+
+			pi: []Point{{2, 3}, {3, 2}},
+			it: OnSegmentB | OnPoint0SegmentA | OnPoint1SegmentA,
+		},
+		{ // 15
+			Line: [2]Point{{2, 2 + 0.70710678*2}, {2 + 0.70710678*2, 2}},
+			Arc:  [3]Point{{2, 3}, {3, 2}, {2, 1}},
+
+			pi: []Point{{2 + 0.70710678, 2 + 0.70710678}},
+			it: OnSegmentB | OnSegmentA,
 		},
 	}
 	for i, tc := range tcs {

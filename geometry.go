@@ -431,7 +431,7 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		}
 	}
 
-	if st.Has(Arc01indentical) || st.Has(Arc12indentical) || st.Has(Arc02indentical){
+	if st.Has(Arc01indentical) || st.Has(Arc12indentical) || st.Has(Arc02indentical) {
 		switch {
 		case st.Has(Arc01indentical) && st.Has(Arc12indentical):
 			st |= ArcIsPoint
@@ -502,7 +502,7 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		r = (r1 + r2 + r3) / 3.0
 	}
 
-	if LinePointDistance(Line[0], Line[1], Point{xc,yc}) < Eps{
+	if LinePointDistance(Line[0], Line[1], Point{xc, yc}) < Eps {
 		st |= LineFromArcCenter
 	}
 
@@ -620,7 +620,8 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		a0 := math.Atan2(Arc[0].Y-yc, Arc[0].X-xc)
 		a1 := math.Atan2(Arc[1].Y-yc, Arc[1].X-xc)
 		a2 := math.Atan2(Arc[2].Y-yc, Arc[2].X-xc)
-		if (a0 <= a && a <= a1) || (a1 <= a && a <= a2) {
+		if (a0 <= a && a <= a1) || (a1 <= a && a <= a2) ||
+			(a1 <= a && a <= a0) || (a2 <= a && a <= a1) {
 			pi = append(pi, r)
 		}
 	}
