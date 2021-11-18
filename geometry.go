@@ -65,6 +65,14 @@ const (
 	OverlapP1AP0B // overlapping point 1 segment A and point 0 segment B
 	OverlapP1AP1B // overlapping point 1 segment A and point 1 segment B
 
+	Arc01indentical
+	Arc12indentical
+	Arc02indentical
+	ArcIsLine
+	ArcOnePoint
+	LineFromArcCenter
+	LineOutside
+
 	// last unused type
 	endType
 )
@@ -303,6 +311,8 @@ func LinePointDistance(
 	return
 }
 
+// line parameters
+//	Ax+By+C = 0
 func line(p0, p1 Point) (A, B, C float64) {
 	var (
 		dy = p1.Y - p0.Y
@@ -383,9 +393,263 @@ func Orientation(p1, p2, p3 Point) OrientationPoints {
 	return CounterClockwisePoints
 }
 
-func ArcLineAnalisys(line [2]Point, Arc [3]Point) (
-	pi Point,
+func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
+	pi []Point,
 	st State,
-){
+) {
+	var (
+		x1 = Line[0].X
+		y1 = Line[0].Y
+
+		x2 = Line[1].X
+		y2 = Line[1].Y
+	)
+
+	for _, c := range [...]struct {
+		isTrue bool
+		ti     State
+	}{
+		{isTrue: math.Abs(x1-x2) < Eps, ti: VerticalSegmentA},
+		{isTrue: math.Abs(y1-y2) < Eps, ti: HorizontalSegmentA},
+		{isTrue: math.Abs(x1-x2) < Eps && math.Abs(y1-y2) < Eps, ti: ZeroLengthSegmentA},
+	} {
+		if c.isTrue {
+			st |= c.ti
+		}
+	}
+
+	for _, c := range [...]struct {
+		isTrue bool
+		ti     State
+	}{
+		{isTrue: math.Abs(Arc[0].X-Arc[1].X) < Eps && math.Abs(Arc[0].Y-Arc[1].Y) < Eps, ti: Arc01indentical},
+		{isTrue: math.Abs(Arc[1].X-Arc[2].X) < Eps && math.Abs(Arc[1].Y-Arc[2].Y) < Eps, ti: Arc12indentical},
+		{isTrue: math.Abs(Arc[0].X-Arc[2].X) < Eps && math.Abs(Arc[0].Y-Arc[2].Y) < Eps, ti: Arc02indentical},
+	} {
+		if c.isTrue {
+			st |= c.ti
+		}
+	}
+
+	if st.Has(Arc01indentical) || st.Has(Arc12indentical) || st.Has(Arc02indentical){
+		switch {
+		case st.Has(Arc01indentical) && st.Has(Arc12indentical):
+			st |= ArcOnePoint
+			return
+		case st.Has(Arc01indentical):
+			pi2, st2 := SegmentAnalisys(Line[0], Line[1], Arc[0], Arc[2])
+			st |= st2
+			pi = append(pi, pi2)
+		default:
+			// for all cases and st.Has(Arc12indentical)
+			pi2, st2 := SegmentAnalisys(Line[0], Line[1], Arc[0], Arc[1])
+			st |= st2
+			pi = append(pi, pi2)
+		}
+		st |= ArcIsLine
+		return
+	}
+
+	// circle function
+	//	(x-xc)^2 + (y-yc)^2 = R^2
+	// solve circle parameters
+	//	(xi-xc)^2+(yi-yc)^2 = R^2
+	//	xi^2-2*xi*xc+xc^2 + yi^2-2*yi*yc+yc^2 = R^2
+	//	xi^2+yi^2 -2*xi*xc-2*yi*yc = R^2-xc^2-yc^2
+	// between points 1 and 2:
+	//	(x1^2-x2^2) +(y1^2-y2^2) -2*xc*(x1-x2)-2*yc*(y1-y2) = 0
+	//	(x1^2-x3^2) +(y1^2-y3^2) -2*xc*(x1-x3)-2*yc*(y1-y3) = 0
+	//
+	//	2*xc*(x1-x2)+2*yc*(y1-y2) = (x1^2-x2^2) + (y1^2-y2^2)
+	//	2*xc*(x1-x3)+2*yc*(y1-y3) = (x1^2-x3^2) + (y1^2-y3^2)
+	//
+	//	2*(x1-x2)*xc + 2*(y1-y2)*yc = (x1^2-x2^2)+(y1^2-y2^2)
+	//	2*(x1-x3)*xc + 2*(y1-y3)*yc = (x1^2-x3^2)+(y1^2-y3^2)
+	//
+	// solve linear equations:
+	//	a11*xc + a12*yc = b1
+	//	a21*xc + a22*yc = b2
+	// solve:
+	//	xc = (b1 - a12*yc)*1/a11
+	//	a21*(b1-a12*yc)*1/a11 + a22*yc = b2
+	//	yc*(a22-a21/a11*a12) = b2 - a21/a11*b1
+	var xc, yc, r float64
+	{
+		var (
+			x1, x2, x3 = Arc[0].X, Arc[1].X, Arc[2].X
+			y1, y2, y3 = Arc[0].Y, Arc[1].Y, Arc[2].Y
+			a11        = 2 * (x1 - x2)
+			a12        = 2 * (y1 - y2)
+			a21        = 2 * (x1 - x3)
+			a22        = 2 * (y1 - y3)
+			b1         = (pow.E2(x1) - pow.E2(x2)) + (pow.E2(y1) - pow.E2(y2))
+			b2         = (pow.E2(x1) - pow.E2(x3)) + (pow.E2(y1) - pow.E2(y3))
+			lin        = func(a11, a12, b1, a21, a22, b2 float64) (xc, yc float64) {
+				yc = (b2 - a21/a11*b1) / (a22 - a21/a11*a12)
+				xc = (b1 - a12*yc) * 1 / a11
+				return
+			}
+		)
+		if math.Abs(a11) < Eps {
+			yc, xc = lin(a21, a11, b1, a22, a21, b2)
+		} else {
+			xc, yc = lin(a11, a12, b1, a21, a22, b2)
+		}
+		//	(xi-xc)^2+(yi-yc)^2 = R^2
+		r1 := math.Sqrt(pow.E2(x1-xc) + pow.E2(y1-yc))
+		r2 := math.Sqrt(pow.E2(x2-xc) + pow.E2(y2-yc))
+		r3 := math.Sqrt(pow.E2(x3-xc) + pow.E2(y3-yc))
+		r = (r1 + r2 + r3) / 3.0
+	}
+
+	if LinePointDistance(Line[0], Line[1], Point{xc,yc}) < Eps{
+		st |= LineFromArcCenter
+	}
+
+	// line may be horizontal, vertical, other
+	A, B, C := line(Line[0], Line[1])
+
+	// Find intersections
+	//	A*x+B*y+C = 0               :   line equations
+	//	(x-xc)^2 + (y-yc)^2 = r^2   : circle equations
+	var root []Point
+	switch {
+	case st.Has(HorizontalSegmentA):
+		// line is horizontal
+		//	A = 0
+		//
+		//	B*y+C = 0
+		//	(x-xc)^2 + (y-yc)^2 = r^2
+		//
+		//	y = -C/B
+		//	(x-xc)^2 = r^2 - (-C/B-yc)^2
+		//
+		//	x = +/- sqrt(r^2 - (-C/B-yc)^2) - xc
+		D := pow.E2(r) - pow.E2(-C/B-yc)
+		switch {
+		case D < 0:
+			// no intersection
+		case D < Eps:
+			// D == 0
+			// have one root
+			root = append(root, Point{X: -xc, Y: Line[0].Y})
+		default:
+			// 0 < D
+			root = append(root,
+				Point{X: +math.Sqrt(D) - xc, Y: Line[0].Y},
+				Point{X: -math.Sqrt(D) - xc, Y: Line[0].Y},
+			)
+		}
+
+	case st.Has(VerticalSegmentA):
+		// line is vertical
+		// B = 0
+		//
+		//	A*x+C = 0
+		//	(x-xc)^2 + (y-yc)^2 = r^2
+		//
+		//	x=-C/A
+		//	(y-yc)^2 = r^2 - (-C/A-xc)^2
+		//
+		//	y = +/- sqrt(r^2 - (-C/A-xc)^2) - yc
+		D := pow.E2(r) - pow.E2(-C/A-xc)
+		switch {
+		case D < 0:
+			// no intersection
+		case D < Eps:
+			// D == 0
+			// have one root
+			root = append(root, Point{X: Line[0].X, Y: -yc})
+		default:
+			// 0 < D
+			root = append(root,
+				Point{X: Line[0].X, Y: +math.Sqrt(D) - yc},
+				Point{X: Line[0].X, Y: -math.Sqrt(D) - yc},
+			)
+		}
+
+	default:
+		//	A*x+B*y+C = 0               :   line function
+		//	(x-xc)^2 + (y-yc)^2 = r^2   : circle function
+		//
+		// solve intersection:
+		//	x = -(B*y+C)*1/A
+		//	(-(B*y+C)*1/A-xc)^2 + (y-yc)^2 = r^2
+		//	(-(B*y+C)-A*xc)^2 + (y-yc)^2*A^2 = r^2*A^2
+		//	(-B*y-C-A*xc)^2 + (y-yc)^2*A^2 = r^2*A^2
+		//	(-B*y-(C+A*xc))^2 + (y-yc)^2*A^2 = r^2*A^2
+		//	(B*y)^2 + 2*(B*y)*(C+A*xc) + (C+A*xc)^2 + (y^2-2*y*yc+yc^2)*A^2 = r^2*A^2
+		//	y^2*(B^2 + A^2) + y*(2*B*(C+A*xc) - 2*yc*A^2) + (C+A*xc)^2 + yc^2*A^2 - r^2*A^2 = 0
+		//	    ==========      -------------------------   _______________________________
+		var (
+			a = pow.E2(B) + pow.E2(A)
+			b = 2*B*(C+A*xc) - 2*yc*pow.E2(A)
+			c = pow.E2(C+A*xc) + pow.E2(yc*A) - pow.E2(r*A)
+			D = b*b - 4.0*a*c
+		)
+
+		// A and B of line parameters is not zero, so
+		// value a is not a zero and more then zero.
+		switch {
+		case D < 0:
+			// no intersection
+		case D < Eps:
+			// D == 0
+			// have one root
+			y := -b / (2.0 * a)
+			x := -(B*y + C) * 1 / A
+			root = append(root, Point{X: x, Y: y})
+		default:
+			// 0 < D
+			{
+				y := (-b + math.Sqrt(D)) / (2.0 * a)
+				x := -(B*y + C) * 1 / A
+				root = append(root, Point{X: x, Y: y})
+			}
+			{
+				y := (-b - math.Sqrt(D)) / (2.0 * a)
+				x := -(B*y + C) * 1 / A
+				root = append(root, Point{X: x, Y: y})
+			}
+		}
+	}
+
+	// is root on arc?
+	for _, r := range root {
+		a := math.Atan2(r.Y-yc, r.X-xc)
+		a0 := math.Atan2(Arc[0].Y-yc, Arc[0].X-xc)
+		a1 := math.Atan2(Arc[1].Y-yc, Arc[1].X-xc)
+		a2 := math.Atan2(Arc[2].Y-yc, Arc[2].X-xc)
+		if (a0 <= a && a <= a1) || (a1 <= a && a <= a2) {
+			pi = append(pi, r)
+		}
+	}
+
+	// is intersect point on line?
+	for _, r := range pi {
+		for _, c := range [...]struct {
+			isTrue bool
+			ti     State
+		}{
+			{isTrue: math.Abs(Line[0].X-r.X) < Eps && math.Abs(Line[0].Y-r.Y) < Eps,
+				ti: OnPoint0SegmentA},
+			{isTrue: math.Abs(Line[1].X-r.X) < Eps && math.Abs(Line[1].Y-r.Y) < Eps,
+				ti: OnPoint1SegmentA},
+		} {
+			if c.isTrue {
+				st |= c.ti
+			}
+		}
+	}
+
+	if 0 < len(pi) {
+		if !st.Has(OnPoint0SegmentA) && !st.Has(OnPoint1SegmentA) {
+			st |= OnSegmentA
+		}
+		st |= OnSegmentB
+	} else {
+		st |= LineOutside
+	}
+
 	return
 }

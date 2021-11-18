@@ -4,10 +4,69 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/Konstantin8105/cs"
 )
+
+func getStates() (names []string) {
+	out, err := exec.Command("go", "doc", "-all", "State").CombinedOutput()
+	if err != nil {
+		panic(err)
+	}
+	lines := strings.Split(string(out), "\n")
+	for i := range lines {
+		if strings.Contains(lines[i], "const (") {
+			lines = lines[i+1:]
+			break
+		}
+	}
+	for i := range lines {
+		if strings.Contains(lines[i], ")") {
+			lines = lines[:i]
+			break
+		}
+	}
+	for i := range lines {
+		lines[i] = strings.TrimSpace(lines[i])
+		index := strings.Index(lines[i], "//")
+		if index < 0 {
+			if 0 < len(lines[i]) {
+				names = append(names, lines[i])
+			}
+			continue
+		}
+		lines[i] = lines[i][:index]
+		if 0 < len(lines[i]) {
+			names = append(names, lines[i])
+		}
+	}
+	return
+}
+
+func view(s State, names []string) string {
+	var out string
+	var size int
+	for i := 0; i < 64; i++ {
+		if endType == 1<<i {
+			size = i
+			break
+		}
+	}
+	for i := 1; i < size; i++ {
+		si := State(1 << i)
+		out += fmt.Sprintf("%2d\t%25s\t", i, names[i-1])
+		if s.Has(si) {
+			out += "found"
+		} else {
+			out += "not found"
+		}
+		out += "\n"
+	}
+	return out
+}
 
 type TestCase struct {
 	name string
@@ -66,6 +125,13 @@ func Example() {
 	// 20	         100000000000000000000	not found
 	// 21	        1000000000000000000000	not found
 	// 22	       10000000000000000000000	not found
+	// 23	      100000000000000000000000	not found
+	// 24	     1000000000000000000000000	not found
+	// 25	    10000000000000000000000000	not found
+	// 26	   100000000000000000000000000	not found
+	// 27	  1000000000000000000000000000	not found
+	// 28	 10000000000000000000000000000	not found
+// 29	100000000000000000000000000000	not found
 }
 
 var tcs = []TestCase{
@@ -476,6 +542,7 @@ func init() {
 }
 
 func Test(t *testing.T) {
+	names := getStates()
 	var types [64]int
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -488,11 +555,9 @@ func Test(t *testing.T) {
 				t.Logf("Expected : %30b", tc.it)
 				t.Logf("Value    : %30b", it)
 				t.Logf("Diff1    : %30b", tc.it&^it)
-				t.Logf("%s", tc.it&^it)
+				t.Logf("%s", view(tc.it&^it, names))
 				t.Logf("Diff2    : %30b", it&^tc.it)
-				t.Logf("%s", it&^tc.it)
-			} else {
-				t.Logf("Value    : %30b", it)
+				t.Logf("%s", view(it&^tc.it, names))
 			}
 			// store
 			for i := 0; i < len(types); i++ {
@@ -512,6 +577,80 @@ func Test(t *testing.T) {
 		})
 	}
 
+	tcs := []struct {
+		Line [2]Point
+		Arc  [3]Point
+
+		pi []Point
+		it State
+	}{
+		{ // 0
+			Line: [2]Point{{-2, 0}, {2, 0}},
+			Arc:  [3]Point{{0, -1}, {1, 0}, {0, 1}},
+
+			pi: []Point{{1, 0}},
+			it: HorizontalSegmentA | OnSegmentA | OnSegmentB | LineFromArcCenter,
+		},
+		{ // 1
+			Line: [2]Point{{-2, 4}, {2, 4}},
+			Arc:  [3]Point{{0, -1}, {1, 0}, {0, 1}},
+
+			pi: []Point{},
+			it: HorizontalSegmentA | LineOutside,
+		},
+		{ // 2
+			Line: [2]Point{{-2, 4}, {2, 4}},
+			Arc:  [3]Point{{0, -1}, {0, 0}, {0, 1}},
+
+			pi: []Point{},
+ 			it: HorizontalSegmentA | LineOutside,
+			// ArcOneLine | OnSegmentA | OnRay11SegmentB | VerticalSegmentB,
+		},
+		{ // 3
+			Line: [2]Point{{-2, 4}, {2, 4}},
+			Arc:  [3]Point{{1, 0}, {1, 0}, {0, 1}},
+
+			pi: []Point{{-3,4}},
+			it: OnRay00SegmentA | OnRay11SegmentB | HorizontalSegmentA |
+			 ArcIsLine | Arc01indentical,
+		},
+	}
+	for i, tc := range tcs {
+		t.Run(fmt.Sprintf("ARC%02d", i), func(t *testing.T) {
+			pi, it := ArcLineAnalisys(tcs[i].Line, tcs[i].Arc)
+			if it != tc.it {
+				t.Error("Not same types")
+				t.Logf("Expected : %30b", tc.it)
+				t.Logf("Value    : %30b", it)
+				t.Logf("Diff1    : %30b", tc.it&^it)
+				t.Logf("%s", view(tc.it&^it, names))
+				t.Logf("Diff2    : %30b", it&^tc.it)
+				t.Logf("%s", view(it&^tc.it, names))
+			}
+			// store
+			for i := 0; i < len(types); i++ {
+				if it&State(1<<i) != 0 {
+					types[i]++
+				}
+			}
+			if len(pi) != len(tcs[i].pi) {
+				t.Errorf("not valid sizes %d != %d", len(pi), len(tcs[i].pi))
+			} else {
+				for i := range pi {
+					if eps := 1e-6; eps < Distance(pi[i], tc.pi[i]) &&
+						math.Abs(pi[i].X) > eps &&
+						math.Abs(pi[i].Y) > eps {
+						t.Errorf("2 point is too far: %#v != %#v\ndistance = %.6e",
+							pi[i],
+							tc.pi[i],
+							Distance(pi[i], tc.pi[i]),
+						)
+					}
+				}
+			}
+		})
+	}
+
 	sum := 0
 	amountFail := 0
 	for i := range types {
@@ -522,11 +661,11 @@ func Test(t *testing.T) {
 			break
 		}
 		if types[i] > 0 {
-			t.Logf("%2d : %40b : %3d", i, State(1<<i), types[i])
+			t.Logf("%2d : %30s : %3d", i, names[i-1], types[i])
 		} else {
 			t.Errorf("need checking for type: %2d", i)
 			amountFail++
-			t.Logf("%2d : %40b : %3d fail", i, State(1<<i), types[i])
+			t.Logf("%2d : %30s : %3d fail", i, names[i-1], types[i])
 		}
 		sum += types[i]
 	}
