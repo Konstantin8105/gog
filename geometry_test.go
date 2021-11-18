@@ -666,6 +666,20 @@ func Test(t *testing.T) {
 			pi: []Point{},
 			it: VerticalSegmentA | LineOutside,
 		},
+		{ // 11
+			Line: [2]Point{{1, 1}, {1, -1}},
+			Arc:  [3]Point{{0, 0}, {1, 1}, {0, 2}},
+
+			pi: []Point{{1, 1}},
+			it: VerticalSegmentA | OnPoint0SegmentA| OnSegmentB,
+		},
+		{ // 12
+			Line: [2]Point{{-1, 1}, {3, 1}},
+			Arc:  [3]Point{{1, 0}, {2, 1}, {1, 2}},
+
+			pi: []Point{{2, 1}},
+			it: HorizontalSegmentA | OnSegmentA | OnSegmentB | LineFromArcCenter,
+		},
 	}
 	for i, tc := range tcs {
 		t.Run(fmt.Sprintf("ARC%02d", i), func(t *testing.T) {

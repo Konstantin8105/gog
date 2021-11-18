@@ -524,7 +524,7 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		//	y = -C/B
 		//	(x-xc)^2 = r^2 - (-C/B-yc)^2
 		//
-		//	x = +/- sqrt(r^2 - (-C/B-yc)^2) - xc
+		//	x = +/- sqrt(r^2 - (-C/B-yc)^2) + xc
 		D := pow.E2(r) - pow.E2(-C/B-yc)
 		switch {
 		case D < 0:
@@ -532,12 +532,12 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		case D < Eps:
 			// D == 0
 			// have one root
-			root = append(root, Point{X: -xc, Y: Line[0].Y})
+			root = append(root, Point{X: +xc, Y: Line[0].Y})
 		default:
 			// 0 < D
 			root = append(root,
-				Point{X: +math.Sqrt(D) - xc, Y: Line[0].Y},
-				Point{X: -math.Sqrt(D) - xc, Y: Line[0].Y},
+				Point{X: +math.Sqrt(D) + xc, Y: Line[0].Y},
+				Point{X: -math.Sqrt(D) + xc, Y: Line[0].Y},
 			)
 		}
 
@@ -559,12 +559,12 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		case D < Eps:
 			// D == 0
 			// have one root
-			root = append(root, Point{X: Line[0].X, Y: -yc})
+			root = append(root, Point{X: Line[0].X, Y: +yc})
 		default:
 			// 0 < D
 			root = append(root,
-				Point{X: Line[0].X, Y: +math.Sqrt(D) - yc},
-				Point{X: Line[0].X, Y: -math.Sqrt(D) - yc},
+				Point{X: Line[0].X, Y: +math.Sqrt(D) + yc},
+				Point{X: Line[0].X, Y: -math.Sqrt(D) + yc},
 			)
 		}
 
