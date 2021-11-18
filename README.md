@@ -2,7 +2,6 @@
 golang geometry library between point and segments
 ```
 
-
 package gog // import "github.com/Konstantin8105/gog"
 
 
@@ -18,13 +17,20 @@ VARIABLES
 
 var (
 	// FindRayIntersection is global variable for switch off finding
-	// intersection point on segments rays
-	FindRayIntersection = true
+	// intersection point on segments ray
+	FindRayIntersection bool = true
+
+	// Eps is epsilon - precision of intersection
+	Eps float64 = 1e-6
 )
 
 FUNCTIONS
 
-func Check(pps *[]Point) error
+func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
+	pi []Point,
+	st State,
+)
+func Check(pps ...Point) error
     Check - check input data
 
 func Distance(p0, p1 Point) float64
@@ -150,6 +156,13 @@ const (
 	OverlapP1AP0B // overlapping point 1 segment A and point 0 segment B
 	OverlapP1AP1B // overlapping point 1 segment A and point 1 segment B
 
+	Arc01indentical
+	Arc12indentical
+	Arc02indentical
+	ArcIsLine
+	ArcIsPoint
+	LineFromArcCenter
+	LineOutside
 )
 func (s State) Has(si State) bool
     Has is mean s-State has si-State
