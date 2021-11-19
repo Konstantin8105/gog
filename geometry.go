@@ -159,7 +159,7 @@ func SegmentAnalisys(
 	pa0, pa1 Point,
 	pb0, pb1 Point,
 ) (
-	pi Point,
+	pi []Point,
 	st State,
 ) {
 	// check input data of points is outside of that function
@@ -200,9 +200,9 @@ func SegmentAnalisys(
 
 	switch {
 	case st.Has(OverlapP0AP0B) || st.Has(OverlapP0AP1B):
-		pi = pa0
+		pi = []Point{pa0}
 	case st.Has(OverlapP1AP0B) || st.Has(OverlapP1AP1B):
-		pi = pa1
+		pi = []Point{pa1}
 	}
 
 	// if zero, then vertical/horizontal
@@ -219,18 +219,21 @@ func SegmentAnalisys(
 	// intersection point
 	A12 := x1*y2 - y1*x2
 	A34 := x3*y4 - y3*x4
-	pi.X = (A12*(x3-x4) - (x1-x2)*A34) / B
-	pi.Y = (A12*(y3-y4) - (y1-y2)*A34) / B
+	{
+		x := (A12*(x3-x4) - (x1-x2)*A34) / B
+		y := (A12*(y3-y4) - (y1-y2)*A34) / B
+		pi = []Point{Point{X: x, Y: y}}
+	}
 
 	// is intersect point on line?
 	for _, c := range [...]struct {
 		isTrue bool
 		ti     State
 	}{
-		{isTrue: math.Abs(x1-pi.X) < Eps && math.Abs(y1-pi.Y) < Eps, ti: OnPoint0SegmentA},
-		{isTrue: math.Abs(x2-pi.X) < Eps && math.Abs(y2-pi.Y) < Eps, ti: OnPoint1SegmentA},
-		{isTrue: math.Abs(x3-pi.X) < Eps && math.Abs(y3-pi.Y) < Eps, ti: OnPoint0SegmentB},
-		{isTrue: math.Abs(x4-pi.X) < Eps && math.Abs(y4-pi.Y) < Eps, ti: OnPoint1SegmentB},
+		{isTrue: math.Abs(x1-pi[0].X) < Eps && math.Abs(y1-pi[0].Y) < Eps, ti: OnPoint0SegmentA},
+		{isTrue: math.Abs(x2-pi[0].X) < Eps && math.Abs(y2-pi[0].Y) < Eps, ti: OnPoint1SegmentA},
+		{isTrue: math.Abs(x3-pi[0].X) < Eps && math.Abs(y3-pi[0].Y) < Eps, ti: OnPoint0SegmentB},
+		{isTrue: math.Abs(x4-pi[0].X) < Eps && math.Abs(y4-pi[0].Y) < Eps, ti: OnPoint1SegmentB},
 	} {
 		if c.isTrue {
 			st |= c.ti
@@ -243,14 +246,14 @@ func SegmentAnalisys(
 	}{
 		{
 			isTrue: st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) &&
-				math.Min(x1, x2)-Eps <= pi.X && pi.X <= math.Max(x1, x2)+Eps &&
-				math.Min(y1, y2)-Eps <= pi.Y && pi.Y <= math.Max(y1, y2)+Eps,
+				math.Min(x1, x2)-Eps <= pi[0].X && pi[0].X <= math.Max(x1, x2)+Eps &&
+				math.Min(y1, y2)-Eps <= pi[0].Y && pi[0].Y <= math.Max(y1, y2)+Eps,
 			ti: OnSegmentA,
 		},
 		{
 			isTrue: st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) &&
-				math.Min(x3, x4)-Eps <= pi.X && pi.X <= math.Max(x3, x4)+Eps &&
-				math.Min(y3, y4)-Eps <= pi.Y && pi.Y <= math.Max(y3, y4)+Eps,
+				math.Min(x3, x4)-Eps <= pi[0].X && pi[0].X <= math.Max(x3, x4)+Eps &&
+				math.Min(y3, y4)-Eps <= pi[0].Y && pi[0].Y <= math.Max(y3, y4)+Eps,
 			ti: OnSegmentB,
 		},
 	} {
@@ -262,8 +265,8 @@ func SegmentAnalisys(
 	// is intersect point on ray?
 	if FindRayIntersection {
 		if st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) && st.Not(OnSegmentA) {
-			disB0P0p := Distance(pa0, pi)
-			disB0P1p := Distance(pa1, pi)
+			disB0P0p := Distance(pa0, pi[0])
+			disB0P1p := Distance(pa1, pi[0])
 			if disB0P0p < disB0P1p {
 				st |= OnRay00SegmentA
 			} else {
@@ -271,8 +274,8 @@ func SegmentAnalisys(
 			}
 		}
 		if st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) && st.Not(OnSegmentB) {
-			disB1P0p := Distance(pb0, pi)
-			disB1P1p := Distance(pb1, pi)
+			disB1P0p := Distance(pb0, pi[0])
+			disB1P1p := Distance(pb1, pi[0])
 			if disB1P0p < disB1P1p {
 				st |= OnRay00SegmentB
 			} else {
@@ -363,7 +366,7 @@ func MirrorLine(
 		y1      = sp1.Y
 		common  = -2.0 * (A*x1 + B*y1 + C) / (pow.E2(A) + pow.E2(B))
 	)
-	ml0 = pi
+	ml0 = pi[0]
 	ml1.X = A*common + x1
 	ml1.Y = B*common + y1
 	if Distance(ml0, ml1) == 0.0 {
@@ -393,16 +396,16 @@ func Orientation(p1, p2, p3 Point) OrientationPoints {
 	return CounterClockwisePoints
 }
 
-func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
+func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	st State,
 ) {
 	var (
-		x1 = Line[0].X
-		y1 = Line[0].Y
+		x1 = Line0.X
+		y1 = Line0.Y
 
-		x2 = Line[1].X
-		y2 = Line[1].Y
+		x2 = Line1.X
+		y2 = Line1.Y
 	)
 
 	for _, c := range [...]struct {
@@ -422,9 +425,9 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		isTrue bool
 		ti     State
 	}{
-		{isTrue: math.Abs(Arc[0].X-Arc[1].X) < Eps && math.Abs(Arc[0].Y-Arc[1].Y) < Eps, ti: Arc01indentical},
-		{isTrue: math.Abs(Arc[1].X-Arc[2].X) < Eps && math.Abs(Arc[1].Y-Arc[2].Y) < Eps, ti: Arc12indentical},
-		{isTrue: math.Abs(Arc[0].X-Arc[2].X) < Eps && math.Abs(Arc[0].Y-Arc[2].Y) < Eps, ti: Arc02indentical},
+		{isTrue: math.Abs(Arc0.X-Arc1.X) < Eps && math.Abs(Arc0.Y-Arc1.Y) < Eps, ti: Arc01indentical},
+		{isTrue: math.Abs(Arc1.X-Arc2.X) < Eps && math.Abs(Arc1.Y-Arc2.Y) < Eps, ti: Arc12indentical},
+		{isTrue: math.Abs(Arc0.X-Arc2.X) < Eps && math.Abs(Arc0.Y-Arc2.Y) < Eps, ti: Arc02indentical},
 	} {
 		if c.isTrue {
 			st |= c.ti
@@ -437,14 +440,14 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 			st |= ArcIsPoint
 			return
 		case st.Has(Arc01indentical):
-			pi2, st2 := SegmentAnalisys(Line[0], Line[1], Arc[0], Arc[2])
+			pi2, st2 := SegmentAnalisys(Line0, Line1, Arc0, Arc2)
 			st |= st2
-			pi = append(pi, pi2)
+			pi = append(pi, pi2...)
 		default:
 			// for all cases and st.Has(Arc12indentical)
-			pi2, st2 := SegmentAnalisys(Line[0], Line[1], Arc[0], Arc[1])
+			pi2, st2 := SegmentAnalisys(Line0, Line1, Arc0, Arc1)
 			st |= st2
-			pi = append(pi, pi2)
+			pi = append(pi, pi2...)
 		}
 		st |= ArcIsLine
 		return
@@ -476,8 +479,8 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 	var xc, yc, r float64
 	{
 		var (
-			x1, x2, x3 = Arc[0].X, Arc[1].X, Arc[2].X
-			y1, y2, y3 = Arc[0].Y, Arc[1].Y, Arc[2].Y
+			x1, x2, x3 = Arc0.X, Arc1.X, Arc2.X
+			y1, y2, y3 = Arc0.Y, Arc1.Y, Arc2.Y
 			a11        = 2 * (x1 - x2)
 			a12        = 2 * (y1 - y2)
 			a21        = 2 * (x1 - x3)
@@ -502,12 +505,12 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		r = (r1 + r2 + r3) / 3.0
 	}
 
-	if LinePointDistance(Line[0], Line[1], Point{xc, yc}) < Eps {
+	if LinePointDistance(Line0, Line1, Point{xc, yc}) < Eps {
 		st |= LineFromArcCenter
 	}
 
 	// line may be horizontal, vertical, other
-	A, B, C := line(Line[0], Line[1])
+	A, B, C := line(Line0, Line1)
 
 	// Find intersections
 	//	A*x+B*y+C = 0               :   line equations
@@ -527,17 +530,17 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		//	x = +/- sqrt(r^2 - (-C/B-yc)^2) + xc
 		D := pow.E2(r) - pow.E2(-C/B-yc)
 		switch {
-		case D < 0:
+		case D < -Eps:
 			// no intersection
 		case D < Eps:
 			// D == 0
 			// have one root
-			root = append(root, Point{X: +xc, Y: Line[0].Y})
+			root = append(root, Point{X: +xc, Y: Line0.Y})
 		default:
 			// 0 < D
 			root = append(root,
-				Point{X: +math.Sqrt(D) + xc, Y: Line[0].Y},
-				Point{X: -math.Sqrt(D) + xc, Y: Line[0].Y},
+				Point{X: +math.Sqrt(D) + xc, Y: Line0.Y},
+				Point{X: -math.Sqrt(D) + xc, Y: Line0.Y},
 			)
 		}
 
@@ -554,17 +557,17 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		//	y = +/- sqrt(r^2 - (-C/A-xc)^2) - yc
 		D := pow.E2(r) - pow.E2(-C/A-xc)
 		switch {
-		case D < 0:
+		case D < -Eps:
 			// no intersection
 		case D < Eps:
 			// D == 0
 			// have one root
-			root = append(root, Point{X: Line[0].X, Y: +yc})
+			root = append(root, Point{X: Line0.X, Y: +yc})
 		default:
 			// 0 < D
 			root = append(root,
-				Point{X: Line[0].X, Y: +math.Sqrt(D) + yc},
-				Point{X: Line[0].X, Y: -math.Sqrt(D) + yc},
+				Point{X: Line0.X, Y: +math.Sqrt(D) + yc},
+				Point{X: Line0.X, Y: -math.Sqrt(D) + yc},
 			)
 		}
 
@@ -591,7 +594,7 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 		// A and B of line parameters is not zero, so
 		// value a is not a zero and more then zero.
 		switch {
-		case D < 0:
+		case D < -Eps:
 			// no intersection
 		case D < Eps:
 			// D == 0
@@ -617,11 +620,17 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 	// is root on arc?
 	for _, r := range root {
 		a := math.Atan2(r.Y-yc, r.X-xc)
-		a0 := math.Atan2(Arc[0].Y-yc, Arc[0].X-xc)
-		a1 := math.Atan2(Arc[1].Y-yc, Arc[1].X-xc)
-		a2 := math.Atan2(Arc[2].Y-yc, Arc[2].X-xc)
-		if (a0 <= a && a <= a1) || (a1 <= a && a <= a2) ||
-			(a1 <= a && a <= a0) || (a2 <= a && a <= a1) {
+		b := []float64{
+			math.Atan2(Arc0.Y-yc, Arc0.X-xc),
+			math.Atan2(Arc1.Y-yc, Arc1.X-xc),
+			math.Atan2(Arc2.Y-yc, Arc2.X-xc),
+		}
+		if Orientation(Arc0, Arc1, Arc2) == ClockwisePoints {
+			// ClockwisePoints
+			b[0], b[2] = b[2], b[0]
+		}
+		// CounterClockwisePoints
+		if AngleBetween(b[0], a, b[2]) {
 			pi = append(pi, r)
 		}
 	}
@@ -632,10 +641,10 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 			isTrue bool
 			ti     State
 		}{
-			{isTrue: math.Abs(Line[0].X-r.X) < Eps && math.Abs(Line[0].Y-r.Y) < Eps,
-				ti: OnPoint0SegmentA},
-			{isTrue: math.Abs(Line[1].X-r.X) < Eps && math.Abs(Line[1].Y-r.Y) < Eps,
-				ti: OnPoint1SegmentA},
+			{isTrue: math.Abs(Line0.X-r.X) < Eps && math.Abs(Line0.Y-r.Y) < Eps, ti: OnPoint0SegmentA},
+			{isTrue: math.Abs(Line1.X-r.X) < Eps && math.Abs(Line1.Y-r.Y) < Eps, ti: OnPoint1SegmentA},
+			{isTrue: math.Abs(Arc0.X-r.X) < Eps && math.Abs(Arc0.Y-r.Y) < Eps, ti: OnPoint0SegmentB},
+			{isTrue: math.Abs(Arc2.X-r.X) < Eps && math.Abs(Arc2.Y-r.Y) < Eps, ti: OnPoint1SegmentB},
 		} {
 			if c.isTrue {
 				st |= c.ti
@@ -653,4 +662,20 @@ func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
 	}
 
 	return
+}
+
+func AngleBetween(from, a, to float64) (res bool) {
+	if from < a+Eps && a < to+Eps {
+		// from <= a && a <= to
+		return true
+	}
+	if to < from+Eps && a < to+Eps && from < a+2*math.Pi+Eps {
+		// to < from && a <= to && from < a+2*math.Pi
+		return true
+	}
+	if to < from+Eps && from < a+Eps && a < to+2*math.Pi+Eps {
+		// to < from && from <= a && a < to+2*math.Pi
+		return true
+	}
+	return false
 }
