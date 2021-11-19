@@ -671,6 +671,8 @@ func init() {
 					tc.pi[i].X += mx
 					tc.pi[i].Y += my
 				}
+				tc.bp.X += mx
+				tc.bp.Y += my
 				tc.name += fmt.Sprintf("_Move%+5.3f%+5.3f_", mx, my)
 				tcs = append(tcs, tc)
 			}
@@ -690,8 +692,8 @@ func init() {
 			tc.pi[i].X *= -1.0
 			tc.pi[i].Y *= -1.0
 		}
-		// 		tc.bp.X *= -1.0
-		// 		tc.bp.Y *= -1.0
+		tc.bp.X *= -1.0
+		tc.bp.Y *= -1.0
 		tc.name += "_Rotate"
 		tcs = append(tcs, tc)
 	}
