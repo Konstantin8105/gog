@@ -26,7 +26,10 @@ var (
 
 FUNCTIONS
 
-func ArcLineAnalisys(Line [2]Point, Arc [3]Point) (
+func AngleBetween(from, a, to float64) (res bool)
+    AngleBetween return true for angle case from <= a <= to
+
+func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	st State,
 )
@@ -60,7 +63,7 @@ func SegmentAnalisys(
 	pa0, pa1 Point,
 	pb0, pb1 Point,
 ) (
-	pi Point,
+	pi []Point,
 	st State,
 )
     SegmentAnalisys return analisys of two segments
@@ -156,13 +159,14 @@ const (
 	OverlapP1AP0B // overlapping point 1 segment A and point 0 segment B
 	OverlapP1AP1B // overlapping point 1 segment A and point 1 segment B
 
-	Arc01indentical
-	Arc12indentical
-	Arc02indentical
-	ArcIsLine
-	ArcIsPoint
-	LineFromArcCenter
-	LineOutside
+	Arc01indentical   // arc points 0 and 1 zero length
+	Arc12indentical   // arc points 1 and 2 zero length
+	Arc02indentical   // arc points 0 and 2 zero length
+	ArcIsLine         // wrong arc is line
+	ArcIsPoint        // wrong arc is point
+	LineFromArcCenter // line intersect center of arc
+	LineOutside       // line is outside of arc
+
 )
 func (s State) Has(si State) bool
     Has is mean s-State has si-State

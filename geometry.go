@@ -65,13 +65,13 @@ const (
 	OverlapP1AP0B // overlapping point 1 segment A and point 0 segment B
 	OverlapP1AP1B // overlapping point 1 segment A and point 1 segment B
 
-	Arc01indentical
-	Arc12indentical
-	Arc02indentical
-	ArcIsLine
-	ArcIsPoint
-	LineFromArcCenter
-	LineOutside
+	Arc01indentical   // arc points 0 and 1 zero length
+	Arc12indentical   // arc points 1 and 2 zero length
+	Arc02indentical   // arc points 0 and 2 zero length
+	ArcIsLine         // wrong arc is line
+	ArcIsPoint        // wrong arc is point
+	LineFromArcCenter // line intersect center of arc
+	LineOutside       // line is outside of arc
 
 	// last unused type
 	endType
@@ -664,6 +664,7 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	return
 }
 
+// AngleBetween return true for angle case from <= a <= to
 func AngleBetween(from, a, to float64) (res bool) {
 	if from < a+Eps && a < to+Eps {
 		// from <= a && a <= to
