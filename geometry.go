@@ -637,6 +637,7 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	return
 }
 
+// ArcSplit return points of 2 arcs
 func ArcSplit(Arc0, Arc1, Arc2 Point) (res [2][3]Point, err error) {
 	for _, c := range [...]struct {
 		isTrue bool

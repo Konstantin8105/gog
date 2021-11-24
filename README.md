@@ -33,6 +33,9 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	st State,
 )
+func ArcSplit(Arc0, Arc1, Arc2 Point) (res [2][3]Point, err error)
+    ArcSplit return points of 2 arcs
+
 func Check(pps ...Point) error
     Check - check input data
 
