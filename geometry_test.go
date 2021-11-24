@@ -973,3 +973,26 @@ func TestAngleBetween(t *testing.T) {
 		})
 	}
 }
+
+func ExampleArcSplit() {
+	res, err := ArcSplit(
+		Point{X: -2, Y: 0},
+		Point{X: 0, Y: +2},
+		Point{X: +2, Y: 0},
+	)
+	if err != nil {
+		panic(err)
+	}
+	for i := range res {
+		for j := range res[i] {
+			fmt.Fprintf(os.Stdout, "[%02d,%02d] = %+.5f\n", i, j, res[i][j])
+		}
+	}
+	// Output:
+	// [00,00] = {-2.00000 +0.00000}
+	// [00,01] = {+1.41421 -1.41421}
+	// [00,02] = {+2.00000 +0.00000}
+	// [01,00] = {+2.00000 +0.00000}
+	// [01,01] = {+1.41421 +1.41421}
+	// [01,02] = {+2.00000 +0.00000}
+}

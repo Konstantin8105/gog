@@ -637,6 +637,48 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	return
 }
 
+func ArcSplit(Arc0, Arc1, Arc2 Point) (res [2][3]Point, err error) {
+	for _, c := range [...]struct {
+		isTrue bool
+	}{
+		{isTrue: math.Abs(Arc0.X-Arc1.X) < Eps && math.Abs(Arc0.Y-Arc1.Y) < Eps},
+		{isTrue: math.Abs(Arc1.X-Arc2.X) < Eps && math.Abs(Arc1.Y-Arc2.Y) < Eps},
+		{isTrue: math.Abs(Arc0.X-Arc2.X) < Eps && math.Abs(Arc0.Y-Arc2.Y) < Eps},
+	} {
+		if c.isTrue {
+			err = fmt.Errorf("invalid points of arc")
+			return
+		}
+	}
+
+	// parameter of arc
+	xc, yc, r := arcProperty(Arc0, Arc1, Arc2)
+
+	// calculate middle points
+	ps := []Point{}
+	b := []float64{
+		math.Atan2(Arc0.Y-yc, Arc0.X-xc),
+		math.Atan2(Arc2.Y-yc, Arc2.X-xc),
+	}
+	for _, f := range []float64{0.25, 0.5, 0.75} {
+		angle := b[0] + f*(b[1]-b[0])
+		ps = append(ps, Point{
+			X: xc + r*math.Sin(angle),
+			Y: yc + r*math.Cos(angle),
+		})
+	}
+
+	res[0][0] = Arc0
+	res[0][1] = ps[0]
+	res[0][2] = ps[1]
+
+	res[1][0] = ps[1]
+	res[1][1] = ps[2]
+	res[1][2] = Arc2
+
+	return
+}
+
 func arcProperty(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	var (
 		x1, x2, x3 = Arc0.X, Arc1.X, Arc2.X
