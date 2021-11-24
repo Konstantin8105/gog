@@ -476,34 +476,7 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	//	xc = (b1 - a12*yc)*1/a11
 	//	a21*(b1-a12*yc)*1/a11 + a22*yc = b2
 	//	yc*(a22-a21/a11*a12) = b2 - a21/a11*b1
-	var xc, yc, r float64
-	{
-		var (
-			x1, x2, x3 = Arc0.X, Arc1.X, Arc2.X
-			y1, y2, y3 = Arc0.Y, Arc1.Y, Arc2.Y
-			a11        = 2 * (x1 - x2)
-			a12        = 2 * (y1 - y2)
-			a21        = 2 * (x1 - x3)
-			a22        = 2 * (y1 - y3)
-			b1         = (pow.E2(x1) - pow.E2(x2)) + (pow.E2(y1) - pow.E2(y2))
-			b2         = (pow.E2(x1) - pow.E2(x3)) + (pow.E2(y1) - pow.E2(y3))
-			lin        = func(a11, a12, b1, a21, a22, b2 float64) (xc, yc float64) {
-				yc = (b2 - a21/a11*b1) / (a22 - a21/a11*a12)
-				xc = (b1 - a12*yc) * 1 / a11
-				return
-			}
-		)
-		if math.Abs(a11) < Eps {
-			yc, xc = lin(a21, a11, b1, a22, a21, b2)
-		} else {
-			xc, yc = lin(a11, a12, b1, a21, a22, b2)
-		}
-		//	(xi-xc)^2+(yi-yc)^2 = R^2
-		r1 := math.Sqrt(pow.E2(x1-xc) + pow.E2(y1-yc))
-		r2 := math.Sqrt(pow.E2(x2-xc) + pow.E2(y2-yc))
-		r3 := math.Sqrt(pow.E2(x3-xc) + pow.E2(y3-yc))
-		r = (r1 + r2 + r3) / 3.0
-	}
+	xc, yc, r := arcProperty(Arc0, Arc1, Arc2)
 
 	if LinePointDistance(Line0, Line1, Point{xc, yc}) < Eps {
 		st |= LineFromArcCenter
@@ -661,6 +634,35 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 		st |= LineOutside
 	}
 
+	return
+}
+
+func arcProperty(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
+	var (
+		x1, x2, x3 = Arc0.X, Arc1.X, Arc2.X
+		y1, y2, y3 = Arc0.Y, Arc1.Y, Arc2.Y
+		a11        = 2 * (x1 - x2)
+		a12        = 2 * (y1 - y2)
+		a21        = 2 * (x1 - x3)
+		a22        = 2 * (y1 - y3)
+		b1         = (pow.E2(x1) - pow.E2(x2)) + (pow.E2(y1) - pow.E2(y2))
+		b2         = (pow.E2(x1) - pow.E2(x3)) + (pow.E2(y1) - pow.E2(y3))
+		lin        = func(a11, a12, b1, a21, a22, b2 float64) (xc, yc float64) {
+			yc = (b2 - a21/a11*b1) / (a22 - a21/a11*a12)
+			xc = (b1 - a12*yc) * 1 / a11
+			return
+		}
+	)
+	if math.Abs(a11) < Eps {
+		yc, xc = lin(a21, a11, b1, a22, a21, b2)
+	} else {
+		xc, yc = lin(a11, a12, b1, a21, a22, b2)
+	}
+	//	(xi-xc)^2+(yi-yc)^2 = R^2
+	r1 := math.Sqrt(pow.E2(x1-xc) + pow.E2(y1-yc))
+	r2 := math.Sqrt(pow.E2(x2-xc) + pow.E2(y2-yc))
+	r3 := math.Sqrt(pow.E2(x3-xc) + pow.E2(y3-yc))
+	r = (r1 + r2 + r3) / 3.0
 	return
 }
 
