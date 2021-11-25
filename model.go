@@ -23,17 +23,21 @@ func (m *Model) AddPoint(p Point) (index int) {
 
 func (m *Model) AddLine(start, end Point) {
 	// add points
-	st := m.AddPoint(start)
-	en := m.AddPoint(end)
+	var (
+		st = m.AddPoint(start)
+		en = m.AddPoint(end)
+	)
 	// add line
 	m.Lines = append(m.Lines, [2]int{st, en})
 }
 
 func (m *Model) AddArc(start, middle, end Point) {
 	// add points
-	st := m.AddPoint(start)
-	mi := m.AddPoint(middle)
-	en := m.AddPoint(end)
+	var (
+		st = m.AddPoint(start)
+		mi = m.AddPoint(middle)
+		en = m.AddPoint(end)
+	)
 	// add arc
 	m.Arcs = append(m.Arcs, [3]int{st, mi, en})
 }
