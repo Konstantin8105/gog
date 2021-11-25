@@ -65,13 +65,10 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int) {
 
 // Intersection change model with finding all model intersections
 func (m *Model) Intersection() {
+	// value `ai` is amount of intersections
+
+	// find intersections
 	for _, f := range []func() int{
-		// point-line intersection
-		// TODO
-
-		// point-arc intersection
-		// TODO
-
 		// line-line intersection
 		func() (ai int) {
 			intersect := make([]bool, len(m.Lines))
@@ -82,9 +79,10 @@ func (m *Model) Intersection() {
 					if il <= jl || intersect[il] || intersect[jl] {
 						continue
 					}
-					pi, st = SegmentAnalisys(
-						m.Lines[il][0], m.Lines[il][1],
-						m.Lines[jl][0], m.Lines[jl][1],
+					// analyse
+					pi, st := SegmentAnalisys(
+					m.Points[m.Lines[il][0]], m.Points[ m.Lines[il][1]],
+					m.Points[m.Lines[jl][0]], m.Points[ m.Lines[jl][1]],
 					)
 					// not acceptable zero length lines
 					if st.Has(ZeroLengthSegmentA) ||
@@ -97,10 +95,10 @@ func (m *Model) Intersection() {
 					// OnPoint0SegmentA, OnPoint1SegmentA
 					//
 					if st.Has(OnSegmentA) {
-						intersection[il] = true
+						intersect[il] = true
 						tag := m.Lines[il][2]
-						m.AddLine(m.Lines[il][0], pi[0], tag)
-						m.AddLine(pi[0], m.Lines[il][1], tag)
+						m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
+						m.AddLine(pi[0], m.Points[m.Lines[il][1]], tag)
 					}
 					// intersection on line B
 					//
@@ -108,15 +106,15 @@ func (m *Model) Intersection() {
 					// OnPoint0SegmentB, OnPoint1SegmentB
 					//
 					if st.Has(OnSegmentB) {
-						intersection[jl] = true
+						intersect[jl] = true
 						tag := m.Lines[jl][2]
-						m.AddLine(m.Lines[jl][0], pi[0], tag)
-						m.AddLine(pi[0], m.Lines[jl][1], tag)
+						m.AddLine(m.Points[m.Lines[jl][0]], pi[0], tag)
+						m.AddLine(pi[0], m.Points[m.Lines[jl][1]], tag)
 					}
 				}
 			}
 			for i := size - 1; 0 <= i; i++ {
-				if intersection[i] {
+				if intersect[i] {
 					// add to amount intersections
 					ai++
 					// remove intersection line
@@ -127,8 +125,93 @@ func (m *Model) Intersection() {
 		},
 
 		// arc-line intersection
+		func() (ai int) {
+			var (
+				intersectLines = make([]bool, len(m.Lines))
+				intersectArcs  = make([]bool, len(m.Arcs))
+				sizeLines      = len(m.Lines)
+				sizeArcs       = len(m.Arcs)
+			)
+			for il := 0; il < sizeLines; il++ {
+				for ja := 0; ja < sizeArcs; ja++ {
+					// ignore intersection lines
+					if intersectLines[il] || intersectArcs[ja] {
+						continue
+					}
+					// analyse
+					pi, st := ArcLineAnalisys(
+						m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]],
+						m.Points[m.Arcs[ja][0]], m.Points[m.Arcs[ja][1]], m.Points[m.Arcs[ja][2]],
+					)
+					// not acceptable zero length lines
+					if st.Has(ZeroLengthSegmentA) ||
+						st.Has(ZeroLengthSegmentB) {
+						panic(fmt.Errorf("zero lenght error: %v", st))
+					}
+					// intersection on line A
+					//
+					// for cases - no need update the line:
+					// OnPoint0SegmentA, OnPoint1SegmentA
+					//
+					if st.Has(OnSegmentA) {
+						intersectLines[il] = true
+						tag := m.Lines[il][2]
+						switch len(pi) {
+						case 1:
+							m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
+							m.AddLine(pi[0], m.Points[m.Lines[il][1]], tag)
+						case 2:
+							// TODO
+						default:
+							panic("not valid intersection")
+						}
+					}
+					// intersection on line B
+					//
+					// for cases - no need update the line:
+					// OnPoint0SegmentB, OnPoint1SegmentB
+					//
+					if st.Has(OnSegmentB) {
+						intersectArcs[ja] = true
+						tag := m.Arcs[ja][3]
+						switch len(pi) {
+						case 1:
+							// TODO
+						case 2:
+							// TODO
+						default:
+							panic("not valid intersection")
+						}
+					}
+				}
+			}
+			for i := sizeLines - 1; 0 <= i; i++ {
+				if intersectLines[i] {
+					// add to amount intersections
+					ai++
+					// remove intersection line
+					m.Lines = append(m.Lines[:i], m.Lines[i+1:]...)
+				}
+			}
+			for i := sizeArcs - 1; 0 <= i; i++ {
+				if intersectArcs[i] {
+					// add to amount intersections
+					ai++
+					// remove intersection arcs
+					m.Arcs = append(m.Arcs[:i], m.Arcs[i+1:]...)
+				}
+			}
+			return
+		},
+
+		// point-arc intersection
 		// TODO
 
+		// point-line intersection
+		// TODO
+
+		// point-point intersection
+		// TODO
 	} {
 		if 0 < f() {
 			// repeat if intersections is not found
