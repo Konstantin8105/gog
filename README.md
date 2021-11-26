@@ -34,7 +34,7 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	st State,
 )
 func ArcSplit(Arc0, Arc1, Arc2 Point) (res [2][3]Point, err error)
-    ArcSplit return points of 2 arcs
+    ArcSplit return points of 2 arcs with middle point
 
 func Check(pps ...Point) error
     Check - check input data
@@ -97,6 +97,37 @@ func SegmentAnalisys(
 
 
 TYPES
+
+type Model struct {
+	Points []Point  // Points is slice of points
+	Lines  [][3]int // Lines store 2 index of Points and last for tag
+	Arcs   [][4]int // Arcs store 3 index of Points and last for tag
+}
+    Model of points, lines, arcs for prepare of triangulation
+
+func (m *Model) AddArc(start, middle, end Point, tag int)
+    AddArc add arc into model with specific tag
+
+func (m *Model) AddCircle(xc, yc, r float64, tag int, isHole bool)
+    AddCircle add arcs based on circle geometry into model with specific tag
+
+func (m *Model) AddLine(start, end Point, tag int)
+    AddLine add line into model with specific tag
+
+func (m *Model) AddPoint(p Point) (index int)
+    AddPoint return index in model slice point
+
+func (m *Model) Intersection()
+    Intersection change model with finding all model intersections
+
+func (m Model) MinPointDistance() (distance float64)
+    MinPointDistance return minimal between 2 points
+
+func (m *Model) RemoveEmptyPoints()
+
+func (m *Model) RemovePoint()
+
+func (m *Model) Split()
 
 type OrientationPoints int8
 
