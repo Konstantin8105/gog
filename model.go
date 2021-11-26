@@ -169,9 +169,52 @@ func (m *Model) Intersection() {
 							m.AddLine(pi[0], m.Points[m.Lines[il][1]], tag)
 						case 2:
 							if st.Has(VerticalSegmentA) {
-								// TODO
+								if pi[1].Y < pi[0].Y {
+									pi[0], pi[1] = pi[1], pi[0]
+								}
+								// pi[0].Y < pi[1].Y
+								if m.Points[m.Lines[il][0]].Y < m.Points[m.Lines[il][1]].Y {
+									// Design:
+									//
+									//	| Lines [1]
+									//	| pi[1]
+									//	| pi[0]
+									//	| Lines [0]
+									m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
+									m.AddLine(pi[0], pi[1], tag)
+									m.AddLine(pi[1], m.Points[m.Lines[il][1]], tag)
+								} else {
+									// Design:
+									//
+									//	| Lines [0]
+									//	| pi[1]
+									//	| pi[0]
+									//	| Lines [1]
+									m.AddLine(m.Points[m.Lines[il][1]], pi[0], tag)
+									m.AddLine(pi[0], pi[1], tag)
+									m.AddLine(pi[1], m.Points[m.Lines[il][0]], tag)
+								}
 							} else {
-								// TODO
+								// Not vertical line
+								if pi[1].X < pi[0].X {
+									pi[0], pi[1] = pi[1], pi[0]
+								}
+								// pi[0].X < pi[1].X
+								if m.Points[m.Lines[il][0]].X < m.Points[m.Lines[il][1]].X {
+									// Design:
+									//
+									//	 Lines[0]    pi[0]   pi[1]   Lines[1]
+									m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
+									m.AddLine(pi[0], pi[1], tag)
+									m.AddLine(pi[1], m.Points[m.Lines[il][1]], tag)
+								} else {
+									// Design:
+									//
+									//	 Lines[1]    pi[0]   pi[1]   Lines[0]
+									m.AddLine(m.Points[m.Lines[il][1]], pi[0], tag)
+									m.AddLine(pi[0], pi[1], tag)
+									m.AddLine(pi[1], m.Points[m.Lines[il][0]], tag)
+								}
 							}
 						default:
 							panic("not valid intersection")
@@ -194,7 +237,7 @@ func (m *Model) Intersection() {
 							panic(err)
 						}
 						for i := range res {
-							m.AddArc(res[i][0], res[i][1], res[i][2])
+							m.AddArc(res[i][0], res[i][1], res[i][2], tag)
 						}
 					}
 				}
