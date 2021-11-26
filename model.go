@@ -50,7 +50,7 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 }
 
 // AddCircle add arcs based on circle geometry into model with specific tag
-func (m *Model) AddCircle(xc, yc, r float64, tag int) {
+func (m *Model) AddCircle(xc, yc, r float64, tag int, isHole bool) {
 	// add points
 	var (
 		up    = Point{X: xc, Y: yc + r}
@@ -59,8 +59,15 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int) {
 		right = Point{X: xc + r, Y: yc}
 	)
 	// add arcs
-	m.AddArc(down, left, up, tag)
-	m.AddArc(up, right, down, tag)
+	if isHole {
+		// ClockwisePoints
+		m.AddArc(down, left, up, tag)
+		m.AddArc(up, right, down, tag)
+	} else {
+		// CounterClockwisePoints
+		m.AddArc(down, right, up, tag)
+		m.AddArc(up, left, down, tag)
+	}
 }
 
 // Intersection change model with finding all model intersections
@@ -81,8 +88,8 @@ func (m *Model) Intersection() {
 					}
 					// analyse
 					pi, st := SegmentAnalisys(
-					m.Points[m.Lines[il][0]], m.Points[ m.Lines[il][1]],
-					m.Points[m.Lines[jl][0]], m.Points[ m.Lines[jl][1]],
+						m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]],
+						m.Points[m.Lines[jl][0]], m.Points[m.Lines[jl][1]],
 					)
 					// not acceptable zero length lines
 					if st.Has(ZeroLengthSegmentA) ||
@@ -161,12 +168,16 @@ func (m *Model) Intersection() {
 							m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
 							m.AddLine(pi[0], m.Points[m.Lines[il][1]], tag)
 						case 2:
-							// TODO
+							if st.Has(VerticalSegmentA) {
+								// TODO
+							} else {
+								// TODO
+							}
 						default:
 							panic("not valid intersection")
 						}
 					}
-					// intersection on line B
+					// intersection on arc B
 					//
 					// for cases - no need update the line:
 					// OnPoint0SegmentB, OnPoint1SegmentB
@@ -174,13 +185,16 @@ func (m *Model) Intersection() {
 					if st.Has(OnSegmentB) {
 						intersectArcs[ja] = true
 						tag := m.Arcs[ja][3]
-						switch len(pi) {
-						case 1:
-							// TODO
-						case 2:
-							// TODO
-						default:
-							panic("not valid intersection")
+						res, err := ArcSplitByPoint(
+							m.Points[m.Arcs[ja][0]],
+							m.Points[m.Arcs[ja][1]],
+							m.Points[m.Arcs[ja][2]],
+							pi...)
+						if err != nil {
+							panic(err)
+						}
+						for i := range res {
+							m.AddArc(res[i][0], res[i][1], res[i][2])
 						}
 					}
 				}
