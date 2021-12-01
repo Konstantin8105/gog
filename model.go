@@ -16,8 +16,7 @@ type Model struct {
 func (m *Model) AddPoint(p Point) (index int) {
 	// search in exist points
 	for i := range m.Points {
-		if math.Abs(p.X-m.Points[i].X) < Eps &&
-			math.Abs(p.Y-m.Points[i].Y) < Eps {
+		if Distance(p, m.Points[i]) < Eps {
 			return i
 		}
 	}
@@ -33,6 +32,16 @@ func (m *Model) AddLine(start, end Point, tag int) {
 		st = m.AddPoint(start)
 		en = m.AddPoint(end)
 	)
+	if en < st {
+		st, en = en, st
+	}
+	// do not add line with same id
+	for i := range m.Lines {
+		if m.Lines[i][0] == st && m.Lines[i][1] == en {
+			m.Lines[i][2] = tag
+			return
+		}
+	}
 	// add line
 	m.Lines = append(m.Lines, [3]int{st, en, tag})
 }
@@ -45,6 +54,17 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 		mi = m.AddPoint(middle)
 		en = m.AddPoint(end)
 	)
+	if en < st {
+		st, en = en, st
+	}
+	// do not add line with same id
+	for i := range m.Arcs {
+		if (m.Arcs[i][0] == st && m.Arcs[i][1] == mi && m.Arcs[i][2] == en) ||
+			(m.Arcs[i][2] == st && m.Arcs[i][1] == mi && m.Arcs[i][0] == en) {
+			m.Arcs[i][3] = tag
+			return
+		}
+	}
 	// add arc
 	m.Arcs = append(m.Arcs, [4]int{st, mi, en, tag})
 }
@@ -75,7 +95,7 @@ func (m *Model) Intersection() {
 	// value `ai` is amount of intersections
 
 	// find intersections
-	for _, f := range []func() int{
+	fs := []func() int{
 		// line-line intersection
 		func() (ai int) {
 			intersect := make([]bool, len(m.Lines))
@@ -91,17 +111,32 @@ func (m *Model) Intersection() {
 						m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]],
 						m.Points[m.Lines[jl][0]], m.Points[m.Lines[jl][1]],
 					)
+					// no intersections
+					if 0 == len(pi) {
+						continue
+					}
+					// debug test
+					if 1 < len(pi) {
+						panic("not valid")
+					}
 					// not acceptable zero length lines
 					if st.Has(ZeroLengthSegmentA) ||
 						st.Has(ZeroLengthSegmentB) {
 						panic(fmt.Errorf("zero lenght error: %v", st))
 					}
+
+					if st.Has(OnPoint0SegmentA) && st.Has(OnPoint1SegmentA) &&
+						st.Has(OnPoint0SegmentB) && st.Has(OnPoint1SegmentB) {
+						intersect[il] = true
+						continue
+					}
+
 					// intersection on line A
 					//
 					// for cases - no need update the line:
 					// OnPoint0SegmentA, OnPoint1SegmentA
 					//
-					if st.Has(OnSegmentA) {
+					if st.Has(OnSegmentA) && !(st.Has(OnPoint0SegmentA) || st.Has(OnPoint1SegmentA)) {
 						intersect[il] = true
 						tag := m.Lines[il][2]
 						m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
@@ -112,7 +147,7 @@ func (m *Model) Intersection() {
 					// for cases - no need update the line:
 					// OnPoint0SegmentB, OnPoint1SegmentB
 					//
-					if st.Has(OnSegmentB) {
+					if st.Has(OnSegmentB) && !(st.Has(OnPoint0SegmentB) || st.Has(OnPoint1SegmentB)) {
 						intersect[jl] = true
 						tag := m.Lines[jl][2]
 						m.AddLine(m.Points[m.Lines[jl][0]], pi[0], tag)
@@ -120,7 +155,7 @@ func (m *Model) Intersection() {
 					}
 				}
 			}
-			for i := size - 1; 0 <= i; i++ {
+			for i := size - 1; 0 <= i; i-- {
 				if intersect[i] {
 					// add to amount intersections
 					ai++
@@ -147,8 +182,12 @@ func (m *Model) Intersection() {
 					}
 					// analyse
 					pi, st := ArcLineAnalisys(
+						// Line
 						m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]],
-						m.Points[m.Arcs[ja][0]], m.Points[m.Arcs[ja][1]], m.Points[m.Arcs[ja][2]],
+						// Arc
+						m.Points[m.Arcs[ja][0]],
+						m.Points[m.Arcs[ja][1]],
+						m.Points[m.Arcs[ja][2]],
 					)
 					// not acceptable zero length lines
 					if st.Has(ZeroLengthSegmentA) ||
@@ -161,7 +200,19 @@ func (m *Model) Intersection() {
 					// OnPoint0SegmentA, OnPoint1SegmentA
 					//
 					if st.Has(OnSegmentA) {
-						intersectLines[il] = true
+						// remove OnPoint
+					same1:
+						for i := range pi {
+							for j := 0; j < 2; j++ {
+								if Distance(pi[i], m.Points[m.Lines[il][j]]) < Eps {
+									pi = append(pi[:i], pi[i+1:]...)
+									goto same1
+								}
+							}
+						}
+						if 0 < len(pi) {
+							intersectLines[il] = true
+						}
 						tag := m.Lines[il][2]
 						switch len(pi) {
 						case 1:
@@ -217,7 +268,7 @@ func (m *Model) Intersection() {
 								}
 							}
 						default:
-							panic("not valid intersection")
+							panic("not valid")
 						}
 					}
 					// intersection on arc B
@@ -226,7 +277,6 @@ func (m *Model) Intersection() {
 					// OnPoint0SegmentB, OnPoint1SegmentB
 					//
 					if st.Has(OnSegmentB) {
-						intersectArcs[ja] = true
 						tag := m.Arcs[ja][3]
 						res, err := ArcSplitByPoint(
 							m.Points[m.Arcs[ja][0]],
@@ -234,15 +284,18 @@ func (m *Model) Intersection() {
 							m.Points[m.Arcs[ja][2]],
 							pi...)
 						if err != nil {
-							panic(err)
-						}
-						for i := range res {
-							m.AddArc(res[i][0], res[i][1], res[i][2], tag)
+							// TODO	panic(err)
+							err = nil
+						} else {
+							for i := range res {
+								intersectArcs[ja] = true
+								m.AddArc(res[i][0], res[i][1], res[i][2], tag)
+							}
 						}
 					}
 				}
 			}
-			for i := sizeLines - 1; 0 <= i; i++ {
+			for i := sizeLines - 1; 0 <= i; i-- {
 				if intersectLines[i] {
 					// add to amount intersections
 					ai++
@@ -250,7 +303,7 @@ func (m *Model) Intersection() {
 					m.Lines = append(m.Lines[:i], m.Lines[i+1:]...)
 				}
 			}
-			for i := sizeArcs - 1; 0 <= i; i++ {
+			for i := sizeArcs - 1; 0 <= i; i-- {
 				if intersectArcs[i] {
 					// add to amount intersections
 					ai++
@@ -269,9 +322,12 @@ func (m *Model) Intersection() {
 
 		// point-point intersection
 		// TODO
-	} {
-		if 0 < f() {
-			// repeat if intersections is not found
+
+	}
+	ai := 0
+	for _, f := range fs {
+		ai += f()
+		if 0 < ai {
 			m.Intersection()
 			return
 		}
@@ -300,7 +356,7 @@ func (m Model) MinPointDistance() (distance float64) {
 				continue
 			}
 			// calculation
-			distance = math.Max(distance,
+			distance = math.Min(distance,
 				math.Hypot(
 					m.Points[i].X-m.Points[j].X,
 					m.Points[i].Y-m.Points[j].Y,

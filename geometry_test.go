@@ -131,7 +131,6 @@ func Example() {
 	// 26	   100000000000000000000000000	not found
 	// 27	  1000000000000000000000000000	not found
 	// 28	 10000000000000000000000000000	not found
-	// 29	100000000000000000000000000000	not found
 }
 
 var tcs = []TestCase{
@@ -150,7 +149,11 @@ var tcs = []TestCase{
 			VerticalSegmentA |
 			OverlapP0AP0B |
 			OverlapP0AP1B |
-			HorizontalSegmentB | VerticalSegmentB |
+			HorizontalSegmentB |
+			VerticalSegmentB |
+			OnPoint0SegmentA |
+			OnPoint0SegmentB |
+			OnPoint1SegmentB |
 			Collinear,
 		pi:  []Point{{X: 0, Y: 8}},
 		dbp: 1,
@@ -169,6 +172,10 @@ var tcs = []TestCase{
 		it: VerticalSegmentA | VerticalSegmentB |
 			OverlapP0AP0B |
 			OverlapP1AP1B |
+			OnPoint0SegmentA |
+			OnPoint1SegmentA |
+			OnPoint0SegmentB |
+			OnPoint1SegmentB |
 			Collinear,
 		pi:  []Point{{X: 0, Y: 8}},
 		dbp: 1,
@@ -186,6 +193,10 @@ var tcs = []TestCase{
 		},
 		it: OverlapP0AP0B |
 			OverlapP1AP1B |
+			OnPoint0SegmentA |
+			OnPoint1SegmentA |
+			OnPoint0SegmentB |
+			OnPoint1SegmentB |
 			Collinear,
 		pi:  []Point{{X: 2, Y: 8}},
 		dbp: 3.1622776602e-01,
@@ -251,6 +262,8 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 5}, // 4
 		},
 		it: VerticalSegmentA | VerticalSegmentB |
+			OnPoint1SegmentA |
+			OnPoint0SegmentB |
 			OverlapP1AP0B |
 			Collinear,
 		pi:  []Point{{X: 2, Y: 6}},
@@ -269,6 +282,8 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 2}, // 4
 		},
 		it: OverlapP1AP0B |
+			OnPoint1SegmentA |
+			OnPoint0SegmentB |
 			Collinear,
 		pi:  []Point{{X: 4, Y: 4}},
 		dbp: 7.0710678119e-01,
@@ -287,11 +302,14 @@ var tcs = []TestCase{
 			HorizontalSegmentB |
 			ZeroLengthSegmentA |
 			ZeroLengthSegmentB |
+			OnPoint0SegmentA |
+			OnPoint1SegmentA |
+			OnPoint0SegmentB |
+			OnPoint1SegmentB |
 			OverlapP0AP0B |
 			OverlapP0AP1B |
 			OverlapP1AP0B |
-			OverlapP1AP1B |
-			Collinear,
+			OverlapP1AP1B,
 		pi: []Point{{X: 5, Y: 5}},
 	},
 	{ // 9
@@ -495,7 +513,7 @@ var tcs = []TestCase{
 			{0, -1}, {1, 0}, {0, 1}},
 
 		pi: []Point{},
-		it: HorizontalSegmentA | LineOutside,
+		it: HorizontalSegmentA,
 	},
 	{ // 23
 		ps: []Point{
@@ -503,7 +521,7 @@ var tcs = []TestCase{
 			{0, -1}, {0, 0}, {0, 1}},
 
 		pi: []Point{},
-		it: HorizontalSegmentA | LineOutside,
+		it: HorizontalSegmentA,
 	},
 	{ // 24
 		ps: []Point{
@@ -538,7 +556,7 @@ var tcs = []TestCase{
 			{0, -1}, {1, 0}, {0, 1}},
 
 		pi: []Point{{0, 1}},
-		it: HorizontalSegmentA | OnSegmentA | OnSegmentB | OnPoint1SegmentB,
+		it: HorizontalSegmentA | OnSegmentA | OnPoint1SegmentB,
 	},
 	{ // 28
 		ps: []Point{
@@ -546,7 +564,7 @@ var tcs = []TestCase{
 			{0, -1}, {1, 0}, {0, 1}},
 
 		pi: []Point{{0, 1}},
-		it: HorizontalSegmentA | OnSegmentB | OnPoint0SegmentA | OnPoint1SegmentB,
+		it: HorizontalSegmentA | OnPoint0SegmentA | OnPoint1SegmentB,
 	},
 	{ // 29
 		ps: []Point{
@@ -555,7 +573,7 @@ var tcs = []TestCase{
 
 		pi: []Point{{0, 1}, {0, -1}},
 		it: VerticalSegmentA | OnPoint0SegmentA | OnPoint1SegmentA |
-			OnSegmentB | LineFromArcCenter | OnPoint0SegmentB |
+			LineFromArcCenter | OnPoint0SegmentB |
 			OnPoint1SegmentB,
 	},
 	{ // 30
@@ -572,7 +590,7 @@ var tcs = []TestCase{
 			{0, -1}, {1, 0}, {0, 1}},
 
 		pi: []Point{},
-		it: VerticalSegmentA | LineOutside,
+		it: VerticalSegmentA,
 	},
 	{ // 32
 		ps: []Point{
@@ -596,7 +614,6 @@ var tcs = []TestCase{
 			{2, 3}, {3, 2}, {2, 1}},
 
 		pi: []Point{},
-		it: LineOutside,
 	},
 	{ // 35
 		ps: []Point{
@@ -604,7 +621,7 @@ var tcs = []TestCase{
 			{2, 3}, {3, 2}, {2, 1}},
 
 		pi: []Point{{2, 3}, {3, 2}},
-		it: OnSegmentB | OnPoint0SegmentA | OnPoint1SegmentA | OnPoint0SegmentB,
+		it: OnPoint0SegmentA | OnPoint1SegmentA | OnPoint0SegmentB,
 	},
 	{ // 36
 		ps: []Point{
@@ -631,6 +648,15 @@ var tcs = []TestCase{
 			Arc01indentical | Arc12indentical | Arc02indentical | ArcIsPoint,
 		pi: []Point{},
 	},
+	{ // 39
+		ps: []Point{
+			{0, -1}, {0, 0},
+			{0, -1}, {1, 0}, {0, 1},
+		},
+		it: VerticalSegmentA | OnPoint0SegmentA |
+			OnPoint0SegmentB | LineFromArcCenter,
+		pi: []Point{{0, -1}},
+	},
 }
 
 func init() {
@@ -650,7 +676,7 @@ func init() {
 
 	// add names
 	for i := range tcs {
-		tcs[i].name = fmt.Sprintf("%02d", i)
+		tcs[i].name = fmt.Sprintf("t%02d", i)
 		tcs[i].bp = Point{X: -1, Y: -2}
 	}
 
@@ -858,11 +884,11 @@ func TestRotate(t *testing.T) {
 		for _, angle := range angles {
 			t.Run(fmt.Sprintf("%s:%+.2f", tc.name, angle), func(t *testing.T) {
 				for index, p := range tc.ps {
-					pw := Rotate(angle, p)
+					pw := Rotate(0, 0, angle, p)
 					if Distance(p, pw) < eps {
 						t.Errorf("No change %d: %v %v", index, p, pw)
 					}
-					pw = Rotate(-angle, pw)
+					pw = Rotate(0, 0, -angle, pw)
 					if Distance(p, pw) > eps {
 						t.Errorf("Some change %d: %v %v", index, p, pw)
 					}
@@ -974,25 +1000,94 @@ func TestAngleBetween(t *testing.T) {
 	}
 }
 
-func ExampleArcSplit() {
-	res, err := ArcSplit(
-		Point{X: -2, Y: 0},
-		Point{X: 0, Y: +2},
-		Point{X: +2, Y: 0},
-	)
-	if err != nil {
-		panic(err)
+func ExampleArcSplitByPoint() {
+	tcs := [][]Point{
+		[]Point{ // 0
+			Point{X: -2, Y: 0},
+			Point{X: 0, Y: +2},
+			Point{X: +2, Y: 0},
+		},
+		[]Point{ // 1
+			Point{X: +2, Y: 0},
+			Point{X: 0, Y: +2},
+			Point{X: -2, Y: 0},
+		},
+		[]Point{ // 2
+			Point{X: -2, Y: 0},
+			Point{X: 0, Y: +2},
+			Point{X: +2, Y: 0},
+			Point{X: 0, Y: +2},
+		},
+		[]Point{ // 3
+			Point{X: +2, Y: 0},
+			Point{X: 0, Y: +2},
+			Point{X: -2, Y: 0},
+			Point{X: 0, Y: +2},
+		},
+		[]Point{ // 4
+			Point{X: -2, Y: 0},
+			Point{X: 0, Y: +2},
+			Point{X: +2, Y: 0},
+			Point{+1.41421, +1.41421},
+		},
+		[]Point{ // 5
+			Point{0, 1}, Point{-1, 0}, Point{0, -1},
+			Point{-1, 0},
+		},
 	}
-	for i := range res {
-		for j := range res[i] {
-			fmt.Fprintf(os.Stdout, "[%02d,%02d] = %+.5f\n", i, j, res[i][j])
+	for index, tc := range tcs {
+		fmt.Fprintf(os.Stdout, "case %d:\n", index)
+		res, err := ArcSplitByPoint(tc[0], tc[1], tc[2], tc[3:]...)
+		if err != nil {
+			panic(fmt.Errorf("index %d: %v", index, err))
+		}
+		for i := range res {
+			for j := range res[i] {
+				fmt.Fprintf(os.Stdout, "[%02d,%02d] = %+.5f\n", i, j, res[i][j])
+			}
 		}
 	}
 	// Output:
+	// case 0:
 	// [00,00] = {-2.00000 +0.00000}
-	// [00,01] = {+1.41421 -1.41421}
-	// [00,02] = {+2.00000 +0.00000}
-	// [01,00] = {+2.00000 +0.00000}
+	// [00,01] = {-1.41421 +1.41421}
+	// [00,02] = {+0.00000 +2.00000}
+	// [01,00] = {+0.00000 +2.00000}
 	// [01,01] = {+1.41421 +1.41421}
 	// [01,02] = {+2.00000 +0.00000}
+	// case 1:
+	// [00,00] = {+2.00000 +0.00000}
+	// [00,01] = {+1.41421 +1.41421}
+	// [00,02] = {+0.00000 +2.00000}
+	// [01,00] = {+0.00000 +2.00000}
+	// [01,01] = {-1.41421 +1.41421}
+	// [01,02] = {-2.00000 +0.00000}
+	// case 2:
+	// [00,00] = {-2.00000 +0.00000}
+	// [00,01] = {-1.41421 +1.41421}
+	// [00,02] = {-0.00000 +2.00000}
+	// [01,00] = {-0.00000 +2.00000}
+	// [01,01] = {+1.41421 +1.41421}
+	// [01,02] = {+2.00000 +0.00000}
+	// case 3:
+	// [00,00] = {+2.00000 +0.00000}
+	// [00,01] = {+1.41421 +1.41421}
+	// [00,02] = {-0.00000 +2.00000}
+	// [01,00] = {-0.00000 +2.00000}
+	// [01,01] = {-1.41421 +1.41421}
+	// [01,02] = {-2.00000 +0.00000}
+	// case 4:
+	// [00,00] = {-2.00000 +0.00000}
+	// [00,01] = {-0.76537 +1.84776}
+	// [00,02] = {+1.41421 +1.41421}
+	// [01,00] = {+1.41421 +1.41421}
+	// [01,01] = {+1.84776 +0.76537}
+	// [01,02] = {+2.00000 +0.00000}
+	// case 5:
+	// [00,00] = {+0.00000 +1.00000}
+	// [00,01] = {-0.70711 +0.70711}
+	// [00,02] = {-1.00000 +0.00000}
+	// [01,00] = {-1.00000 +0.00000}
+	// [01,01] = {-0.70711 -0.70711}
+	// [01,02] = {-0.00000 -1.00000}
 }
