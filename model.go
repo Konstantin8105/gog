@@ -107,7 +107,7 @@ func (m *Model) Intersection() {
 						continue
 					}
 					// analyse
-					pi, st := SegmentAnalisys(
+					pi, stA, stB := LineLine(
 						m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]],
 						m.Points[m.Lines[jl][0]], m.Points[m.Lines[jl][1]],
 					)
@@ -120,13 +120,13 @@ func (m *Model) Intersection() {
 						panic("not valid")
 					}
 					// not acceptable zero length lines
-					if st.Has(ZeroLengthSegmentA) ||
-						st.Has(ZeroLengthSegmentB) {
-						panic(fmt.Errorf("zero lenght error: %v", st))
+					if stA.Has(ZeroLengthSegment) ||
+						stB.Has(ZeroLengthSegment) {
+						panic(fmt.Errorf("zero lenght error"))
 					}
 
-					if st.Has(OnPoint0SegmentA) && st.Has(OnPoint1SegmentA) &&
-						st.Has(OnPoint0SegmentB) && st.Has(OnPoint1SegmentB) {
+					if stA.Has(OnPoint0Segment) && stA.Has(OnPoint1Segment) &&
+						stB.Has(OnPoint0Segment) && stB.Has(OnPoint1Segment) {
 						intersect[il] = true
 						continue
 					}
@@ -136,7 +136,7 @@ func (m *Model) Intersection() {
 					// for cases - no need update the line:
 					// OnPoint0SegmentA, OnPoint1SegmentA
 					//
-					if st.Has(OnSegmentA) && !(st.Has(OnPoint0SegmentA) || st.Has(OnPoint1SegmentA)) {
+					if stA.Has(OnSegment) && !(stA.Has(OnPoint0Segment) || stA.Has(OnPoint1Segment)) {
 						intersect[il] = true
 						tag := m.Lines[il][2]
 						m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
@@ -147,7 +147,7 @@ func (m *Model) Intersection() {
 					// for cases - no need update the line:
 					// OnPoint0SegmentB, OnPoint1SegmentB
 					//
-					if st.Has(OnSegmentB) && !(st.Has(OnPoint0SegmentB) || st.Has(OnPoint1SegmentB)) {
+					if stB.Has(OnSegment) && !(stB.Has(OnPoint0Segment) || stB.Has(OnPoint1Segment)) {
 						intersect[jl] = true
 						tag := m.Lines[jl][2]
 						m.AddLine(m.Points[m.Lines[jl][0]], pi[0], tag)
@@ -181,7 +181,7 @@ func (m *Model) Intersection() {
 						continue
 					}
 					// analyse
-					pi, st := ArcLineAnalisys(
+					pi, stA, stB := LineArc(
 						// Line
 						m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]],
 						// Arc
@@ -190,85 +190,89 @@ func (m *Model) Intersection() {
 						m.Points[m.Arcs[ja][2]],
 					)
 					// not acceptable zero length lines
-					if st.Has(ZeroLengthSegmentA) ||
-						st.Has(ZeroLengthSegmentB) {
-						panic(fmt.Errorf("zero lenght error: %v", st))
+					if stA.Has(ZeroLengthSegment) ||
+						stB.Has(ZeroLengthSegment) {
+						panic(fmt.Errorf("zero lenght error"))
 					}
 					// intersection on line A
 					//
 					// for cases - no need update the line:
-					// OnPoint0SegmentA, OnPoint1SegmentA
+					// OnPoint0Segment, OnPoint1Segment
 					//
-					if st.Has(OnSegmentA) {
+					if stA.Has(OnSegment) {
 						// remove OnPoint
+						roots := make([]Point, len(pi))
+						copy(roots, pi)
+
 					same1:
-						for i := range pi {
+						for i := range roots {
 							for j := 0; j < 2; j++ {
-								if Distance(pi[i], m.Points[m.Lines[il][j]]) < Eps {
-									pi = append(pi[:i], pi[i+1:]...)
+								if Distance(roots[i], m.Points[m.Lines[il][j]]) < Eps {
+									roots = append(roots[:i], roots[i+1:]...)
 									goto same1
 								}
 							}
 						}
-						if 0 < len(pi) {
+
+						if 0 < len(roots) {
 							intersectLines[il] = true
-						}
-						tag := m.Lines[il][2]
-						switch len(pi) {
-						case 1:
-							m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
-							m.AddLine(pi[0], m.Points[m.Lines[il][1]], tag)
-						case 2:
-							if st.Has(VerticalSegmentA) {
-								if pi[1].Y < pi[0].Y {
-									pi[0], pi[1] = pi[1], pi[0]
-								}
-								// pi[0].Y < pi[1].Y
-								if m.Points[m.Lines[il][0]].Y < m.Points[m.Lines[il][1]].Y {
-									// Design:
-									//
-									//	| Lines [1]
-									//	| pi[1]
-									//	| pi[0]
-									//	| Lines [0]
-									m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
-									m.AddLine(pi[0], pi[1], tag)
-									m.AddLine(pi[1], m.Points[m.Lines[il][1]], tag)
+							tag := m.Lines[il][2]
+							switch len(roots) {
+							case 1:
+								m.AddLine(m.Points[m.Lines[il][0]], roots[0], tag)
+								m.AddLine(roots[0], m.Points[m.Lines[il][1]], tag)
+							case 2:
+								if stA.Has(VerticalSegment) {
+									if roots[1].Y < roots[0].Y {
+										roots[0], roots[1] = roots[1], roots[0]
+									}
+									// roots[0].Y < roots[1].Y
+									if m.Points[m.Lines[il][0]].Y < m.Points[m.Lines[il][1]].Y {
+										// Design:
+										//
+										//	| Lines [1]
+										//	| roots[1]
+										//	| roots[0]
+										//	| Lines [0]
+										m.AddLine(m.Points[m.Lines[il][0]], roots[0], tag)
+										m.AddLine(roots[0], roots[1], tag)
+										m.AddLine(roots[1], m.Points[m.Lines[il][1]], tag)
+									} else {
+										// Design:
+										//
+										//	| Lines [0]
+										//	| roots[1]
+										//	| roots[0]
+										//	| Lines [1]
+										m.AddLine(m.Points[m.Lines[il][1]], roots[0], tag)
+										m.AddLine(roots[0], roots[1], tag)
+										m.AddLine(roots[1], m.Points[m.Lines[il][0]], tag)
+									}
 								} else {
-									// Design:
-									//
-									//	| Lines [0]
-									//	| pi[1]
-									//	| pi[0]
-									//	| Lines [1]
-									m.AddLine(m.Points[m.Lines[il][1]], pi[0], tag)
-									m.AddLine(pi[0], pi[1], tag)
-									m.AddLine(pi[1], m.Points[m.Lines[il][0]], tag)
+									// Not vertical line
+									if roots[1].X < roots[0].X {
+										roots[0], roots[1] = roots[1], roots[0]
+									}
+									// roots[0].X < roots[1].X
+									if m.Points[m.Lines[il][0]].X < m.Points[m.Lines[il][1]].X {
+										// Design:
+										//
+										//	 Lines[0]    roots[0]   roots[1]   Lines[1]
+										m.AddLine(m.Points[m.Lines[il][0]], roots[0], tag)
+										m.AddLine(roots[0], roots[1], tag)
+										m.AddLine(roots[1], m.Points[m.Lines[il][1]], tag)
+									} else {
+										// Design:
+										//
+										//	 Lines[1]    roots[0]   roots[1]   Lines[0]
+										m.AddLine(m.Points[m.Lines[il][1]], roots[0], tag)
+										m.AddLine(roots[0], roots[1], tag)
+										m.AddLine(roots[1], m.Points[m.Lines[il][0]], tag)
+									}
 								}
-							} else {
-								// Not vertical line
-								if pi[1].X < pi[0].X {
-									pi[0], pi[1] = pi[1], pi[0]
-								}
-								// pi[0].X < pi[1].X
-								if m.Points[m.Lines[il][0]].X < m.Points[m.Lines[il][1]].X {
-									// Design:
-									//
-									//	 Lines[0]    pi[0]   pi[1]   Lines[1]
-									m.AddLine(m.Points[m.Lines[il][0]], pi[0], tag)
-									m.AddLine(pi[0], pi[1], tag)
-									m.AddLine(pi[1], m.Points[m.Lines[il][1]], tag)
-								} else {
-									// Design:
-									//
-									//	 Lines[1]    pi[0]   pi[1]   Lines[0]
-									m.AddLine(m.Points[m.Lines[il][1]], pi[0], tag)
-									m.AddLine(pi[0], pi[1], tag)
-									m.AddLine(pi[1], m.Points[m.Lines[il][0]], tag)
-								}
+							default:
+								panic("not valid")
 							}
-						default:
-							panic("not valid")
 						}
 					}
 					// intersection on arc B
@@ -276,7 +280,7 @@ func (m *Model) Intersection() {
 					// for cases - no need update the line:
 					// OnPoint0SegmentB, OnPoint1SegmentB
 					//
-					if st.Has(OnSegmentB) {
+					if stB.Has(OnSegment) {
 						tag := m.Arcs[ja][3]
 						res, err := ArcSplitByPoint(
 							m.Points[m.Arcs[ja][0]],

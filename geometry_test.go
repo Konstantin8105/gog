@@ -71,7 +71,8 @@ func view(s State, names []string) string {
 type TestCase struct {
 	name string
 	ps   []Point
-	it   State
+	itA  State
+	itB  State
 	pi   []Point
 
 	bp  Point   // base point
@@ -94,43 +95,42 @@ func Example() {
 	if err := Check(pps...); err != nil {
 		panic(err)
 	}
-	pi, st := SegmentAnalisys(
+	pi, stA, stB := LineLine(
 		pps[0], pps[1],
 		pps[2], pps[3],
 	)
 	fmt.Fprintf(os.Stdout, "Intersection point: %s\n", pi)
-	fmt.Fprintf(os.Stdout, "Intersection state:\n%s\n", st)
+	fmt.Fprintf(os.Stdout, "Intersection state A:\n%s\n", stA)
+	fmt.Fprintf(os.Stdout, "Intersection state B:\n%s\n", stB)
 	// Output:
 	// Intersection point: [[2.50000e+00,2.50000e+00]]
-	// Intersection state:
+	// Intersection state A:
 	//  1	                            10	not found
 	//  2	                           100	not found
 	//  3	                          1000	not found
 	//  4	                         10000	not found
 	//  5	                        100000	not found
-	//  6	                       1000000	not found
+	//  6	                       1000000	found
 	//  7	                      10000000	not found
 	//  8	                     100000000	not found
-	//  9	                    1000000000	found
-	// 10	                   10000000000	found
+	//  9	                    1000000000	not found
+	// 10	                   10000000000	not found
 	// 11	                  100000000000	not found
 	// 12	                 1000000000000	not found
-	// 13	                10000000000000	not found
-	// 14	               100000000000000	not found
-	// 15	              1000000000000000	not found
-	// 16	             10000000000000000	not found
-	// 17	            100000000000000000	not found
-	// 18	           1000000000000000000	not found
-	// 19	          10000000000000000000	not found
-	// 20	         100000000000000000000	not found
-	// 21	        1000000000000000000000	not found
-	// 22	       10000000000000000000000	not found
-	// 23	      100000000000000000000000	not found
-	// 24	     1000000000000000000000000	not found
-	// 25	    10000000000000000000000000	not found
-	// 26	   100000000000000000000000000	not found
-	// 27	  1000000000000000000000000000	not found
-	// 28	 10000000000000000000000000000	not found
+	//
+	// Intersection state B:
+	//  1	                            10	not found
+	//  2	                           100	not found
+	//  3	                          1000	not found
+	//  4	                         10000	not found
+	//  5	                        100000	not found
+	//  6	                       1000000	found
+	//  7	                      10000000	not found
+	//  8	                     100000000	not found
+	//  9	                    1000000000	not found
+	// 10	                   10000000000	not found
+	// 11	                  100000000000	not found
+	// 12	                 1000000000000	not found
 }
 
 var tcs = []TestCase{
@@ -145,17 +145,10 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 8}, // 3
 			Point{X: 0, Y: 8}, // 4
 		},
-		it: ZeroLengthSegmentB |
-			VerticalSegmentA |
-			OverlapP0AP0B |
-			OverlapP0AP1B |
-			HorizontalSegmentB |
-			VerticalSegmentB |
-			OnPoint0SegmentA |
-			OnPoint0SegmentB |
-			OnPoint1SegmentB |
-			Collinear,
-		pi:  []Point{{X: 0, Y: 8}},
+		itA: VerticalSegment | OnPoint0Segment,
+		itB: ZeroLengthSegment | VerticalSegment | HorizontalSegment | 
+		OnPoint0Segment | OnPoint1Segment,
+		pi:  []Point{},
 		dbp: 1,
 	},
 	{ // 1
@@ -169,15 +162,9 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 8}, // 3
 			Point{X: 0, Y: 2}, // 4
 		},
-		it: VerticalSegmentA | VerticalSegmentB |
-			OverlapP0AP0B |
-			OverlapP1AP1B |
-			OnPoint0SegmentA |
-			OnPoint1SegmentA |
-			OnPoint0SegmentB |
-			OnPoint1SegmentB |
-			Collinear,
-		pi:  []Point{{X: 0, Y: 8}},
+		itA: VerticalSegment | OnPoint0Segment | OnPoint1Segment | Collinear,
+		itB: VerticalSegment | OnPoint0Segment | OnPoint1Segment | Collinear,
+		pi:  []Point{},
 		dbp: 1,
 	},
 	{ // 2
@@ -191,14 +178,9 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 8}, // 3
 			Point{X: 0, Y: 2}, // 4
 		},
-		it: OverlapP0AP0B |
-			OverlapP1AP1B |
-			OnPoint0SegmentA |
-			OnPoint1SegmentA |
-			OnPoint0SegmentB |
-			OnPoint1SegmentB |
-			Collinear,
-		pi:  []Point{{X: 2, Y: 8}},
+		itA: OnPoint0Segment | OnPoint1Segment | Collinear,
+		itB: OnPoint0Segment | OnPoint1Segment | Collinear,
+		pi:  []Point{},
 		dbp: 3.1622776602e-01,
 	},
 	{ // 3
@@ -212,7 +194,8 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 8}, // 3
 			Point{X: 4, Y: 2}, // 4
 		},
-		it:  VerticalSegmentA | VerticalSegmentB | Parallel,
+		itA: VerticalSegment | Parallel,
+		itB: VerticalSegment | Parallel,
 		dbp: 1,
 	},
 	{ // 4
@@ -229,7 +212,8 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 6}, // 3
 			Point{X: 2, Y: 5}, // 4
 		},
-		it:  VerticalSegmentA | VerticalSegmentB | Collinear,
+		itA: VerticalSegment | Collinear,
+		itB: VerticalSegment | Collinear,
 		dbp: 3,
 	},
 	{ // 5
@@ -246,7 +230,8 @@ var tcs = []TestCase{
 			Point{X: 3, Y: 3}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it:  Collinear,
+		itA: Collinear,
+		itB: Collinear,
 		dbp: 7.0710678119e-01,
 	},
 	{ // 6
@@ -261,12 +246,9 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 6}, // 3
 			Point{X: 2, Y: 5}, // 4
 		},
-		it: VerticalSegmentA | VerticalSegmentB |
-			OnPoint1SegmentA |
-			OnPoint0SegmentB |
-			OverlapP1AP0B |
-			Collinear,
-		pi:  []Point{{X: 2, Y: 6}},
+		itA: VerticalSegment | OnPoint1Segment | Collinear,
+		itB: VerticalSegment | OnPoint0Segment | Collinear,
+		pi:  []Point{},
 		dbp: 3,
 	},
 	{ // 7
@@ -281,11 +263,9 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it: OverlapP1AP0B |
-			OnPoint1SegmentA |
-			OnPoint0SegmentB |
-			Collinear,
-		pi:  []Point{{X: 4, Y: 4}},
+		itA: OnPoint1Segment | Collinear,
+		itB: OnPoint0Segment | Collinear,
+		pi:  []Point{},
 		dbp: 7.0710678119e-01,
 	},
 	{ // 8
@@ -296,21 +276,9 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 5}, // 3
 			Point{X: 5, Y: 5}, // 4
 		},
-		it: VerticalSegmentA |
-			VerticalSegmentB |
-			HorizontalSegmentA |
-			HorizontalSegmentB |
-			ZeroLengthSegmentA |
-			ZeroLengthSegmentB |
-			OnPoint0SegmentA |
-			OnPoint1SegmentA |
-			OnPoint0SegmentB |
-			OnPoint1SegmentB |
-			OverlapP0AP0B |
-			OverlapP0AP1B |
-			OverlapP1AP0B |
-			OverlapP1AP1B,
-		pi: []Point{{X: 5, Y: 5}},
+		itA: ZeroLengthSegment | VerticalSegment | HorizontalSegment | OnPoint0Segment | OnPoint1Segment,
+		itB: ZeroLengthSegment | VerticalSegment | HorizontalSegment | OnPoint0Segment | OnPoint1Segment,
+		pi:  []Point{},
 	},
 	{ // 9
 		//     *2  //
@@ -324,7 +292,8 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 2}, // 3
 			Point{X: 5, Y: 0}, // 4
 		},
-		it:  OnPoint0SegmentB | OnSegmentA,
+		itA: OnSegment,
+		itB: OnPoint0Segment,
 		pi:  []Point{{X: 2, Y: 2}},
 		dbp: 7.0710678119e-01,
 	},
@@ -340,7 +309,8 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 5}, // 3
 			Point{X: 5, Y: 0}, // 4
 		},
-		it:  OnSegmentA | OnSegmentB,
+		itA: OnSegment,
+		itB: OnSegment,
 		pi:  []Point{{X: 2.5, Y: 2.5}},
 		dbp: 7.0710678119e-01,
 	},
@@ -356,7 +326,8 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it:  OnPoint1SegmentB | OnSegmentA,
+		itA: OnSegment,
+		itB: OnPoint1Segment,
 		pi:  []Point{{X: 2, Y: 2}},
 		dbp: 7.0710678119e-01,
 	},
@@ -372,7 +343,8 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it:  OnPoint0SegmentA | OnSegmentB,
+		itA: OnPoint0Segment,
+		itB: OnSegment,
 		pi:  []Point{{X: 2, Y: 2}},
 		dbp: 4.9923017660e+00,
 	},
@@ -388,7 +360,8 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it:  OnPoint1SegmentA | OnSegmentB,
+		itA: OnPoint1Segment,
+		itB: OnSegment,
 		pi:  []Point{{X: 2, Y: 2}},
 		dbp: 4.9923017660e+00,
 	},
@@ -405,8 +378,9 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 5, Y: 9}, // 4
 		},
-		it:  VerticalSegmentB | OnRay11SegmentA | OnSegmentB,
-		pi:  []Point{{X: 5, Y: 5}},
+		itA: OnRay11Segment,
+		itB: VerticalSegment,
+		pi:  []Point{},
 		dbp: 7.0710678119e-01,
 	},
 	{ // 15
@@ -422,8 +396,9 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 5, Y: 9}, // 4
 		},
-		it:  VerticalSegmentB | OnRay00SegmentA | OnSegmentB,
-		pi:  []Point{{X: 5, Y: 5}},
+		itA: OnRay00Segment,
+		itB: VerticalSegment,
+		pi:  []Point{},
 		dbp: 7.0710678119e-01,
 	},
 	{ // 16
@@ -439,8 +414,9 @@ var tcs = []TestCase{
 			Point{X: 1, Y: 1}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it:  VerticalSegmentA | OnRay11SegmentB | OnSegmentA,
-		pi:  []Point{{X: 5, Y: 5}},
+		itA: VerticalSegment,
+		itB: OnRay11Segment,
+		pi:  []Point{},
 		dbp: 6,
 	},
 	{ // 17
@@ -456,8 +432,9 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 2}, // 3
 			Point{X: 1, Y: 1}, // 4
 		},
-		it:  VerticalSegmentA | OnRay00SegmentB | OnSegmentA,
-		pi:  []Point{{X: 5, Y: 5}},
+		itA: VerticalSegment,
+		itB: OnRay00Segment,
+		pi:  []Point{},
 		dbp: 6,
 	},
 	{ // 18 : Test data - no intersection
@@ -467,8 +444,8 @@ var tcs = []TestCase{
 			Point{X: 1.2, Y: 2},
 			Point{X: 5, Y: 5},
 		},
-		it:  OnRay00SegmentB | OnSegmentA,
-		pi:  []Point{{X: 0.7509280607532581, Y: 1.6454695216473094}},
+		itB: OnRay00Segment,
+		pi:  []Point{},
 		dbp: 2.4656014677e+00,
 	},
 	{ // 19 : Test data - no intersection
@@ -478,7 +455,8 @@ var tcs = []TestCase{
 			Point{X: 9, Y: 2},
 			Point{X: 5, Y: 5},
 		},
-		it:  OnSegmentA | OnSegmentB,
+		itA: OnSegment,
+		itB: OnSegment,
 		pi:  []Point{{X: 5.9627881085877945, Y: 4.277908918559155}},
 		dbp: 5.5977179784e+00,
 	},
@@ -496,7 +474,8 @@ var tcs = []TestCase{
 			Point{X: 4, Y: 4}, // 3
 			Point{X: 2, Y: 2}, // 4
 		},
-		it:  Collinear,
+		itA: Collinear,
+		itB: Collinear,
 		dbp: 7.0710678119e-01,
 	},
 	{ // 21
@@ -504,109 +483,115 @@ var tcs = []TestCase{
 			{-2, 0}, {2, 0},
 			{0, -1}, {1, 0}, {0, 1},
 		},
-		it: HorizontalSegmentA | OnSegmentA | OnSegmentB | LineFromArcCenter,
-		pi: []Point{{1, 0}},
+		itA: HorizontalSegment | OnSegment,
+		itB: OnSegment,
+		pi:  []Point{{1, 0}},
 	},
 	{ // 22
 		ps: []Point{
 			{-2, 4}, {2, 4},
 			{0, -1}, {1, 0}, {0, 1}},
 
-		pi: []Point{},
-		it: HorizontalSegmentA,
+		pi:  []Point{},
+		itA: HorizontalSegment,
 	},
 	{ // 23
 		ps: []Point{
 			{-2, 4}, {2, 4},
 			{0, -1}, {0, 0}, {0, 1}},
 
-		pi: []Point{},
-		it: HorizontalSegmentA,
+		pi:  []Point{},
+		itA: HorizontalSegment,
+		itB: VerticalSegment | OnRay11Segment | ArcIsLine,
 	},
 	{ // 24
 		ps: []Point{
 			{-2, 4}, {2, 4},
 			{1, 0}, {1, 0}, {0, 1}},
 
-		pi: []Point{{-3, 4}},
-		it: OnRay00SegmentA | OnRay11SegmentB | HorizontalSegmentA |
-			ArcIsLine | Arc01indentical,
+		pi:  []Point{},
+		itA: OnRay00Segment | HorizontalSegment,
+		itB: OnRay11Segment | ArcIsLine,
 	},
 	{ // 25
 		ps: []Point{
 			{-2, 4}, {2, 4},
 			{1, 0}, {0, 1}, {0, 1}},
 
-		pi: []Point{{-3, 4}},
-		it: OnRay00SegmentA | OnRay11SegmentB | HorizontalSegmentA |
-			ArcIsLine | Arc12indentical,
+		pi:  []Point{},
+		itA: OnRay00Segment | HorizontalSegment,
+		itB: OnRay11Segment | ArcIsLine,
 	},
 	{ // 26
 		ps: []Point{
 			{-2, 4}, {2, 4},
 			{0, 1}, {0, 1}, {0, 1}},
 
-		pi: []Point{},
-		it: HorizontalSegmentA | ArcIsPoint |
-			Arc01indentical | Arc02indentical | Arc12indentical,
+		pi:  []Point{},
+		itA: HorizontalSegment | OnRay11Segment,
+		itB: ArcIsPoint | VerticalSegment | HorizontalSegment | ZeroLengthSegment,
 	},
 	{ // 27
 		ps: []Point{
 			{-2, 1}, {2, 1},
 			{0, -1}, {1, 0}, {0, 1}},
 
-		pi: []Point{{0, 1}},
-		it: HorizontalSegmentA | OnSegmentA | OnPoint1SegmentB,
+		pi:  []Point{Point{0, 1}},
+		itA: HorizontalSegment | OnSegment,
+		itB: OnPoint1Segment,
 	},
 	{ // 28
 		ps: []Point{
 			{0, 1}, {2, 1},
 			{0, -1}, {1, 0}, {0, 1}},
 
-		pi: []Point{{0, 1}},
-		it: HorizontalSegmentA | OnPoint0SegmentA | OnPoint1SegmentB,
+		pi:  []Point{},
+		itA: HorizontalSegment | OnPoint0Segment,
+		itB: OnPoint1Segment,
 	},
 	{ // 29
 		ps: []Point{
 			{0, 1}, {0, -1},
 			{0, -1}, {1, 0}, {0, 1}},
 
-		pi: []Point{{0, 1}, {0, -1}},
-		it: VerticalSegmentA | OnPoint0SegmentA | OnPoint1SegmentA |
-			LineFromArcCenter | OnPoint0SegmentB |
-			OnPoint1SegmentB,
+		pi:  []Point{},
+		itA: VerticalSegment | OnPoint0Segment | OnPoint1Segment,
+		itB: OnPoint0Segment | OnPoint1Segment,
 	},
 	{ // 30
 		ps: []Point{
 			{1, 1}, {1, -1},
 			{0, -1}, {1, 0}, {0, 1}},
 
-		pi: []Point{{1, 0}},
-		it: VerticalSegmentA | OnSegmentA | OnSegmentB,
+		pi:  []Point{{1, 0}},
+		itA: VerticalSegment | OnSegment,
+		itB: OnSegment,
 	},
 	{ // 31
 		ps: []Point{
 			{2, 1}, {2, -1},
 			{0, -1}, {1, 0}, {0, 1}},
 
-		pi: []Point{},
-		it: VerticalSegmentA,
+		pi:  []Point{},
+		itA: VerticalSegment,
 	},
 	{ // 32
 		ps: []Point{
 			{1, 1}, {1, -1},
 			{0, 0}, {1, 1}, {0, 2}},
 
-		pi: []Point{{1, 1}},
-		it: VerticalSegmentA | OnPoint0SegmentA | OnSegmentB,
+		pi:  []Point{Point{1, 1}},
+		itA: VerticalSegment | OnPoint0Segment,
+		itB: OnSegment,
 	},
 	{ // 33
 		ps: []Point{
 			{-1, 1}, {3, 1},
 			{1, 0}, {2, 1}, {1, 2}},
 
-		pi: []Point{{2, 1}},
-		it: HorizontalSegmentA | OnSegmentA | OnSegmentB | LineFromArcCenter,
+		pi:  []Point{{2, 1}},
+		itA: HorizontalSegment | OnSegment,
+		itB: OnSegment,
 	},
 	{ // 34
 		ps: []Point{
@@ -620,32 +605,38 @@ var tcs = []TestCase{
 			{2, 3}, {3, 2},
 			{2, 3}, {3, 2}, {2, 1}},
 
-		pi: []Point{{2, 3}, {3, 2}},
-		it: OnPoint0SegmentA | OnPoint1SegmentA | OnPoint0SegmentB,
+		pi:  []Point{{3, 2}},
+		itA: OnPoint0Segment | OnPoint1Segment,
+		itB: OnPoint0Segment | OnSegment,
 	},
 	{ // 36
 		ps: []Point{
 			{2, 2 + 0.70710678*2}, {2 + 0.70710678*2, 2},
 			{2, 3}, {3, 2}, {2, 1}},
 
-		pi: []Point{{2 + 0.70710678, 2 + 0.70710678}},
-		it: OnSegmentB | OnSegmentA,
+		pi:  []Point{{2 + 0.70710678, 2 + 0.70710678}},
+		itA: OnSegment,
+		itB: OnSegment,
 	},
 	{ // 37
 		ps: []Point{
 			{-2, 0}, {2, 0},
 			{0, 1}, {1, 0}, {0, -1},
 		},
-		it: HorizontalSegmentA | OnSegmentA | OnSegmentB | LineFromArcCenter,
-		pi: []Point{{1, 0}},
+		itA: HorizontalSegment | OnSegment,
+		itB: OnSegment,
+		pi:  []Point{{1, 0}},
 	},
 	{ // 38
 		ps: []Point{
 			{1, 1}, {1, 1},
 			{1, 1}, {1, 1}, {1, 1},
 		},
-		it: HorizontalSegmentA | VerticalSegmentA | ZeroLengthSegmentA |
-			Arc01indentical | Arc12indentical | Arc02indentical | ArcIsPoint,
+		itA: HorizontalSegment | VerticalSegment | ZeroLengthSegment |
+			OnPoint0Segment | OnPoint1Segment,
+		itB: HorizontalSegment | VerticalSegment | ZeroLengthSegment |
+			OnPoint0Segment | OnPoint1Segment |
+			ArcIsPoint,
 		pi: []Point{},
 	},
 	{ // 39
@@ -653,9 +644,9 @@ var tcs = []TestCase{
 			{0, -1}, {0, 0},
 			{0, -1}, {1, 0}, {0, 1},
 		},
-		it: VerticalSegmentA | OnPoint0SegmentA |
-			OnPoint0SegmentB | LineFromArcCenter,
-		pi: []Point{{0, -1}},
+		itA: VerticalSegment | OnPoint0Segment,
+		itB: OnPoint0Segment,
+		pi:  []Point{},
 	},
 }
 
@@ -668,7 +659,8 @@ func init() {
 		ts.ps = make([]Point, len(t.ps))
 		copy(ts.ps, t.ps)
 		ts.name = t.name
-		ts.it = t.it
+		ts.itA = t.itA
+		ts.itB = t.itB
 		ts.bp = t.bp
 		ts.dbp = t.dbp
 		return ts
@@ -681,6 +673,8 @@ func init() {
 	}
 
 	var size int
+
+	// TODO line to arc
 
 	// add test with moving
 	size = len(tcs)
@@ -734,37 +728,45 @@ func Test(t *testing.T) {
 				t.Fatal(err)
 			}
 			var (
-				pi []Point
-				it State
+				pi       []Point
+				itA, itB State
 			)
 			switch len(tc.ps) {
 			case 4:
-				pi, it = SegmentAnalisys(
+				pi, itA, itB = LineLine(
 					tc.ps[0], tc.ps[1],
 					tc.ps[2], tc.ps[3],
 				)
 			case 5:
-				pi, it = ArcLineAnalisys(
+				pi, itA, itB = LineArc(
 					tc.ps[0], tc.ps[1],
 					tc.ps[2], tc.ps[3], tc.ps[4],
 				)
 			default:
 				t.Fatal("not valid data")
 			}
-			if it != tc.it {
-				t.Error("Not same types")
-				t.Logf("Points   : %v", tc.ps)
-				t.Logf("Expected : %30b", tc.it)
-				t.Logf("Actual   : %30b", it)
-				t.Logf("Diff1    : %30b", tc.it&^it)
-				t.Logf("View:\n%s", view(tc.it&^it, names))
-				t.Logf("Diff2    : %30b", it&^tc.it)
-				t.Logf("View:\n%s", view(it&^tc.it, names))
-			}
-			// store
-			for i := 0; i < len(types); i++ {
-				if it&State(1<<i) != 0 {
-					types[i]++
+			for index, s := range [][2]State{
+				[2]State{itA, tc.itA},
+				[2]State{itB, tc.itB},
+			} {
+				if s[0] != s[1] {
+					t.Errorf("Not same types: %d", index)
+					t.Logf("Points   : %v", tc.ps)
+					t.Logf("Expected : %30b", s[0])
+					t.Logf("Actual   : %30b", s[1])
+					t.Logf("Diff1    : %30b", s[1]&^s[0])
+					t.Logf("View:\n%s", view(s[1]&^s[0], names))
+					t.Logf("Diff2    : %30b", s[0]&^s[1])
+					t.Logf("View:\n%s", view(s[0]&^s[1], names))
+				}
+				// store
+				for i := 0; i < len(types); i++ {
+					if itA&State(1<<i) != 0 {
+						types[i]++
+					}
+					if itB&State(1<<i) != 0 {
+						types[i]++
+					}
 				}
 			}
 			if len(pi) != len(tc.pi) {
@@ -847,7 +849,7 @@ func Benchmark(b *testing.B) {
 		panic(err)
 	}
 	for n := 0; n < b.N; n++ {
-		SegmentAnalisys(
+		LineLine(
 			pps[0], pps[1],
 			pps[2], pps[3],
 		)
@@ -864,7 +866,7 @@ func TestLinePointDistance(t *testing.T) {
 			if err := Check(tc.ps...); err != nil {
 				t.Fatal(err)
 			}
-			d := LinePointDistance(tc.ps[0], tc.ps[1], tc.ps[4])
+			d := PointLineDistance(tc.ps[0], tc.ps[1], tc.ps[4])
 			if eps := 1e-6; math.Abs(d-tc.dbp) > eps {
 				t.Errorf("Not valid distance: %.10e != expected %.2e",
 					d, tc.dbp,
@@ -970,34 +972,96 @@ func TestOrientation(t *testing.T) {
 
 func TestAngleBetween(t *testing.T) {
 	tcs := []struct {
-		from, a, to float64
-		expect      bool
+		name          string
+		xc,yc float64
+		from, mid, to Point
+		a             Point
+		expect        bool
 	}{
-		{from: -3.1, a: -2.5, to: -.02, expect: true},  // 0
-		{from: -3.1, a: -3.2, to: -2.0, expect: false}, // 1
-		{from: +2.1, a: +2.5, to: +2.8, expect: true},  // 2
-		{from: -2.1, a: +2.5, to: +2.8, expect: true},  // 3
-		{from: +2.1, a: -2.5, to: +2.8, expect: false}, // 4
-		{from: +3.0, a: -2.5, to: -2.0, expect: true},  // 5
-		{from: -1.2, a: -2.5, to: -2.0, expect: true},  // 6
-		{from: -3.0, a: -2.5, to: -2.0, expect: true},  // 7
-		{from: -2.5, a: -2.0, to: -2.2, expect: false}, // 8
-		{from: -2.5, a: -2.1, to: -2.2, expect: false}, // 9
-		{from: -1.2, a: +3.1, to: -2.0, expect: true},  // 10
-		{from: +3.0, a: +3.1, to: -2.0, expect: true},  // 11
-		{from: +3.0, a: +3.1, to: +2.9, expect: true},  // 12
-		{from: +3.0, a: -1.5, to: -2.0, expect: false}, // 13
-		{from: +3.0, a: +2.5, to: -2.0, expect: false}, // 14
+		{ // 0
+			from:   Point{+1, +0},
+			mid:    Point{+0, +1},
+			to:     Point{-1, +0},
+			a:      Point{+0, +1},
+			expect: true,
+		}, { // 1
+			from:   Point{+1, +0},
+			mid:    Point{+0, +1},
+			to:     Point{-1, +0},
+			a:      Point{+0, -1},
+			expect: false,
+		}, { // 2
+			from:   Point{-1, +0},
+			mid:    Point{+0, +1},
+			to:     Point{+1, +0},
+			a:      Point{+0, +1},
+			expect: true,
+		}, { // 3
+			from:   Point{-1, +0},
+			mid:    Point{+0, +1},
+			to:     Point{+1, +0},
+			a:      Point{+0, -1},
+			expect: false,
+		}, { // 4
+			from:   Point{+0, +1},
+			mid:    Point{-1, +0},
+			to:     Point{+0, -1},
+			a:      Point{-1, +0},
+			expect: true,
+		}, { // 5
+			from:   Point{+0, +1},
+			mid:    Point{-1, +0},
+			to:     Point{+0, -1},
+			a:      Point{+1, +0},
+			expect: false,
+		}, { // 6
+			from:   Point{+0, -1},
+			mid:    Point{-1, +0},
+			to:     Point{+0, +1},
+			a:      Point{-1, +0},
+			expect: true,
+		}, { // 7
+			from:   Point{+0, -1},
+			mid:    Point{-1, +0},
+			to:     Point{+0, +1},
+			a:      Point{+1, +0},
+			expect: false,
+		},
+	}
+	for i := range tcs {
+		tcs[i].name = fmt.Sprintf("t%02d", i)
+	}
+	// move
+	size := len(tcs)
+	for _, xc := range []float64{2.0, 0.0, -2.0} {
+		for _, yc := range []float64{2.0, 0.0, -2.0} {
+			for i := 0; i < size; i++ {
+				c := tcs[i]
+				c.name += fmt.Sprintf("move%.0f%.0f", xc, yc)
+				c.from.X += xc
+				c.from.Y += yc
+				c.mid.X += xc
+				c.mid.Y += yc
+				c.to.X += xc
+				c.to.Y += yc
+				c.a.X += xc
+				c.a.Y += yc
+				c.xc = xc
+				c.yc = yc
+				tcs = append(tcs, c)
+			}
+		}
 	}
 
 	for i := range tcs {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			res := AngleBetween(tcs[i].from, tcs[i].a, tcs[i].to)
+		t.Run(fmt.Sprintf("%s", tcs[i].name), func(t *testing.T) {
+			res := AngleBetween(Point{tcs[i].xc, tcs[i].yc}, tcs[i].from, tcs[i].mid, tcs[i].to, tcs[i].a)
 			if res != tcs[i].expect {
 				t.Errorf("not valid: %v", tcs[i])
 			}
 		})
 	}
+
 }
 
 func ExampleArcSplitByPoint() {

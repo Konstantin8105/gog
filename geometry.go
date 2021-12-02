@@ -31,14 +31,11 @@ type State int64
 const (
 	empty State = 1 << iota
 
-	VerticalSegmentA // vertical segment A
-	VerticalSegmentB // vertical segment B
+	VerticalSegment // vertical segment
 
-	HorizontalSegmentA // horizontal segment A
-	HorizontalSegmentB // horizontal segment B
+	HorizontalSegment // horizontal segment
 
-	ZeroLengthSegmentA // zero length segment A
-	ZeroLengthSegmentB // zero length segment B
+	ZeroLengthSegment // zero length segment
 
 	// Segment A and segment B are parallel.
 	// Intersection point data is not valid.
@@ -48,30 +45,16 @@ const (
 	// Intersection point data is not valid.
 	Collinear
 
-	OnSegmentA // intersection point on segment A
-	OnSegmentB // intersection point on segment B
+	OnSegment // intersection point on segment
 
-	OnRay00SegmentA // intersection point on ray 00 segment A
-	OnRay11SegmentA // intersection point on ray 11 segment A
-	OnRay00SegmentB // intersection point on ray 00 segment B
-	OnRay11SegmentB // intersection point on ray 11 segment B
+	OnRay00Segment // intersection point on ray 00 segment
+	OnRay11Segment // intersection point on ray 11 segment
 
-	OnPoint0SegmentA // intersection point on point 0 segment A
-	OnPoint1SegmentA // intersection point on point 1 segment A
-	OnPoint0SegmentB // intersection point on point 0 segment B
-	OnPoint1SegmentB // intersection point on point 1 segment B
+	OnPoint0Segment // intersection point on point 0 segment
+	OnPoint1Segment // intersection point on point 1 segment
 
-	OverlapP0AP0B // overlapping point 0 segment A and point 0 segment B
-	OverlapP0AP1B // overlapping point 0 segment A and point 1 segment B
-	OverlapP1AP0B // overlapping point 1 segment A and point 0 segment B
-	OverlapP1AP1B // overlapping point 1 segment A and point 1 segment B
-
-	Arc01indentical   // arc points 0 and 1 zero length
-	Arc12indentical   // arc points 1 and 2 zero length
-	Arc02indentical   // arc points 0 and 2 zero length
-	ArcIsLine         // wrong arc is line
-	ArcIsPoint        // wrong arc is point
-	LineFromArcCenter // line intersect center of arc
+	ArcIsLine  // wrong arc is line
+	ArcIsPoint // wrong arc is point
 
 	// last unused type
 	endType
@@ -134,7 +117,79 @@ var (
 	Eps float64 = 1e-6
 )
 
-// SegmentAnalisys return analisys of two segments
+func PointPoint(
+	pt0, pt1 Point,
+) (
+	pi []Point,
+	stA, stB State,
+) {
+	// fmt.Println("> PointPoint")
+	stA |= ZeroLengthSegment | VerticalSegment | HorizontalSegment
+	stA |= OnPoint0Segment | OnPoint1Segment
+	if Distance(pt0, pt1) < Eps {
+		stA |= OnPoint0Segment | OnPoint1Segment
+	}
+	stB = stA
+	return
+}
+
+func PointLine(
+	pt Point,
+	pb0, pb1 Point,
+) (
+	pi []Point,
+	stA, stB State,
+) {
+	// fmt.Println("> PointLine: ", pt, pb0, pb1)
+	// Point - Point
+	if Distance(pb0, pb1) < Eps {
+		return PointPoint(pt, pb0)
+	}
+	// Point - Line
+
+	stA |= ZeroLengthSegment | VerticalSegment | HorizontalSegment
+
+	for _, c := range [...]struct {
+		isTrue   bool
+		tiA, tiB State
+	}{
+		{isTrue: Distance(pt, pb0) < Eps, tiA: OnPoint0Segment | OnPoint1Segment, tiB: OnPoint0Segment},
+		{isTrue: Distance(pt, pb1) < Eps, tiA: OnPoint0Segment | OnPoint1Segment, tiB: OnPoint1Segment},
+		{isTrue: math.Abs(pb0.X-pb1.X) < Eps, tiB: VerticalSegment},
+		{isTrue: math.Abs(pb0.Y-pb1.Y) < Eps, tiB: HorizontalSegment},
+	} {
+		if c.isTrue {
+			stA |= c.tiA
+			stB |= c.tiB
+		}
+	}
+
+	if math.Abs(Distance(pt, pb0)+Distance(pt, pb1)-Distance(pb0, pb1)) < Eps &&
+		stB.Not(OnPoint0Segment) && stB.Not(OnPoint1Segment) {
+		stA |= OnPoint0Segment | OnPoint1Segment
+		stB |= OnSegment
+	}
+
+	if stB.Has(OnSegment) && stB.Not(OnPoint0Segment) && stB.Not(OnPoint1Segment) {
+		pi = []Point{pt}
+	}
+
+	// is point on ray
+	if FindRayIntersection &&
+		stB.Not(OnPoint0Segment) &&
+		stB.Not(OnPoint1Segment) &&
+		stB.Not(OnSegment) {
+		if Distance(pb0, pt) < Distance(pb1, pt) {
+			stB |= OnRay00Segment
+		} else {
+			stB |= OnRay11Segment
+		}
+	}
+
+	return
+}
+
+// LineLine return analisys of two segments
 //
 // Design of segments:
 //	                                            //
@@ -155,150 +210,123 @@ var (
 //
 // Reference:
 //	[1]  https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
-func SegmentAnalisys(
+func LineLine(
 	pa0, pa1 Point,
 	pb0, pb1 Point,
 ) (
 	pi []Point,
-	st State,
+	stA, stB State,
 ) {
-	// check input data of points is outside of that function
-
-	var (
-		x1 = pa0.X
-		y1 = pa0.Y
-
-		x2 = pa1.X
-		y2 = pa1.Y
-
-		x3 = pb0.X
-		y3 = pb0.Y
-
-		x4 = pb1.X
-		y4 = pb1.Y
-	)
-
-	for _, c := range [...]struct {
-		isTrue bool
-		ti     State
-	}{
-		{isTrue: math.Abs(x1-x3) < Eps && math.Abs(y1-y3) < Eps, ti: OverlapP0AP0B},
-		{isTrue: math.Abs(x1-x4) < Eps && math.Abs(y1-y4) < Eps, ti: OverlapP0AP1B},
-		{isTrue: math.Abs(x2-x3) < Eps && math.Abs(y2-y3) < Eps, ti: OverlapP1AP0B},
-		{isTrue: math.Abs(x2-x4) < Eps && math.Abs(y2-y4) < Eps, ti: OverlapP1AP1B},
-		{isTrue: math.Abs(x1-x2) < Eps, ti: VerticalSegmentA},
-		{isTrue: math.Abs(x3-x4) < Eps, ti: VerticalSegmentB},
-		{isTrue: math.Abs(y1-y2) < Eps, ti: HorizontalSegmentA},
-		{isTrue: math.Abs(y3-y4) < Eps, ti: HorizontalSegmentB},
-		{isTrue: math.Abs(x1-x2) < Eps && math.Abs(y1-y2) < Eps, ti: ZeroLengthSegmentA},
-		{isTrue: math.Abs(x3-x4) < Eps && math.Abs(y3-y4) < Eps, ti: ZeroLengthSegmentB},
-	} {
-		if c.isTrue {
-			st |= c.ti
-		}
+	// fmt.Println("> LineLine")
+	// Point - Point
+	if Distance(pa0, pa1) < Eps && Distance(pb0, pb1) < Eps {
+		return PointPoint(pa0, pb0)
 	}
-
-	// is intersect point on line?
-	for _, c := range [...]struct {
-		isTrue bool
-		ti     State
-	}{
-		{isTrue: Distance(pa0, pb0) < Eps, ti: OnPoint0SegmentA | OnPoint0SegmentB},
-		{isTrue: Distance(pa0, pb1) < Eps, ti: OnPoint0SegmentA | OnPoint1SegmentB},
-		{isTrue: Distance(pa1, pb0) < Eps, ti: OnPoint1SegmentA | OnPoint0SegmentB},
-		{isTrue: Distance(pa1, pb1) < Eps, ti: OnPoint1SegmentA | OnPoint1SegmentB},
-	} {
-		if c.isTrue {
-			st |= c.ti
-		}
+	// Point - Line
+	if Distance(pa0, pa1) < Eps {
+		return PointLine(pa0, pb0, pb1)
 	}
-
-	if st.Has(ZeroLengthSegmentA) && st.Has(ZeroLengthSegmentB) {
-		pi = []Point{pa0}
+	if Distance(pb0, pb1) < Eps {
+		pi, stA, stB = PointLine(pb0, pa0, pa1)
+		stA, stB = stB, stA
 		return
 	}
+	// Line - Line
 
-	switch {
-	case st.Has(OverlapP0AP0B) || st.Has(OverlapP0AP1B):
-		pi = []Point{pa0}
-	case st.Has(OverlapP1AP0B) || st.Has(OverlapP1AP1B):
-		pi = []Point{pa1}
+	for _, c := range [...]struct {
+		isTrue   bool
+		tiA, tiB State
+	}{
+		{isTrue: Distance(pa0, pb0) < Eps, tiA: OnPoint0Segment, tiB: OnPoint0Segment},
+		{isTrue: Distance(pa0, pb1) < Eps, tiA: OnPoint0Segment, tiB: OnPoint1Segment},
+		{isTrue: Distance(pa1, pb0) < Eps, tiA: OnPoint1Segment, tiB: OnPoint0Segment},
+		{isTrue: Distance(pa1, pb1) < Eps, tiA: OnPoint1Segment, tiB: OnPoint1Segment},
+		{isTrue: math.Abs(pa0.X-pa1.X) < Eps, tiA: VerticalSegment},
+		{isTrue: math.Abs(pa0.Y-pa1.Y) < Eps, tiA: HorizontalSegment},
+		{isTrue: math.Abs(pb0.X-pb1.X) < Eps, tiB: VerticalSegment},
+		{isTrue: math.Abs(pb0.Y-pb1.Y) < Eps, tiB: HorizontalSegment},
+	} {
+		if c.isTrue {
+			stA |= c.tiA
+			stB |= c.tiB
+		}
 	}
 
-	// if zero, then vertical/horizontal
-	B := (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
-	if math.Abs(B) < Eps || st.Has(ZeroLengthSegmentA) || st.Has(ZeroLengthSegmentB) {
-		if math.Abs((x3-x1)*(y2-y1)-(x2-x1)*(y3-y1)) < Eps {
-			st |= Collinear
+	// collinear or parallel
+	Aa, Ba, Ca := Line(pa0, pa1)
+	Ab, Bb, Cb := Line(pb0, pb1)
+	if math.Abs((pa1.Y-pa0.Y)*(pb1.X-pb0.X)-(pb1.Y-pb0.Y)*(pa1.X-pa0.X)) < Eps {
+		collinear := false
+		switch {
+		case stA.Has(VerticalSegment) && stB.Has(VerticalSegment):
+			if math.Abs(pa0.X-pb0.X) < Eps {
+				collinear = true
+			}
+		case stA.Has(HorizontalSegment) && stB.Has(HorizontalSegment):
+			if math.Abs(pa0.Y-pb0.Y) < Eps {
+				collinear = true
+			}
+		default:
+			if Eps < math.Abs(Aa) && Eps < math.Abs(Ab) && math.Abs(Ca/Aa-Cb/Ab) < Eps {
+				collinear = true
+			}
+		}
+
+		if collinear {
+			stA |= Collinear
+			stB |= Collinear
 		} else {
-			st |= Parallel
+			stA |= Parallel
+			stB |= Parallel
 		}
 		return
 	}
 
 	// intersection point
-	A12 := x1*y2 - y1*x2
-	A34 := x3*y4 - y3*x4
+	x, y := Linear(Aa, Ba, -Ca, Ab, Bb, -Cb)
+	root := Point{X: x, Y: y}
 	{
-		x := (A12*(x3-x4) - (x1-x2)*A34) / B
-		y := (A12*(y3-y4) - (y1-y2)*A34) / B
-		pi = []Point{Point{X: x, Y: y}}
+		_, _, stBa := PointLine(root, pa0, pa1)
+		_, _, stBb := PointLine(root, pb0, pb1)
+		if stBa.Has(OnSegment) &&
+			(stBb.Has(OnSegment) || stBb.Has(OnPoint0Segment) || stBb.Has(OnPoint1Segment)) {
+			stA |= OnSegment
+		}
+		if stBb.Has(OnSegment) &&
+			(stBa.Has(OnSegment) || stBa.Has(OnPoint0Segment) || stBa.Has(OnPoint1Segment)) {
+			stB |= OnSegment
+		}
+
+		if stBa.Has(OnRay00Segment) {
+			stA |= OnRay00Segment
+		}
+		if stBa.Has(OnRay11Segment) {
+			stA |= OnRay11Segment
+		}
+
+		if stBb.Has(OnRay00Segment) {
+			stB |= OnRay00Segment
+		}
+		if stBb.Has(OnRay11Segment) {
+			stB |= OnRay11Segment
+		}
+	}
+	if stA.Has(OnSegment) || stB.Has(OnSegment) {
+		pi = []Point{root}
 	}
 
-	// is intersect point on line?
 	for _, c := range [...]struct {
-		isTrue bool
-		ti     State
+		isTrue   bool
+		tiA, tiB State
 	}{
-		{isTrue: Distance(pa0, pi[0]) < Eps, ti: OnPoint0SegmentA},
-		{isTrue: Distance(pa1, pi[0]) < Eps, ti: OnPoint1SegmentA},
-		{isTrue: Distance(pb0, pi[0]) < Eps, ti: OnPoint0SegmentB},
-		{isTrue: Distance(pb1, pi[0]) < Eps, ti: OnPoint1SegmentB},
+		{isTrue: Distance(pa0, root) < Eps, tiA: OnPoint0Segment},
+		{isTrue: Distance(pa1, root) < Eps, tiA: OnPoint1Segment},
+		{isTrue: Distance(pb0, root) < Eps, tiB: OnPoint0Segment},
+		{isTrue: Distance(pb1, root) < Eps, tiB: OnPoint1Segment},
 	} {
 		if c.isTrue {
-			st |= c.ti
-		}
-	}
-
-	for _, c := range [...]struct {
-		isTrue bool
-		ti     State
-	}{
-		{
-			isTrue: st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) &&
-				Distance(pa0, pi[0])+Distance(pa1, pi[0])-Distance(pa0, pa1) < Eps,
-			ti: OnSegmentA,
-		},
-		{
-			isTrue: st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) &&
-				Distance(pb0, pi[0])+Distance(pb1, pi[0])-Distance(pb0, pb1) < Eps,
-			ti: OnSegmentB,
-		},
-	} {
-		if c.isTrue {
-			st |= c.ti
-		}
-	}
-
-	// is intersect point on ray?
-	if FindRayIntersection {
-		if st.Not(OnPoint0SegmentA) && st.Not(OnPoint1SegmentA) && st.Not(OnSegmentA) {
-			disB0P0p := Distance(pa0, pi[0])
-			disB0P1p := Distance(pa1, pi[0])
-			if disB0P0p < disB0P1p {
-				st |= OnRay00SegmentA
-			} else {
-				st |= OnRay11SegmentA
-			}
-		}
-		if st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) && st.Not(OnSegmentB) {
-			disB1P0p := Distance(pb0, pi[0])
-			disB1P1p := Distance(pb1, pi[0])
-			if disB1P0p < disB1P1p {
-				st |= OnRay00SegmentB
-			} else {
-				st |= OnRay11SegmentB
-			}
+			stA |= c.tiA
+			stB |= c.tiB
 		}
 	}
 
@@ -318,11 +346,11 @@ func SegmentAnalisys(
 //
 // Distance from point (xm,ym) to line:
 //	d = |(A*xm+B*ym+C)/sqrt(A^2+B^2)|
-func LinePointDistance(
-	p0, p1 Point,
+func PointLineDistance(
 	pc Point,
+	p0, p1 Point,
 ) (distance float64) {
-	A, B, C := line(p0, p1)
+	A, B, C := Line(p0, p1)
 	var (
 		// coordinates of point
 		xm = pc.X
@@ -334,7 +362,7 @@ func LinePointDistance(
 
 // line parameters
 //	Ax+By+C = 0
-func line(p0, p1 Point) (A, B, C float64) {
+func Line(p0, p1 Point) (A, B, C float64) {
 	var (
 		dy = p1.Y - p0.Y
 		dx = p1.X - p0.X
@@ -369,22 +397,36 @@ func MirrorLine(
 	ml0, ml1 Point,
 	err error,
 ) {
-	pi, ti := SegmentAnalisys(
+	pi, tiA, tiB := LineLine(
 		sp0, sp1,
 		mp0, mp1,
 	)
-	if ti.Has(Parallel) || ti.Has(Collinear) {
+	if tiA.Has(Parallel) || tiA.Has(Collinear) ||
+		tiB.Has(Parallel) || tiB.Has(Collinear) {
 		err = fmt.Errorf("Segment and mirror is not intersect")
 		return
 	}
 	// Image of Point sp0 with respect to a line ax+bx+c=0 is line mirror mp0-mp1
 	var (
-		A, B, C = line(mp0, mp1)
+		A, B, C = Line(mp0, mp1)
 		x1      = sp1.X
 		y1      = sp1.Y
 		common  = -2.0 * (A*x1 + B*y1 + C) / (pow.E2(A) + pow.E2(B))
 	)
-	ml0 = pi[0]
+	if len(pi) == 0 {
+		switch {
+		case tiA.Has(OnPoint0Segment):
+			ml0 = sp0
+		case tiA.Has(OnPoint1Segment):
+			ml0 = sp1
+		default:
+
+			fmt.Printf("not understtod that case: %v", tiB)
+			return
+		}
+	} else {
+		ml0 = pi[0]
+	}
 	ml1.X = A*common + x1
 	ml1.Y = B*common + y1
 	if Distance(ml0, ml1) == 0.0 {
@@ -414,44 +456,143 @@ func Orientation(p1, p2, p3 Point) OrientationPoints {
 	return CounterClockwisePoints
 }
 
-func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
+func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
-	st State,
+	stA, stB State,
 ) {
-
-	for _, c := range [...]struct {
-		isTrue bool
-		ti     State
-	}{
-		{isTrue: math.Abs(Line0.X-Line1.X) < Eps, ti: VerticalSegmentA},
-		{isTrue: math.Abs(Line0.Y-Line1.Y) < Eps, ti: HorizontalSegmentA},
-		{isTrue: Distance(Line0, Line1) < Eps, ti: ZeroLengthSegmentA},
-		{isTrue: Distance(Arc0, Arc1) < Eps, ti: Arc01indentical},
-		{isTrue: Distance(Arc1, Arc2) < Eps, ti: Arc12indentical},
-		{isTrue: Distance(Arc0, Arc2) < Eps, ti: Arc02indentical},
-	} {
-		if c.isTrue {
-			st |= c.ti
+	// fmt.Println("> PointArc")
+	// Point - Point
+	if Distance(Arc0, Arc1) < Eps && Distance(Arc1, Arc2) < Eps {
+		pi, stA, stB = PointPoint(pt, Arc0)
+		stB |= ArcIsPoint
+		return
+	}
+	// Point - Line
+	{
+		A01, B01, C01 := Line(Arc0, Arc1)
+		A12, B12, C12 := Line(Arc1, Arc2)
+		if math.Abs(A01-A12) < Eps &&
+			math.Abs(B01-B12) < Eps &&
+			math.Abs(C01-C12) < Eps {
+			pi, stA, stB = PointLine(pt, Arc0, Arc2)
+			stB |= ArcIsLine
+			return
+		}
+		if Distance(Arc0, Arc1) < Eps {
+			pi, stA, stB = PointLine(pt, Arc0, Arc2)
+			stB |= ArcIsLine
+			return
+		}
+		if Distance(Arc1, Arc2) < Eps {
+			pi, stA, stB = PointLine(pt, Arc0, Arc2)
+			stB |= ArcIsLine
+			return
 		}
 	}
+	// Point - Arc
 
-	if st.Has(Arc01indentical) || st.Has(Arc12indentical) || st.Has(Arc02indentical) {
-		switch {
-		case st.Has(Arc01indentical) && st.Has(Arc12indentical):
-			st |= ArcIsPoint
-			return
-		case st.Has(Arc01indentical):
-			pi2, st2 := SegmentAnalisys(Line0, Line1, Arc0, Arc2)
-			st |= st2
-			pi = append(pi, pi2...)
-		default:
-			// for all cases and st.Has(Arc12indentical)
-			pi2, st2 := SegmentAnalisys(Line0, Line1, Arc0, Arc1)
-			st |= st2
-			pi = append(pi, pi2...)
-		}
-		st |= ArcIsLine
+	stA |= ZeroLengthSegment | VerticalSegment | HorizontalSegment
+
+	xc, yc, r := Arc(Arc0, Arc1, Arc2)
+	radius := Distance(Point{X: xc, Y: yc}, pt)
+	if radius < r-Eps || r+Eps < radius {
+		// point is outside of arc
 		return
+	}
+	// point is on arc corner ?
+	if Distance(pt, Arc0) < Eps {
+		stB |= OnPoint0Segment
+	}
+	if Distance(pt, Arc2) < Eps {
+		stB |= OnPoint1Segment
+	}
+
+// 	fmt.Println(">>>>>>>>>>>>>>>>>>>>>",
+// 
+// 		stB.Has(OnPoint0Segment), stB.Has(OnPoint1Segment),
+// 		AngleBetween(
+// 			Point{X: xc, Y: yc},
+// 			Arc0,
+// 			Arc1,
+// 			Arc2,
+// 			pt,
+// 		),
+// 
+// 		Point{X: xc, Y: yc},
+// 		Arc0,
+// 		Arc1,
+// 		Arc2,
+// 		pt,
+// 	)
+
+	// point is on arc ?
+	if stB.Not(OnPoint0Segment) && stB.Not(OnPoint1Segment) && AngleBetween(
+		Point{X: xc, Y: yc},
+		Arc0,
+		Arc1,
+		Arc2,
+		pt,
+	) {
+		stB |= OnSegment
+	}
+
+	return
+}
+
+func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
+	pi []Point,
+	stA, stB State,
+) {
+	// Point - Arc
+	if Distance(Line0, Line1) < Eps {
+		return PointArc(Line0, Arc0, Arc1, Arc2)
+	}
+	// Line - Point
+	if Distance(Arc0, Arc1) < Eps && Distance(Arc1, Arc2) < Eps {
+		pi, stA, stB = PointLine(Arc0, Line0, Line1)
+		stA, stB = stB, stA
+		stB |= ArcIsPoint
+		return
+	}
+	// Line - Line
+	if Distance(Arc0, Arc1) < Eps {
+		pi, stA, stB = LineLine(Line0, Line1, Arc0, Arc2)
+		stB |= ArcIsLine
+		return
+	}
+	if Distance(Arc1, Arc2) < Eps {
+		pi, stA, stB = LineLine(Line0, Line1, Arc0, Arc2)
+		stB |= ArcIsLine
+		return
+	}
+	{
+		A01, B01, C01 := Line(Arc0, Arc1)
+		A12, B12, C12 := Line(Arc1, Arc2)
+		if math.Abs(A01-A12) < Eps &&
+			math.Abs(B01-B12) < Eps &&
+			math.Abs(C01-C12) < Eps {
+			pi, stA, stB = LineLine(Line0, Line1, Arc0, Arc2)
+			stB |= ArcIsLine
+			return
+		}
+	}
+	// Line - Arc
+
+	for _, c := range [...]struct {
+		isTrue   bool
+		tiA, tiB State
+	}{
+		{isTrue: math.Abs(Line0.X-Line1.X) < Eps, tiA: VerticalSegment},
+		{isTrue: math.Abs(Line0.Y-Line1.Y) < Eps, tiA: HorizontalSegment},
+		{isTrue: Distance(Line0, Arc0) < Eps, tiA: OnPoint0Segment, tiB: OnPoint0Segment},
+		{isTrue: Distance(Line0, Arc2) < Eps, tiA: OnPoint0Segment, tiB: OnPoint1Segment},
+		{isTrue: Distance(Line1, Arc0) < Eps, tiA: OnPoint1Segment, tiB: OnPoint0Segment},
+		{isTrue: Distance(Line1, Arc2) < Eps, tiA: OnPoint1Segment, tiB: OnPoint1Segment},
+	} {
+		if c.isTrue {
+			stA |= c.tiA
+			stB |= c.tiB
+		}
 	}
 
 	// circle function
@@ -477,21 +618,17 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	//	xc = (b1 - a12*yc)*1/a11
 	//	a21*(b1-a12*yc)*1/a11 + a22*yc = b2
 	//	yc*(a22-a21/a11*a12) = b2 - a21/a11*b1
-	xc, yc, r := arcProperty(Arc0, Arc1, Arc2)
-
-	if LinePointDistance(Line0, Line1, Point{xc, yc}) < Eps {
-		st |= LineFromArcCenter
-	}
+	xc, yc, r := Arc(Arc0, Arc1, Arc2)
 
 	// line may be horizontal, vertical, other
-	A, B, C := line(Line0, Line1)
+	A, B, C := Line(Line0, Line1)
 
 	// Find intersections
 	//	A*x+B*y+C = 0               :   line equations
 	//	(x-xc)^2 + (y-yc)^2 = r^2   : circle equations
-	var root []Point
+	var roots []Point
 	switch {
-	case st.Has(HorizontalSegmentA):
+	case stA.Has(HorizontalSegment):
 		// line is horizontal
 		//	A = 0
 		//
@@ -509,16 +646,16 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 		case D < Eps:
 			// D == 0
 			// have one root
-			root = append(root, Point{X: +xc, Y: Line0.Y})
+			roots = append(roots, Point{X: +xc, Y: Line0.Y})
 		default:
 			// 0 < D
-			root = append(root,
+			roots = append(roots,
 				Point{X: +math.Sqrt(D) + xc, Y: Line0.Y},
 				Point{X: -math.Sqrt(D) + xc, Y: Line0.Y},
 			)
 		}
 
-	case st.Has(VerticalSegmentA):
+	case stA.Has(VerticalSegment):
 		// line is vertical
 		// B = 0
 		//
@@ -536,10 +673,10 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 		case D < Eps:
 			// D == 0
 			// have one root
-			root = append(root, Point{X: Line0.X, Y: +yc})
+			roots = append(roots, Point{X: Line0.X, Y: +yc})
 		default:
 			// 0 < D
-			root = append(root,
+			roots = append(roots,
 				Point{X: Line0.X, Y: +math.Sqrt(D) + yc},
 				Point{X: Line0.X, Y: -math.Sqrt(D) + yc},
 			)
@@ -575,95 +712,78 @@ func ArcLineAnalisys(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 			// have one root
 			y := -b / (2.0 * a)
 			x := -(B*y + C) * 1 / A
-			root = append(root, Point{X: x, Y: y})
+			roots = append(roots, Point{X: x, Y: y})
 		default:
 			// 0 < D
 			{
 				y := (-b + math.Sqrt(D)) / (2.0 * a)
 				x := -(B*y + C) * 1 / A
-				root = append(root, Point{X: x, Y: y})
+				roots = append(roots, Point{X: x, Y: y})
 			}
 			{
 				y := (-b - math.Sqrt(D)) / (2.0 * a)
 				x := -(B*y + C) * 1 / A
-				root = append(root, Point{X: x, Y: y})
+				roots = append(roots, Point{X: x, Y: y})
 			}
 		}
 	}
 
-	// is root on arc?
-	for _, r := range root {
-		if Distance(r, Point{xc, yc}) < Eps {
-			// point in center never intersect arc
-			continue
-		}
-		a := math.Atan2(r.Y-yc, r.X-xc)
-		b := []float64{
-			math.Atan2(Arc0.Y-yc, Arc0.X-xc),
-			math.Atan2(Arc1.Y-yc, Arc1.X-xc),
-			math.Atan2(Arc2.Y-yc, Arc2.X-xc),
-		}
-		if Orientation(Arc0, Arc1, Arc2) == ClockwisePoints {
-			// ClockwisePoints
-			b[0], b[2] = b[2], b[0]
-		}
-		// CounterClockwisePoints
-		if !AngleBetween(b[0], a, b[2]) {
-			continue
-		}
-		// root must be on line
-		// TODO analyze point-Line
-		_, st := SegmentAnalisys(Point{r.X-1,r.Y-1}, Point{r.X+1, r.Y+1}, Line0, Line1)
-		if st.Has(OnPoint0SegmentB) || st.Has(OnPoint1SegmentB) || st.Has(OnSegmentB) {
-			pi = append(pi, r)
-		}
-	}
+	// fmt.Println("roots", roots)
+	for _, root := range roots {
+		_, _, stBa := PointLine(root, Line0, Line1)
+		_, _, stBb := PointArc(root, Arc0, Arc1, Arc2)
 
-	// is intersect point on line?
-	for _, r := range pi {
+		added := false
+		// fmt.Println(root, stBa, stBb, "   arc   ", root, Arc0, Arc1, Arc2)
+
+		if stBa.Has(OnSegment) &&
+			(stBb.Has(OnSegment) || stBb.Has(OnPoint0Segment) || stBb.Has(OnPoint1Segment)) {
+			added = true
+			stA |= OnSegment
+		}
+
+		if stBb.Has(OnSegment) &&
+			(stBa.Has(OnSegment) || stBa.Has(OnPoint0Segment) || stBa.Has(OnPoint1Segment)) {
+			added = true
+			stB |= OnSegment
+		}
+
+		if !added {
+			continue
+		}
+
+		pi = append(pi, root)
+
 		for _, c := range [...]struct {
-			isTrue bool
-			ti     State
+			isTrue   bool
+			tiA, tiB State
 		}{
-			{isTrue: math.Abs(Line0.X-r.X) < Eps && math.Abs(Line0.Y-r.Y) < Eps, ti: OnPoint0SegmentA},
-			{isTrue: math.Abs(Line1.X-r.X) < Eps && math.Abs(Line1.Y-r.Y) < Eps, ti: OnPoint1SegmentA},
-			{isTrue: math.Abs(Arc0.X-r.X) < Eps && math.Abs(Arc0.Y-r.Y) < Eps, ti: OnPoint0SegmentB},
-			{isTrue: math.Abs(Arc2.X-r.X) < Eps && math.Abs(Arc2.Y-r.Y) < Eps, ti: OnPoint1SegmentB},
+			{
+				isTrue: Distance(Line0, root) < Eps &&
+					(stBa.Has(OnSegment) || stBa.Has(OnPoint0Segment) || stBa.Has(OnPoint1Segment)),
+				tiA: OnPoint0Segment,
+			},
+			{
+				isTrue: Distance(Line1, root) < Eps &&
+					(stBa.Has(OnSegment) || stBa.Has(OnPoint0Segment) || stBa.Has(OnPoint1Segment)),
+				tiA: OnPoint1Segment,
+			},
+			{
+				isTrue: Distance(Arc0, root) < Eps &&
+					(stBb.Has(OnSegment) || stBb.Has(OnPoint0Segment) || stBb.Has(OnPoint1Segment)),
+				tiB: OnPoint0Segment,
+			},
+			{
+				isTrue: Distance(Arc2, root) < Eps &&
+					(stBb.Has(OnSegment) || stBb.Has(OnPoint0Segment) || stBb.Has(OnPoint1Segment)),
+				tiB: OnPoint1Segment,
+			},
 		} {
 			if c.isTrue {
-				st |= c.ti
+				stA |= c.tiA
+				stB |= c.tiB
 			}
 		}
-	}
-
-	// identification of arc
-	size := len(pi)
-	if st.Has(OnPoint0SegmentB) {
-		size--
-	}
-	if st.Has(OnPoint1SegmentB) {
-		size--
-	}
-
-	switch size {
-	case 1:
-		if st.Not(OnPoint0SegmentB) && st.Not(OnPoint1SegmentB) {
-			st |= OnSegmentB
-		}
-	case 2:
-		st |= OnSegmentB
-	}
-
-	// identification of line
-	size = len(pi)
-	if st.Has(OnPoint0SegmentA) {
-		size--
-	}
-	if st.Has(OnPoint1SegmentA) {
-		size--
-	}
-	if 0 < size {
-		st |= OnSegmentA
 	}
 
 	return
@@ -703,7 +823,7 @@ againRemove:
 	}
 
 	// parameter of arc
-	xc, yc, r := arcProperty(Arc0, Arc1, Arc2)
+	xc, yc, r := Arc(Arc0, Arc1, Arc2)
 
 	// angle for rotate
 	angle0 := math.Min(
@@ -780,7 +900,30 @@ again:
 	return
 }
 
-func arcProperty(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
+// linear equations solving:
+//	a11*x + a12*y = b1
+//	a21*x + a22*y = b2
+func Linear(
+	a11, a12, b1 float64,
+	a21, a22, b2 float64,
+) (x, y float64) {
+	if math.Abs(a11) < Eps {
+		if math.Abs(a12) < Eps {
+			panic("cannot solve linear equations")
+		}
+		// swap parameters
+		a11, a12 = a12, a11
+		a21, a22 = a22, a21
+		defer func() {
+			x, y = y, x
+		}()
+	}
+	y = (b2 - a21/a11*b1) / (a22 - a21/a11*a12)
+	x = (b1 - a12*y) * 1 / a11
+	return
+}
+
+func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	var (
 		x1, x2, x3 = Arc0.X, Arc1.X, Arc2.X
 		y1, y2, y3 = Arc0.Y, Arc1.Y, Arc2.Y
@@ -790,38 +933,56 @@ func arcProperty(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 		a22        = 2 * (y1 - y3)
 		b1         = (pow.E2(x1) - pow.E2(x2)) + (pow.E2(y1) - pow.E2(y2))
 		b2         = (pow.E2(x1) - pow.E2(x3)) + (pow.E2(y1) - pow.E2(y3))
-		lin        = func(a11, a12, b1, a21, a22, b2 float64) (xc, yc float64) {
-			yc = (b2 - a21/a11*b1) / (a22 - a21/a11*a12)
-			xc = (b1 - a12*yc) * 1 / a11
-			return
-		}
 	)
-	if math.Abs(a11) < Eps {
-		yc, xc = lin(a21, a11, b1, a22, a21, b2)
-	} else {
-		xc, yc = lin(a11, a12, b1, a21, a22, b2)
-	}
+	xc, yc = Linear(a11, a12, b1, a21, a22, b2)
+
 	//	(xi-xc)^2+(yi-yc)^2 = R^2
 	r1 := math.Sqrt(pow.E2(x1-xc) + pow.E2(y1-yc))
 	r2 := math.Sqrt(pow.E2(x2-xc) + pow.E2(y2-yc))
 	r3 := math.Sqrt(pow.E2(x3-xc) + pow.E2(y3-yc))
 	r = (r1 + r2 + r3) / 3.0
+	// find angles
 	return
 }
 
 // AngleBetween return true for angle case from <= a <= to
-func AngleBetween(from, a, to float64) (res bool) {
-	if from < a+Eps && a < to+Eps {
-		// from <= a && a <= to
+func AngleBetween(center, from, mid, to, a Point) (res bool) {
+	switch Orientation(from, mid, to) {
+	case CollinearPoints:
+		panic("collinear")
+	case ClockwisePoints:
+		return AngleBetween(center, to, mid, from, a)
+	}
+	// CounterClockwisePoints
+	//fmt.Println("AngleBetween :::", center, from, mid, to, a)
+
+	ps := []Point{from, mid, to, a}
+	for i := range ps {
+		ps[i] = Point{X: ps[i].X - center.X, Y: ps[i].Y - center.Y}
+	}
+
+	// angle for rotate
+	// 	angle0 := 0.0
+	angle0 := -(math.Atan2(ps[0].Y, ps[0].X) + math.Pi)
+
+	//fmt.Println("angle0", angle0)
+
+	// rotate
+	for i := range ps {
+		ps[i] = Rotate(0, 0, +angle0, ps[i])
+	}
+	//fmt.Println("PS: ", ps)
+
+	// points angles
+	var b []float64
+	for i := range ps {
+		b = append(b, math.Atan2(ps[i].Y, ps[i].X))
+	}
+	//fmt.Println("B: ", b)
+
+	if b[0] < b[3] && b[3] < b[2] {
 		return true
 	}
-	if to < from+Eps && a < to+Eps && from < a+2*math.Pi+Eps {
-		// to < from && a <= to && from < a+2*math.Pi
-		return true
-	}
-	if to < from+Eps && from < a+Eps && a < to+2*math.Pi+Eps {
-		// to < from && from <= a && a < to+2*math.Pi
-		return true
-	}
+
 	return false
 }
