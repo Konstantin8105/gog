@@ -991,29 +991,69 @@ func TestOrientation(t *testing.T) {
 	tcs := []struct {
 		ps [3]Point
 		or OrientationPoints
-	}{
-		{
-			ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, 2}},
-			or: CollinearPoints,
-		},
-		{
-			ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, 20}},
-			or: CounterClockwisePoints,
-		},
-		{
-			ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, -2}},
-			or: ClockwisePoints,
-		},
+	}{{ // 0
+		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, 2}},
+		or: CollinearPoints,
+	}, { // 1
+		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, 20}},
+		or: CounterClockwisePoints,
+	}, { // 2
+		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, -2}},
+		or: ClockwisePoints,
+	}, { // 3
+		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{1, 0}},
+		or: ClockwisePoints,
+	}, { // 4
+		ps: [3]Point{Point{0, 0}, Point{1, 0}, Point{0.5, -0.5}},
+		or: ClockwisePoints,
+	}, { // 5
+		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{0, 1}},
+		or: CounterClockwisePoints,
+	}, { // 6
+		ps: [3]Point{Point{0, 0}, Point{0.5, 0.5}, Point{1, 0}},
+		or: ClockwisePoints,
+	}, { // 7
+		ps: [3]Point{Point{1, 0}, Point{0.5, 0.5}, Point{0, 0}},
+		or: CounterClockwisePoints,
+	}, { // 8
+		ps: [3]Point{Point{0, 0}, Point{0.5, 0.5}, Point{1, 1}},
+		or: CollinearPoints,
+	}, { // 9
+		ps: [3]Point{Point{1, 1}, Point{0.5, 0.5}, Point{0, 0}},
+		or: CollinearPoints,
+	}}
+	for i, tc := range tcs {
+		t.Run(fmt.Sprintf("t%2d", i), func(t *testing.T) {
+			p0 := tc.ps[0]
+			p1 := tc.ps[1]
+			p2 := tc.ps[2]
+			or := Orientation(p0, p1, p2)
+			if or != tc.or {
+				t.Errorf("Not valid: %v", tc)
+			}
+		})
 	}
-	for _, tc := range tcs {
-		p0 := tc.ps[0]
-		p1 := tc.ps[1]
-		p2 := tc.ps[2]
-		or := Orientation(p0, p1, p2)
-		if or != tc.or {
-			t.Errorf("Not valid: %v", tc)
-		}
+}
+
+func ExampleOrientation() {
+	delta := 1.0
+	for i := 1; i < 11; i++ {
+		value := Orientation(Point{0, 1}, Point{delta, 0}, Point{0, 0})
+		fmt.Fprintf(os.Stdout, "%.1e\t%v\n", delta, value)
+		delta /= 10.0
 	}
+
+	// Output:
+	// 1.0e+00	0
+	// 1.0e-01	0
+	// 1.0e-02	0
+	// 1.0e-03	0
+	// 1.0e-04	0
+	// 1.0e-05	0
+	// 1.0e-06	0
+	// 1.0e-07	-1
+	// 1.0e-08	-1
+	// 1.0e-09	-1
 }
 
 func TestTriangleSplitByPoint(t *testing.T) {
@@ -1336,6 +1376,41 @@ func TestPointLineDistance(t *testing.T) {
 			}
 			t.Errorf("Actual  : %v", res)
 			t.Errorf("Expected: %v", tcs[k].res)
+		})
+	}
+}
+
+func TestConvexHull(t *testing.T) {
+	tcs := []struct {
+		name string
+		ps   []Point
+		res  []Point
+	}{{
+		ps:  []Point{{0, 3}, {2, 2}, {1, 1}, {2, 1}, {3, 0}, {0, 0}, {3, 3}},
+		res: []Point{{+0, +0}, {+3, +0}, {+3, +3}, {+0, +3}},
+	}, {
+		ps:  []Point{{0, 3}, {1, 1}, {2, 2}, {4, 4}, {0, 0}, {1, 2}, {3, 1}, {3, 3}},
+		res: []Point{{+0, +0}, {+3, +1}, {+4, +4}, {+0, +3}},
+	}, {
+		ps:  []Point{{0, 0}, {0, 4}, {-4, 0}, {5, 0}, {0, -6}, {1, 0}},
+		res: []Point{{+0, -6}, {+5, +0}, {+0, +4}, {-4, +0}},
+	}}
+	for i := range tcs {
+		tcs[i].name = fmt.Sprintf("t%2d", i)
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			res := ConvexHull(tc.ps)
+			if len(res) != len(tc.res) {
+				t.Errorf("not same length")
+				return
+			}
+			for i := range res {
+				if Eps < Distance(res[i], tc.res[i]) {
+					t.Errorf("Not same points: %v != %v", res[i], tc.res[i])
+				}
+			}
 		})
 	}
 }

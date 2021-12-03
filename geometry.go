@@ -114,6 +114,7 @@ var (
 	FindRayIntersection bool = true
 
 	// Eps is epsilon - precision of intersection
+	// TODO add more precision - need 1e-10
 	Eps float64 = 1e-6
 )
 
@@ -1059,5 +1060,89 @@ func TriangleSplitByPoint(
 		{tr1, tr2, pt},
 		{tr2, tr0, pt},
 	}
+	return
+}
+
+func Det(a [3][3]float64) float64 {
+	return a[0][0]*a[1][1]*a[2][2] +
+		a[1][0]*a[2][1]*a[0][2] +
+		a[0][1]*a[1][2]*a[2][0] -
+		a[0][2]*a[1][1]*a[2][0] -
+		a[0][1]*a[1][0]*a[2][2] -
+		a[1][2]*a[2][1]*a[0][0]
+}
+
+func PointInCircle(point Point, circle []Point) bool {
+	var (
+		x1x = circle[0].X - point.X
+		y1y = circle[0].Y - point.Y
+
+		x2x = circle[1].X - point.X
+		y2y = circle[1].Y - point.Y
+
+		x3x = circle[2].X - point.X
+		y3y = circle[2].Y - point.Y
+	)
+
+	result := Det([3][3]float64{
+		[3]float64{x1x*x1x + y1y*y1y, x1x, y1y},
+		[3]float64{x2x*x2x + y2y*y2y, x2x, y2y},
+		[3]float64{x3x*x3x + y3y*y3y, x3x, y3y},
+	})
+	return Eps < result
+}
+
+// ConvexHull return chain of convex points
+func ConvexHull(points []Point) (chain []Point) {
+	if len(points) < 3 {
+		// points slice is small
+		return
+	}
+
+	// copy of points
+	{
+		c := make([]Point, len(points))
+		copy(c, points)
+		points = c
+	}
+	// sorting
+	sort.Slice(points, func(i, j int) bool {
+		if points[i].Y == points[j].Y {
+			return points[i].X < points[j].X
+		}
+		return points[i].Y < points[j].Y
+	})
+
+	// lower hull
+	var hull []Point
+	for _, point := range points {
+		for 2 <= len(hull) && (Orientation(hull[len(hull)-2], hull[len(hull)-1], point) == CollinearPoints ||
+			Orientation(hull[len(hull)-2], hull[len(hull)-1], point) == ClockwisePoints) {
+			hull = hull[:len(hull)-1]
+		}
+		hull = append(hull, point)
+	}
+	chain = append(chain, hull...)
+
+	// upper hull
+	hull = []Point{}
+	for i := len(points) - 1; 0 <= i; i-- {
+		point := points[i]
+		for 2 <= len(hull) && (Orientation(hull[len(hull)-2], hull[len(hull)-1], point) == CollinearPoints ||
+			Orientation(hull[len(hull)-2], hull[len(hull)-1], point) == ClockwisePoints) {
+			hull = hull[:len(hull)-1]
+		}
+		hull = append(hull, point)
+	}
+
+	// merge hulls
+	if 0 < len(chain) && 0 < len(hull) && Distance(chain[len(chain)-1], hull[0]) < Eps {
+		hull = hull[1:]
+	}
+	if 0 < len(chain) && 0 < len(hull) && Distance(chain[0], hull[len(hull)-1]) < Eps {
+		hull = hull[:len(hull)-1]
+	}
+	chain = append(chain, hull...)
+
 	return
 }

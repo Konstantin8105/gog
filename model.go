@@ -321,6 +321,8 @@ func (m *Model) Intersection() {
 		// point-point intersection
 		// TODO
 
+		// point-triangle intersection
+		// TODO
 	}
 	ai := 0
 	for _, f := range fs {
@@ -330,10 +332,6 @@ func (m *Model) Intersection() {
 			return
 		}
 	}
-}
-
-func ConvexHull(ps *[]Point) {
-	// TODO
 }
 
 func (m *Model) Merge() {
