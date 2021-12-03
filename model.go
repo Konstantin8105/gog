@@ -414,23 +414,23 @@ func (m *Model) RemoveEmptyPoints() {
 	pt := make([]bool, len(m.Points))
 	for i := range m.Lines {
 		for j := 0; j < 2; j++ {
-			pt[m.Lines[j]] = true
+			pt[m.Lines[i][j]] = true
 		}
 	}
 	for i := range m.Arcs {
 		for j := 0; j < 3; j++ {
-			pt[m.Arcs[j]] = true
+			pt[m.Arcs[i][j]] = true
 		}
 	}
 	for i := range m.Triangles {
 		for j := 0; j < 3; j++ {
-			pt[m.Triangles[j]] = true
+			pt[m.Triangles[i][j]] = true
 		}
 	}
 	// amount empty points
 	empty := 0
 	for i := range pt {
-		if pt {
+		if pt[i] {
 			continue
 		}
 		empty++
