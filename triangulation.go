@@ -1,6 +1,7 @@
 package gog
 
 type Mesh struct {
+	// TODO
 }
 
 func (m Mesh) ConvexHull() {
@@ -34,6 +35,105 @@ func (m *Mesh) MaxArea() {
 func (m *Mesh) MinAngle() {
 	// TODO
 }
+
+// Triangle is data structure "Nodes, ribs и triangles" created by
+// book "Algoritm building and analyse triangulation", A.B.Skvorcov
+//
+//	Scketch:
+//	+------------------------------------+
+//	|              tr[0]                 |
+//	|  nodes[0]    ribs[0]      nodes[1] |
+//	| o------------------------o         |
+//	|  \                      /          |
+//	|   \                    /           |
+//	|    \                  /            |
+//	|     \                /             |
+//	|      \              /              |
+//	|       \            /  ribs[1]      |
+//	|        \          /   tr[1]        |
+//	|  ribs[2]\        /                 |
+//	|  tr[2]   \      /                  |
+//	|           \    /                   |
+//	|            \  /                    |
+//	|             \/                     |
+//	|              o  nodes[2]           |
+//	+------------------------------------+
+//
+type Triangle struct {
+	nodes [3]int      // indexes of triangle points
+	ribs  [3]int      // indexes of triangle ribs
+	tr    [3]Triangle // indexes of near triangles
+}
+
+func (t *Triangle) swap() {
+	t.nodes[0], t.nodes[1] = t.nodes[1], t.nodes[0]
+	t.ribs[1], t.ribs[2] = t.ribs[2], t.ribs[1]
+	t.tr[1], t.tr[2] = t.tr[2], t.tr[1]
+}
+
+//      func createConvexHullTriangles (points []Point) {
+// 		 i := 0
+//          i++;
+//          nodes.add(points.get(0));
+//          int indexPoint0 = nodes.size() - 1;
+//          i++;
+//          nodes.add(points.get(1));
+//          int indexPoint1 = nodes.size() - 1;
+//          int commonRib = getIdRib();
+//          TriangleStructure commonTriangle = null;
+//
+//          int k = 0;
+//          while (i + k < points.size()) {
+//              i++;
+//              nodes.add(points.get(i - 1));
+//              int indexPoint2 = nodes.size() - 1;
+//              int rib12 = getIdRib();
+//              int rib20 = getIdRib();
+//
+//              TriangleStructure triangle = new TriangleStructure();
+//              triangle.iNodes = new int[]{indexPoint0, indexPoint1, indexPoint2};
+//              triangle.iRibs = new int[]{commonRib, rib12, rib20};
+//              triangle.triangles = new TriangleStructure[]{commonTriangle, null, null};
+//              if (commonTriangle != null) {
+//                  commonTriangle.triangles[1] = triangle;
+//              }
+//
+//              triangleList.add(triangle);
+//
+//              if (i + k >= points.size())
+//                  break;
+//
+//              int indexPoint0_next = indexPoint0;
+//              int indexPoint1_next = indexPoint2;
+//              k++;
+//              nodes.add(points.get(points.size() - k));
+//              int indexPoint2_next = nodes.size() - 1;
+//
+//              int rib12_next = getIdRib();
+//              int rib20_next = getIdRib();
+//
+//              TriangleStructure triangle2 = new TriangleStructure();
+//              triangle2.iNodes = new int[]{indexPoint0_next, indexPoint1_next, indexPoint2_next};
+//              triangle2.iRibs = new int[]{rib20, rib12_next, rib20_next};
+//              triangle2.triangles = new TriangleStructure[]{
+//                      triangle, null, null
+//              };
+//              triangle.triangles[2] = triangle2;
+//              triangleList.add(triangle2);
+//
+//
+//              indexPoint0 = indexPoint2_next;
+//              indexPoint1 = indexPoint1_next;
+//              commonRib = rib12_next;
+//              commonTriangle = triangle2;
+//          }
+//
+//          BorderBox borderBox = new BorderBox();
+//          for (Point point : points) {
+//              borderBox.addPoint(point);
+//          }
+//          return borderBox;
+//      }
 
 //
 // public class FlipStructure {
@@ -235,31 +335,6 @@ func (m *Mesh) MinAngle() {
 // //                triangulation.flipTriangles(next.triangle, next.side);
 //         }
 //     }
-//
-// // Triangulation data structure  "Nodes, ribs и triangles"
-// // book "Algoritm building and analyse triangulation", A.B.Skvorcov.
-// public class TriangleStructure {
-//     // indexes of triangle points
-//     public int[] iNodes;
-//     // indexes of near triangles
-//     public TriangleStructure[] triangles;
-//     // indexes of triangle ribs
-//     public int[] iRibs;
-//
-//     public void changeClockwise() {
-//         int temp;
-//         temp = iNodes[0];
-//         iNodes[0] = iNodes[1];
-//         iNodes[1] = temp;
-//         temp = iRibs[1];
-//         iRibs[1] = iRibs[2];
-//         iRibs[2] = temp;
-//         TriangleStructure tri = triangles[1];
-//         triangles[1] = triangles[2];
-//         triangles[2] = tri;
-//     }
-// }
-//
 //
 // public class TriangulationDelaunay {
 //     // Array of nodes - type: Point
