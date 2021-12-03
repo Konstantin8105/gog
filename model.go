@@ -332,6 +332,10 @@ func (m *Model) Intersection() {
 	}
 }
 
+func ConvexHull(ps *[]Point) {
+	// TODO
+}
+
 func (m *Model) Merge() {
 	// TODO
 }

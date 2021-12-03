@@ -39,6 +39,7 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 func Check(pps ...Point) error
     Check - check input data
 
+func ConvexHull(ps *[]Point)
 func Distance(p0, p1 Point) float64
     Distance between two points
 
@@ -130,6 +131,13 @@ func PointPoint(
 	pi []Point,
 	stA, stB State,
 )
+func TriangleSplitByPoint(
+	pt Point,
+	tr0, tr1, tr2 Point,
+) (
+	res [][3]Point,
+	err error,
+)
 
 TYPES
 
@@ -143,7 +151,7 @@ type Model struct {
 func (m *Model) AddArc(start, middle, end Point, tag int)
     AddArc add arc into model with specific tag
 
-func (m *Model) AddCircle(xc, yc, r float64, tag int, isHole bool)
+func (m *Model) AddCircle(xc, yc, r float64, tag int)
     AddCircle add arcs based on circle geometry into model with specific tag
 
 func (m *Model) AddLine(start, end Point, tag int)
@@ -155,12 +163,18 @@ func (m *Model) AddPoint(p Point) (index int)
 func (m *Model) Intersection()
     Intersection change model with finding all model intersections
 
+func (m *Model) Merge()
+
 func (m Model) MinPointDistance() (distance float64)
     MinPointDistance return minimal between 2 points
+
+func (m *Model) Move()
 
 func (m *Model) RemoveEmptyPoints()
 
 func (m *Model) RemovePoint()
+
+func (m *Model) Rotate()
 
 func (m *Model) Split()
 
