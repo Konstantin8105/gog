@@ -124,7 +124,6 @@ func PointPoint(
 	stA, stB State,
 ) {
 	stA |= ZeroLengthSegment | VerticalSegment | HorizontalSegment
-	stA |= OnPoint0Segment | OnPoint1Segment
 	if Distance(pt0, pt1) < Eps {
 		stA |= OnPoint0Segment | OnPoint1Segment
 	}

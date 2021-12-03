@@ -7,7 +7,7 @@ import (
 
 func ExampleModel() {
 	var m Model
-	m.AddCircle(0, 0, 1, 1, false)
+	m.AddCircle(0, 0, 1, 1)
 	m.AddLine(Point{-1, 0}, Point{1, 0}, 2)
 	m.AddLine(Point{0, -1}, Point{0, 1}, 2)
 	m.Intersection()

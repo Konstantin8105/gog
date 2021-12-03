@@ -657,6 +657,35 @@ var tcs = []TestCase{
 		itA: VerticalSegment | OnPoint0Segment,
 		itB: OnSegment,
 	},
+	{ // 41
+		ps: []Point{
+			{+1, +1},
+			{+0, +0}, {+0, +0},
+		},
+		pi:  []Point{},
+		itA: VerticalSegment | HorizontalSegment | ZeroLengthSegment,
+		itB: VerticalSegment | HorizontalSegment | ZeroLengthSegment,
+	},
+	{ // 42
+		ps: []Point{
+			{+1, +1},
+			{+1, +1}, {+1, +1},
+		},
+		pi: []Point{},
+		itA: VerticalSegment | HorizontalSegment | ZeroLengthSegment |
+			OnPoint0Segment | OnPoint1Segment,
+		itB: VerticalSegment | HorizontalSegment | ZeroLengthSegment |
+			OnPoint0Segment | OnPoint1Segment,
+	},
+	{ // 43
+		ps: []Point{
+			{0, 1}, {0, -1},
+			{0, -1}, {1, 0}, {1, 0}},
+
+		pi:  []Point{},
+		itA: VerticalSegment | OnPoint1Segment,
+		itB: OnPoint0Segment | ArcIsLine,
+	},
 }
 
 func init() {
@@ -741,6 +770,11 @@ func Test(t *testing.T) {
 				itA, itB State
 			)
 			switch len(tc.ps) {
+			case 3:
+				pi, itA, itB = PointLine(
+					tc.ps[0],
+					tc.ps[1], tc.ps[2],
+				)
 			case 4:
 				pi, itA, itB = LineLine(
 					tc.ps[0], tc.ps[1],
@@ -1011,16 +1045,24 @@ func TestTriangleSplitByPoint(t *testing.T) {
 		pt:  Point{0, 0.5},
 		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
 		res: [][3]Point{
-			{{1.00000e+00,0.00000e+00},{0.00000e+00,5.00000e-01},{0.00000e+00,1.00000e+00}},
-			{{1.00000e+00,0.00000e+00},{0.00000e+00,0.00000e+00},{0.00000e+00,5.00000e-01}},
+			{{1.00000e+00, 0.00000e+00}, {0.00000e+00, 5.00000e-01}, {0.00000e+00, 1.00000e+00}},
+			{{1.00000e+00, 0.00000e+00}, {0.00000e+00, 0.00000e+00}, {0.00000e+00, 5.00000e-01}},
 		},
 	}, { // 6
 		pt:  Point{0.5, 0},
 		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
 		res: [][3]Point{
-			{{0.00000e+00,1.00000e+00},{5.00000e-01,0.00000e+00},{0.00000e+00,0.00000e+00}},
-			{{0.00000e+00,1.00000e+00},{1.00000e+00,0.00000e+00},{5.00000e-01,0.00000e+00}},
- },
+			{{0.00000e+00, 1.00000e+00}, {5.00000e-01, 0.00000e+00}, {0.00000e+00, 0.00000e+00}},
+			{{0.00000e+00, 1.00000e+00}, {1.00000e+00, 0.00000e+00}, {5.00000e-01, 0.00000e+00}},
+		},
+	}, { // 7
+		pt:  Point{0.2, 0.2},
+		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
+		res: [][3]Point{
+			{{0.00000e+00, 0.00000e+00}, {1.00000e+00, 0.00000e+00}, {2.00000e-01, 2.00000e-01}},
+			{{1.00000e+00, 0.00000e+00}, {0.00000e+00, 1.00000e+00}, {2.00000e-01, 2.00000e-01}},
+			{{0.00000e+00, 1.00000e+00}, {0.00000e+00, 0.00000e+00}, {2.00000e-01, 2.00000e-01}},
+		},
 	}}
 	for i := range tcs {
 		tcs[i].name = fmt.Sprintf("t%02d", i)
@@ -1044,10 +1086,10 @@ func TestTriangleSplitByPoint(t *testing.T) {
 			}
 			size := len(res)
 			bs := make([]bool, size)
-			for i := 0; i < size; i++{
-				for j := 0; j < size; j++{
+			for i := 0; i < size; i++ {
+				for j := 0; j < size; j++ {
 					eps := 1e-6
-					if  Distance(res[i][0], tcs[k].res[j][0]) < eps &&
+					if Distance(res[i][0], tcs[k].res[j][0]) < eps &&
 						Distance(res[i][1], tcs[k].res[j][1]) < eps &&
 						Distance(res[i][2], tcs[k].res[j][2]) < eps {
 						bs[j] = true
@@ -1068,7 +1110,6 @@ func TestTriangleSplitByPoint(t *testing.T) {
 			t.Errorf("Expect: %#v", tcs[k].res)
 		})
 	}
-
 }
 
 func TestAngleBetween(t *testing.T) {
@@ -1255,4 +1296,46 @@ func ExampleArcSplitByPoint() {
 	// [01,00] = {-1.00000 +0.00000}
 	// [01,01] = {-0.70711 -0.70711}
 	// [01,02] = {-0.00000 -1.00000}
+}
+
+func TestPointLineDistance(t *testing.T) {
+	tcs := []struct {
+		name string
+		pt   Point
+		line [2]Point
+		res  float64
+	}{{ // 0
+		pt:   Point{-1, 0},
+		line: [2]Point{{0, 0}, {0, 1}},
+		res:  1.0,
+	}, { // 1
+		pt:   Point{1, 0},
+		line: [2]Point{{0, 0}, {0, 1}},
+		res:  1.0,
+	}, { // 2
+		pt:   Point{2, 0},
+		line: [2]Point{{0, 0}, {0, 1}},
+		res:  2.0,
+	}, { // 3
+		pt:   Point{0, 0},
+		line: [2]Point{{0, 0}, {0, 1}},
+		res:  0.0,
+	}}
+	for i := range tcs {
+		tcs[i].name = fmt.Sprintf("t%02d", i)
+	}
+
+	for k := range tcs {
+		t.Run(fmt.Sprintf("%s", tcs[k].name), func(t *testing.T) {
+			res := PointLineDistance(tcs[k].pt,
+				tcs[k].line[0], tcs[k].line[1],
+			)
+			eps := 1e-6
+			if math.Abs(res-tcs[k].res) < eps {
+				return
+			}
+			t.Errorf("Actual  : %v", res)
+			t.Errorf("Expected: %v", tcs[k].res)
+		})
+	}
 }

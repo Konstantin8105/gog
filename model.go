@@ -70,7 +70,7 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 }
 
 // AddCircle add arcs based on circle geometry into model with specific tag
-func (m *Model) AddCircle(xc, yc, r float64, tag int, isHole bool) {
+func (m *Model) AddCircle(xc, yc, r float64, tag int) {
 	// add points
 	var (
 		up    = Point{X: xc, Y: yc + r}
@@ -79,15 +79,9 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int, isHole bool) {
 		right = Point{X: xc + r, Y: yc}
 	)
 	// add arcs
-	if isHole {
-		// ClockwisePoints
-		m.AddArc(down, left, up, tag)
-		m.AddArc(up, right, down, tag)
-	} else {
-		// CounterClockwisePoints
-		m.AddArc(down, right, up, tag)
-		m.AddArc(up, left, down, tag)
-	}
+	// CounterClockwisePoints
+	m.AddArc(down, right, up, tag)
+	m.AddArc(up, left, down, tag)
 }
 
 // Intersection change model with finding all model intersections
