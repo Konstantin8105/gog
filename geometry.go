@@ -394,7 +394,7 @@ func MirrorLine(
 	ml0, ml1 Point,
 	err error,
 ) {
-	if Distance(ml0, ml1) < 0.0 {
+	if Distance(ml0, ml1) < Eps {
 		panic("mirror line is point")
 	}
 
