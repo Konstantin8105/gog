@@ -15,6 +15,7 @@ func ExampleModel() {
 	m.ConvexHullTriangles()
 	m.Intersection()
 	fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
+	fmt.Fprintf(os.Stdout, "Minimal distance between points:\n%.4f", m.MinPointDistance())
 	// Output:
 	// Only structural lines:
 	// Points:
@@ -240,4 +241,6 @@ func ExampleModel() {
 	// 061	[ 81  82  83  -1]
 	// 062	[ 82  83  84  -1]
 	// 063	[ 83  84  85  -1]
+	// Minimal distance between points:
+	// 0.0491
 }
