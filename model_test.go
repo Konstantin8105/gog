@@ -12,8 +12,10 @@ func ExampleModel() {
 	m.AddLine(Point{0, -1}, Point{0, 1}, 3)
 	fmt.Fprintf(os.Stdout, "Only structural lines:\n%s", m)
 	m.Split(0.2)
+	m.RemoveEmptyPoints()
 	m.ConvexHullTriangles()
 	m.Intersection()
+	m.RemoveEmptyPoints()
 	fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
 	fmt.Fprintf(os.Stdout, "Minimal distance between points:\n%.4f", m.MinPointDistance())
 	// Output:
