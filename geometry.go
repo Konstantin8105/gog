@@ -757,17 +757,23 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 			return
 		}
 	}
+
+	// remove points on corners or same points
 againRemove:
 	for i, p := range pi {
 		for _, c := range [...]struct {
 			isTrue bool
 		}{
-			{isTrue: math.Abs(Arc0.X-p.X) < Eps && math.Abs(Arc0.Y-p.Y) < Eps},
-			// {isTrue: math.Abs(Arc1.X-p.X) < Eps && math.Abs(Arc1.Y-p.Y) < Eps},
-			{isTrue: math.Abs(Arc0.X-p.X) < Eps && math.Abs(Arc0.Y-p.Y) < Eps},
+			{isTrue: Distance(Arc0, p) < Eps},
+			{isTrue: Distance(Arc2, p) < Eps},
 		} {
 			if c.isTrue {
-				// remove points on corners
+				pi = append(pi[:i], pi[i+1:]...)
+				goto againRemove
+			}
+		}
+		for j := range pi {
+			if i < j && Distance(pi[i], pi[j]) < Eps {
 				pi = append(pi[:i], pi[i+1:]...)
 				goto againRemove
 			}

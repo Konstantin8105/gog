@@ -7,9 +7,46 @@ import (
 
 // Model of points, lines, arcs for prepare of triangulation
 type Model struct {
-	Points []Point  // Points is slice of points
-	Lines  [][3]int // Lines store 2 index of Points and last for tag
-	Arcs   [][4]int // Arcs store 3 index of Points and last for tag
+	Points    []Point  // Points is slice of points
+	Lines     [][3]int // Lines store 2 index of Points and last for tag
+	Arcs      [][4]int // Arcs store 3 index of Points and last for tag
+	Triangles [][4]int // Triangles store 3 index of Points and last for tag/material
+}
+
+// String return a stantard model view
+func (m Model) String() string {
+	var str string
+	if 0 < len(m.Points) {
+		str += fmt.Sprintf("Points:\n")
+	}
+	for i := range m.Points {
+		str += fmt.Sprintf("%03d\t%+.4f\n", i, m.Points[i])
+	}
+	if 0 < len(m.Lines) {
+		str += fmt.Sprintf("Lines:\n")
+	}
+	for i := range m.Lines {
+		str += fmt.Sprintf("%03d\t%3d\n", i, m.Lines[i])
+	}
+	if 0 < len(m.Arcs) {
+		str += fmt.Sprintf("Arcs:\n")
+	}
+	for i := range m.Arcs {
+		str += fmt.Sprintf("%03d\t%3d\n", i, m.Arcs[i])
+	}
+	if 0 < len(m.Triangles) {
+		str += fmt.Sprintf("Triangles:\n")
+	}
+	for i := range m.Triangles {
+		str += fmt.Sprintf("%03d\t%3d\n", i, m.Triangles[i])
+	}
+	return str
+}
+
+// Dxf return string in dxf drawing format
+func (m Model) Dxf() string {
+	// TODO
+	return ""
 }
 
 // AddPoint return index in model slice point
@@ -67,6 +104,29 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 	}
 	// add arc
 	m.Arcs = append(m.Arcs, [4]int{st, mi, en, tag})
+}
+
+// AddTriangle add triangle into model with specific tag/material
+func (m *Model) AddTriangle(start, middle, end Point, tag int) {
+	// add points
+	var (
+		st = m.AddPoint(start)
+		mi = m.AddPoint(middle)
+		en = m.AddPoint(end)
+	)
+	if en < st {
+		st, en = en, st
+	}
+	// do not add line with same id
+	for i := range m.Triangles {
+		if (m.Triangles[i][0] == st && m.Triangles[i][1] == mi && m.Triangles[i][2] == en) ||
+			(m.Triangles[i][2] == st && m.Triangles[i][1] == mi && m.Triangles[i][0] == en) {
+			m.Triangles[i][3] = tag
+			return
+		}
+	}
+	// add arc
+	m.Triangles = append(m.Triangles, [4]int{st, mi, en, tag})
 }
 
 // AddCircle add arcs based on circle geometry into model with specific tag
@@ -354,8 +414,98 @@ func (m *Model) RemoveEmptyPoints() {
 	// TODO
 }
 
-func (m *Model) Split() {
-	// TODO
+func (m *Model) Split(d float64) {
+	if d <= 0 {
+		panic("negative or zero split distance")
+	}
+	{
+		// split lines
+		size := len(m.Lines)
+		split := make([]bool, size)
+		for il := 0; il < size; il++ {
+			distance := Distance(m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]])
+			if distance <= d {
+				continue
+			}
+			split[il] = true
+			var (
+				// amount intermediant points
+				am = int(distance/d) + 1
+				// step
+				dx = (m.Points[m.Lines[il][1]].X - m.Points[m.Lines[il][0]].X) / float64(am)
+				dy = (m.Points[m.Lines[il][1]].Y - m.Points[m.Lines[il][0]].Y) / float64(am)
+			)
+			// add new lines
+			for i := 1; i <= am; i++ {
+				m.AddLine(
+					Point{
+						X: m.Points[m.Lines[il][0]].X + dx*float64(i-1),
+						Y: m.Points[m.Lines[il][0]].Y + dy*float64(i-1),
+					},
+					Point{
+						X: m.Points[m.Lines[il][0]].X + dx*float64(i),
+						Y: m.Points[m.Lines[il][0]].Y + dy*float64(i),
+					},
+					m.Lines[il][2],
+				)
+			}
+		}
+		// remove split lines
+		for il := size - 1; 0 <= il; il-- {
+			if !split[il] {
+				continue
+			}
+			m.Lines = append(m.Lines[:il], m.Lines[il+1:]...)
+		}
+	}
+	{
+		// split arcs
+		size := len(m.Arcs)
+		split := make([]bool, size)
+		for ia := 0; ia < size; ia++ {
+			var arcs [][3]Point
+			arcs = append(arcs, [3]Point{
+				m.Points[m.Arcs[ia][0]],
+				m.Points[m.Arcs[ia][1]],
+				m.Points[m.Arcs[ia][2]],
+			})
+
+			for iter := 0; iter < 100; iter++ {
+				distance := 2.0 * Distance(arcs[len(arcs)-1][0], arcs[len(arcs)-1][1])
+				// preliminary calculation arc length for
+				// typical 90 degree arcs
+				distance *= math.Pi / (2.0 * math.Sqrt(2.0))
+				if distance <= d {
+					break
+				}
+				arcs2 := [][3]Point{}
+				for i := range arcs {
+					res, err := ArcSplitByPoint(arcs[i][0], arcs[i][1], arcs[i][2])
+					if err != nil {
+						panic(fmt.Errorf("Arc: %v", arcs[len(arcs)-1]))
+					}
+					arcs2 = append(arcs2, res...)
+				}
+				arcs = arcs2
+			}
+
+			if len(arcs) == 1 {
+				continue
+			}
+			split[ia] = true
+			// add new arcs
+			for i := range arcs {
+				m.AddArc(arcs[i][0], arcs[i][1], arcs[i][2], m.Arcs[ia][3])
+			}
+		}
+		// remove split lines
+		for ia := size - 1; 0 <= ia; ia-- {
+			if !split[ia] {
+				continue
+			}
+			m.Arcs = append(m.Arcs[:ia], m.Arcs[ia+1:]...)
+		}
+	}
 }
 
 // MinPointDistance return minimal between 2 points
@@ -376,4 +526,12 @@ func (m Model) MinPointDistance() (distance float64) {
 		}
 	}
 	return
+}
+
+// ConvexHullTriangles add triangles of model convex hull
+func (m *Model) ConvexHullTriangles() {
+	cps := ConvexHull(m.Points) // points on convex hull
+	for i := 2; i < len(cps); i++ {
+		m.AddTriangle(cps[i-2], cps[i-1], cps[i], -1)
+	}
 }

@@ -60,9 +60,10 @@ func (m *Mesh) MinAngle() {
 //	+------------------------------------+
 //
 type Triangle struct {
-	nodes [3]int       // indexes of triangle points
-	ribs  [3]int       // indexes of triangle ribs
-	tr    [3]*Triangle // indexes of near triangles
+	nodes    [3]int       // indexes of triangle points
+	ribs     [3]int       // indexes of triangle ribs
+	tr       [3]*Triangle // indexes of near triangles
+	material int          // material of triangle
 }
 
 func (t *Triangle) swap() {
@@ -71,69 +72,72 @@ func (t *Triangle) swap() {
 	t.tr[1], t.tr[2] = t.tr[2], t.tr[1]
 }
 
-//      func createConvexHullTriangles (points []Point) {
-// 		 i := 0
-//          i++;
-//          nodes.add(points.get(0));
-//          int indexPoint0 = nodes.size() - 1;
-//          i++;
-//          nodes.add(points.get(1));
-//          int indexPoint1 = nodes.size() - 1;
-//          int commonRib = getIdRib();
-//          TriangleStructure commonTriangle = null;
-//
-//          int k = 0;
-//          while (i + k < points.size()) {
-//              i++;
-//              nodes.add(points.get(i - 1));
-//              int indexPoint2 = nodes.size() - 1;
-//              int rib12 = getIdRib();
-//              int rib20 = getIdRib();
-//
-//              TriangleStructure triangle = new TriangleStructure();
-//              triangle.iNodes = new int[]{indexPoint0, indexPoint1, indexPoint2};
-//              triangle.iRibs = new int[]{commonRib, rib12, rib20};
-//              triangle.triangles = new TriangleStructure[]{commonTriangle, null, null};
-//              if (commonTriangle != null) {
-//                  commonTriangle.triangles[1] = triangle;
-//              }
-//
-//              triangleList.add(triangle);
-//
-//              if (i + k >= points.size())
-//                  break;
-//
-//              int indexPoint0_next = indexPoint0;
-//              int indexPoint1_next = indexPoint2;
-//              k++;
-//              nodes.add(points.get(points.size() - k));
-//              int indexPoint2_next = nodes.size() - 1;
-//
-//              int rib12_next = getIdRib();
-//              int rib20_next = getIdRib();
-//
-//              TriangleStructure triangle2 = new TriangleStructure();
-//              triangle2.iNodes = new int[]{indexPoint0_next, indexPoint1_next, indexPoint2_next};
-//              triangle2.iRibs = new int[]{rib20, rib12_next, rib20_next};
-//              triangle2.triangles = new TriangleStructure[]{
-//                      triangle, null, null
-//              };
-//              triangle.triangles[2] = triangle2;
-//              triangleList.add(triangle2);
-//
-//
-//              indexPoint0 = indexPoint2_next;
-//              indexPoint1 = indexPoint1_next;
-//              commonRib = rib12_next;
-//              commonTriangle = triangle2;
-//          }
-//
-//          BorderBox borderBox = new BorderBox();
-//          for (Point point : points) {
-//              borderBox.addPoint(point);
-//          }
-//          return borderBox;
-//      }
+func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
+	//cps := ConvexHull(points) // points on convex hull
+
+	//  i := 0
+	//  i++;
+	//  nodes.add(points.get(0));
+	//  int indexPoint0 = nodes.size() - 1;
+	//  i++;
+	//  nodes.add(points.get(1));
+	//  int indexPoint1 = nodes.size() - 1;
+	//  int commonRib = getIdRib();
+	//  TriangleStructure commonTriangle = null;
+	//
+	//  int k = 0;
+	//  while (i + k < points.size()) {
+	//      i++;
+	//      nodes.add(points.get(i - 1));
+	//      int indexPoint2 = nodes.size() - 1;
+	//      int rib12 = getIdRib();
+	//      int rib20 = getIdRib();
+	//
+	//      TriangleStructure triangle = new TriangleStructure();
+	//      triangle.iNodes = new int[]{indexPoint0, indexPoint1, indexPoint2};
+	//      triangle.iRibs = new int[]{commonRib, rib12, rib20};
+	//      triangle.triangles = new TriangleStructure[]{commonTriangle, null, null};
+	//      if (commonTriangle != null) {
+	//          commonTriangle.triangles[1] = triangle;
+	//      }
+	//
+	//      triangleList.add(triangle);
+	//
+	//      if (i + k >= points.size())
+	//          break;
+	//
+	//      int indexPoint0_next = indexPoint0;
+	//      int indexPoint1_next = indexPoint2;
+	//      k++;
+	//      nodes.add(points.get(points.size() - k));
+	//      int indexPoint2_next = nodes.size() - 1;
+	//
+	//      int rib12_next = getIdRib();
+	//      int rib20_next = getIdRib();
+	//
+	//      TriangleStructure triangle2 = new TriangleStructure();
+	//      triangle2.iNodes = new int[]{indexPoint0_next, indexPoint1_next, indexPoint2_next};
+	//      triangle2.iRibs = new int[]{rib20, rib12_next, rib20_next};
+	//      triangle2.triangles = new TriangleStructure[]{
+	//              triangle, null, null
+	//      };
+	//      triangle.triangles[2] = triangle2;
+	//      triangleList.add(triangle2);
+	//
+	//
+	//      indexPoint0 = indexPoint2_next;
+	//      indexPoint1 = indexPoint1_next;
+	//      commonRib = rib12_next;
+	//      commonTriangle = triangle2;
+	//  }
+	//
+	//  BorderBox borderBox = new BorderBox();
+	//  for (Point point : points) {
+	//      borderBox.addPoint(point);
+	//  }
+	//  return borderBox;
+	return
+}
 
 //
 // public class FlipStructure {
