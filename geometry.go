@@ -421,9 +421,9 @@ const (
 func Orientation(p1, p2, p3 Point) OrientationPoints {
 	v := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
 	switch {
-	case math.Abs(v) < 1e-6:
+	case math.Abs(v) < Eps:
 		return CollinearPoints
-	case v > 0:
+	case 0 < v:
 		return ClockwisePoints
 	}
 	return CounterClockwisePoints
@@ -748,9 +748,9 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 	for _, c := range [...]struct {
 		isTrue bool
 	}{
-		{isTrue: math.Abs(Arc0.X-Arc1.X) < Eps && math.Abs(Arc0.Y-Arc1.Y) < Eps},
-		{isTrue: math.Abs(Arc1.X-Arc2.X) < Eps && math.Abs(Arc1.Y-Arc2.Y) < Eps},
-		{isTrue: math.Abs(Arc0.X-Arc2.X) < Eps && math.Abs(Arc0.Y-Arc2.Y) < Eps},
+		{isTrue: Distance(Arc0, Arc1) < Eps},
+		{isTrue: Distance(Arc1, Arc2) < Eps},
+		{isTrue: Distance(Arc0, Arc2) < Eps},
 	} {
 		if c.isTrue {
 			err = fmt.Errorf("invalid points of arc")
@@ -913,7 +913,6 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 	}
 
 	// angle for rotate
-	// 	angle0 := 0.0
 	angle0 := -(math.Atan2(ps[0].Y, ps[0].X) + math.Pi - 0.01)
 
 	// rotate
@@ -932,4 +931,134 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 	}
 
 	return false
+}
+
+func TriangleSplitByPoint(
+	pt Point,
+	tr0, tr1, tr2 Point,
+) (
+	res [][3]Point,
+	err error,
+) {
+	// check valid triangle
+	for _, c := range [...]struct {
+		isTrue bool
+	}{
+		{isTrue: Distance(tr0, tr1) < Eps},
+		{isTrue: Distance(tr1, tr2) < Eps},
+		{isTrue: Distance(tr0, tr2) < Eps},
+	} {
+		if c.isTrue {
+			err = fmt.Errorf("invalid points of triangle")
+			return
+		}
+	}
+	// point in triangle box ?
+	{
+		var (
+			xmax = -math.MaxFloat64
+			ymax = -math.MaxFloat64
+			xmin = +math.MaxFloat64
+			ymin = +math.MaxFloat64
+		)
+		for _, tr := range []Point{tr0, tr1, tr2} {
+			xmax = math.Max(xmax, tr.X)
+			ymax = math.Max(ymax, tr.Y)
+			xmin = math.Min(xmin, tr.X)
+			ymin = math.Min(ymin, tr.Y)
+		}
+		if pt.X < xmin || xmax < pt.X || pt.Y < ymin || ymax < pt.Y {
+			// point outside triangle
+			return
+		}
+	}
+	// point on corner ?
+	for _, c := range [...]struct {
+		isTrue bool
+	}{
+		{isTrue: Distance(tr0, pt) < Eps},
+		{isTrue: Distance(tr1, pt) < Eps},
+		{isTrue: Distance(tr2, pt) < Eps},
+	} {
+		if c.isTrue {
+			// point on corner
+			// no need a split
+			return
+		}
+	}
+	// point on the side ?
+	for _, line := range []struct {
+		Line [2]Point
+		Free Point
+	}{
+		{
+			// tr0 --- pt --- tr1  //
+			//   \           /     //
+			//    \         /      //
+			//     \       /       //
+			//      \ tr2 /        //
+			Line: [2]Point{tr0, tr1},
+			Free: tr2,
+		},
+		{
+			// tr0 ---------- tr1  //
+			//   \           /     //
+			//    \         pt     //
+			//     \       /       //
+			//      \ tr2 /        //
+			Line: [2]Point{tr1, tr2},
+			Free: tr0,
+		},
+		{
+			// tr0 ---------- tr1  //
+			//   \           /     //
+			//    pt        /      //
+			//     \       /       //
+			//      \ tr2 /        //
+			Line: [2]Point{tr2, tr0},
+			Free: tr1,
+		},
+	} {
+		_, _, stB := PointLine(pt, line.Line[0], line.Line[1])
+		if !stB.Has(OnSegment) {
+			// point is outside side
+			continue
+		}
+		// point on side
+		switch Orientation(tr0, tr1, tr2) {
+		case ClockwisePoints:
+			res = [][3]Point{
+				{line.Line[0], pt, line.Free},
+				{pt, line.Line[1], line.Free},
+			}
+		case CounterClockwisePoints:
+			res = [][3]Point{
+				{line.Free, pt, line.Line[0]},
+				{line.Free, line.Line[1], pt},
+			}
+		default:
+			panic("strange situation")
+		}
+		return
+	}
+
+	// point in body ?
+	orient := [3]OrientationPoints{
+		Orientation(tr0, pt, tr1),
+		Orientation(tr1, pt, tr2),
+		Orientation(tr2, pt, tr0),
+	}
+	if orient[0] != orient[1] ||
+		orient[1] != orient[2] ||
+		orient[0] != orient[2] {
+		// point is outside triangle
+		return
+	}
+	// point inside triangle
+	res = [][3]Point{
+		{tr0, tr1, pt},
+		{tr1, tr2, pt},
+		{tr2, tr0, pt},
+	}
+	return
 }

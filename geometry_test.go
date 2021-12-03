@@ -945,9 +945,9 @@ func TestMirrorLine(t *testing.T) {
 			}
 			if eps < Distance(tc.expect[0], ml0) || eps < Distance(tc.expect[1], ml1) {
 				t.Errorf("Not valid points: %v %v", ml0, ml1)
-				t.Logf("Points : %v", tc.segment )
-				t.Logf("Mirror : %v", tc.mirror )
-				t.Logf("Distance: %v %v", Distance(tc.expect[0], ml0), Distance(tc.expect[1], ml1) )
+				t.Logf("Points : %v", tc.segment)
+				t.Logf("Mirror : %v", tc.mirror)
+				t.Logf("Distance: %v %v", Distance(tc.expect[0], ml0), Distance(tc.expect[1], ml1))
 			}
 		})
 	}
@@ -980,6 +980,95 @@ func TestOrientation(t *testing.T) {
 			t.Errorf("Not valid: %v", tc)
 		}
 	}
+}
+
+func TestTriangleSplitByPoint(t *testing.T) {
+	tcs := []struct {
+		name string
+		pt   Point
+		tri  [3]Point
+		res  [][3]Point
+	}{{ // 0
+		pt:  Point{-1, 0},
+		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
+	}, { // 1
+		pt:  Point{2, 0},
+		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
+	}, { // 2
+		pt:  Point{0, 2},
+		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
+	}, { // 3
+		pt:  Point{0, -1},
+		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
+	}, { // 4
+		pt:  Point{0.5, 0.5},
+		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
+		res: [][3]Point{
+			{{0.00000e+00, 0.00000e+00}, {5.00000e-01, 5.00000e-01}, {1.00000e+00, 0.00000e+00}},
+			{{0.00000e+00, 0.00000e+00}, {0.00000e+00, 1.00000e+00}, {5.00000e-01, 5.00000e-01}},
+		},
+	}, { // 5
+		pt:  Point{0, 0.5},
+		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
+		res: [][3]Point{
+			{{1.00000e+00,0.00000e+00},{0.00000e+00,5.00000e-01},{0.00000e+00,1.00000e+00}},
+			{{1.00000e+00,0.00000e+00},{0.00000e+00,0.00000e+00},{0.00000e+00,5.00000e-01}},
+		},
+	}, { // 6
+		pt:  Point{0.5, 0},
+		tri: [3]Point{{0, 0}, {1, 0}, {0, 1}},
+		res: [][3]Point{
+			{{0.00000e+00,1.00000e+00},{5.00000e-01,0.00000e+00},{0.00000e+00,0.00000e+00}},
+			{{0.00000e+00,1.00000e+00},{1.00000e+00,0.00000e+00},{5.00000e-01,0.00000e+00}},
+ },
+	}}
+	for i := range tcs {
+		tcs[i].name = fmt.Sprintf("t%02d", i)
+	}
+
+	for k := range tcs {
+		t.Run(fmt.Sprintf("%s", tcs[k].name), func(t *testing.T) {
+			res, err := TriangleSplitByPoint(tcs[k].pt,
+				tcs[k].tri[0],
+				tcs[k].tri[1],
+				tcs[k].tri[2],
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(res) != len(tcs[k].res) {
+				t.Errorf("not valid sizes %d != %d", len(res), len(tcs[k].res))
+				t.Errorf("Actual  : %v", res)
+				t.Errorf("Expected: %v", tcs[k].res)
+				return
+			}
+			size := len(res)
+			bs := make([]bool, size)
+			for i := 0; i < size; i++{
+				for j := 0; j < size; j++{
+					eps := 1e-6
+					if  Distance(res[i][0], tcs[k].res[j][0]) < eps &&
+						Distance(res[i][1], tcs[k].res[j][1]) < eps &&
+						Distance(res[i][2], tcs[k].res[j][2]) < eps {
+						bs[j] = true
+					}
+				}
+			}
+			ok := true
+			for i := range res {
+				if bs[i] {
+					continue
+				}
+				ok = false
+			}
+			if ok {
+				return
+			}
+			t.Errorf("Actual: %#v", res)
+			t.Errorf("Expect: %#v", tcs[k].res)
+		})
+	}
+
 }
 
 func TestAngleBetween(t *testing.T) {
