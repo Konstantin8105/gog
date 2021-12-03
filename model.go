@@ -332,6 +332,18 @@ func (m *Model) Intersection() {
 	}
 }
 
+func (m *Model) Merge() {
+	// TODO
+}
+
+func (m *Model) Rotate() {
+	// TODO
+}
+
+func (m *Model) Move() {
+	// TODO
+}
+
 func (m *Model) RemovePoint() {
 	// TODO
 }
