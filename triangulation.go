@@ -60,9 +60,9 @@ func (m *Mesh) MinAngle() {
 //	+------------------------------------+
 //
 type Triangle struct {
-	nodes [3]int      // indexes of triangle points
-	ribs  [3]int      // indexes of triangle ribs
-	tr    [3]Triangle // indexes of near triangles
+	nodes [3]int       // indexes of triangle points
+	ribs  [3]int       // indexes of triangle ribs
+	tr    [3]*Triangle // indexes of near triangles
 }
 
 func (t *Triangle) swap() {
