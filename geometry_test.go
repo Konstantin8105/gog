@@ -146,8 +146,8 @@ var tcs = []TestCase{
 			Point{X: 0, Y: 8}, // 4
 		},
 		itA: VerticalSegment | OnPoint0Segment,
-		itB: ZeroLengthSegment | VerticalSegment | HorizontalSegment | 
-		OnPoint0Segment | OnPoint1Segment,
+		itB: ZeroLengthSegment | VerticalSegment | HorizontalSegment |
+			OnPoint0Segment | OnPoint1Segment,
 		pi:  []Point{},
 		dbp: 1,
 	},
@@ -648,6 +648,15 @@ var tcs = []TestCase{
 		itB: OnPoint0Segment,
 		pi:  []Point{},
 	},
+	{ // 40
+		ps: []Point{
+			{-0.0, -2.2}, {-0.0, -0.20},
+			{+1.0, -1.2}, {-0.0, -2.20}, {1.0, -3.2},
+		},
+		pi:  []Point{Point{0, -2.2}},
+		itA: VerticalSegment | OnPoint0Segment,
+		itB: OnSegment,
+	},
 }
 
 func init() {
@@ -909,17 +918,17 @@ func TestMirrorLine(t *testing.T) {
 		{
 			segment: [2]Point{Point{X: 4, Y: 4}, Point{X: -4, Y: -4}},
 			mirror:  [2]Point{Point{X: -1, Y: 0}, Point{X: 5, Y: 0}},
-			expect:  []Point{Point{0, 0}, Point{X: -4, Y: 4}},
+			expect:  []Point{Point{4, -4}, Point{X: -4, Y: 4}},
 		},
 		{
 			segment: [2]Point{Point{X: 4, Y: 5}, Point{X: -4, Y: -3}},
 			mirror:  [2]Point{Point{X: -1, Y: 1}, Point{X: 5, Y: 1}},
-			expect:  []Point{Point{0, 1}, Point{X: -4, Y: 5}},
+			expect:  []Point{Point{4, -3}, Point{X: -4, Y: 5}},
 		},
 		{
 			segment: [2]Point{Point{X: 4, Y: 10}, Point{X: 4, Y: 0}},
 			mirror:  [2]Point{Point{X: 0, Y: 0}, Point{X: 1, Y: 1}},
-			expect:  []Point{Point{4, 4}, Point{X: 0, Y: 4}},
+			expect:  []Point{Point{10, 4}, Point{X: 0, Y: 4}},
 		},
 	}
 	eps := 0.001
@@ -934,8 +943,11 @@ func TestMirrorLine(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if Distance(tc.expect[0], ml0) > eps || Distance(tc.expect[1], ml1) > eps {
+			if eps < Distance(tc.expect[0], ml0) || eps < Distance(tc.expect[1], ml1) {
 				t.Errorf("Not valid points: %v %v", ml0, ml1)
+				t.Logf("Points : %v", tc.segment )
+				t.Logf("Mirror : %v", tc.mirror )
+				t.Logf("Distance: %v %v", Distance(tc.expect[0], ml0), Distance(tc.expect[1], ml1) )
 			}
 		})
 	}
@@ -973,7 +985,7 @@ func TestOrientation(t *testing.T) {
 func TestAngleBetween(t *testing.T) {
 	tcs := []struct {
 		name          string
-		xc,yc float64
+		xc, yc        float64
 		from, mid, to Point
 		a             Point
 		expect        bool
@@ -1033,8 +1045,8 @@ func TestAngleBetween(t *testing.T) {
 	}
 	// move
 	size := len(tcs)
-	for _, xc := range []float64{2.0, 0.0, -2.0} {
-		for _, yc := range []float64{2.0, 0.0, -2.0} {
+	for _, xc := range []float64{2.1, 0.0, -2.0} {
+		for _, yc := range []float64{2.0, 0.0, -3.0} {
 			for i := 0; i < size; i++ {
 				c := tcs[i]
 				c.name += fmt.Sprintf("move%.0f%.0f", xc, yc)

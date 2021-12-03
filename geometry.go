@@ -123,7 +123,6 @@ func PointPoint(
 	pi []Point,
 	stA, stB State,
 ) {
-	// fmt.Println("> PointPoint")
 	stA |= ZeroLengthSegment | VerticalSegment | HorizontalSegment
 	stA |= OnPoint0Segment | OnPoint1Segment
 	if Distance(pt0, pt1) < Eps {
@@ -140,7 +139,6 @@ func PointLine(
 	pi []Point,
 	stA, stB State,
 ) {
-	// fmt.Println("> PointLine: ", pt, pb0, pb1)
 	// Point - Point
 	if Distance(pb0, pb1) < Eps {
 		return PointPoint(pt, pb0)
@@ -217,7 +215,6 @@ func LineLine(
 	pi []Point,
 	stA, stB State,
 ) {
-	// fmt.Println("> LineLine")
 	// Point - Point
 	if Distance(pa0, pa1) < Eps && Distance(pb0, pb1) < Eps {
 		return PointPoint(pa0, pb0)
@@ -397,43 +394,19 @@ func MirrorLine(
 	ml0, ml1 Point,
 	err error,
 ) {
-	pi, tiA, tiB := LineLine(
-		sp0, sp1,
-		mp0, mp1,
-	)
-	if tiA.Has(Parallel) || tiA.Has(Collinear) ||
-		tiB.Has(Parallel) || tiB.Has(Collinear) {
-		err = fmt.Errorf("Segment and mirror is not intersect")
-		return
+	if Distance(ml0, ml1) < 0.0 {
+		panic("mirror line is point")
 	}
-	// Image of Point sp0 with respect to a line ax+bx+c=0 is line mirror mp0-mp1
-	var (
-		A, B, C = Line(mp0, mp1)
-		x1      = sp1.X
-		y1      = sp1.Y
-		common  = -2.0 * (A*x1 + B*y1 + C) / (pow.E2(A) + pow.E2(B))
-	)
-	if len(pi) == 0 {
-		switch {
-		case tiA.Has(OnPoint0Segment):
-			ml0 = sp0
-		case tiA.Has(OnPoint1Segment):
-			ml0 = sp1
-		default:
 
-			fmt.Printf("not understtod that case: %v", tiB)
-			return
-		}
-	} else {
-		ml0 = pi[0]
+	A, B, C := Line(mp0, mp1)
+
+	mir := func(x1, y1 float64) Point {
+		temp := -2 * (A*x1 + B*y1 + C) / (A*A + B*B)
+		return Point{X: temp*A + x1, Y: temp*B + y1}
 	}
-	ml1.X = A*common + x1
-	ml1.Y = B*common + y1
-	if Distance(ml0, ml1) == 0.0 {
-		sp1.X += (sp1.X - sp0.X) * 2.0
-		sp1.Y += (sp1.Y - sp0.Y) * 2.0
-		return MirrorLine(sp0, sp1, mp0, mp1)
-	}
+
+	ml0 = mir(sp0.X, sp0.Y)
+	ml1 = mir(sp1.X, sp1.Y)
 	return
 }
 
@@ -460,7 +433,6 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	stA, stB State,
 ) {
-	// fmt.Println("> PointArc")
 	// Point - Point
 	if Distance(Arc0, Arc1) < Eps && Distance(Arc1, Arc2) < Eps {
 		pi, stA, stB = PointPoint(pt, Arc0)
@@ -506,24 +478,6 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	if Distance(pt, Arc2) < Eps {
 		stB |= OnPoint1Segment
 	}
-
-// 	fmt.Println(">>>>>>>>>>>>>>>>>>>>>",
-// 
-// 		stB.Has(OnPoint0Segment), stB.Has(OnPoint1Segment),
-// 		AngleBetween(
-// 			Point{X: xc, Y: yc},
-// 			Arc0,
-// 			Arc1,
-// 			Arc2,
-// 			pt,
-// 		),
-// 
-// 		Point{X: xc, Y: yc},
-// 		Arc0,
-// 		Arc1,
-// 		Arc2,
-// 		pt,
-// 	)
 
 	// point is on arc ?
 	if stB.Not(OnPoint0Segment) && stB.Not(OnPoint1Segment) && AngleBetween(
@@ -728,13 +682,11 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 		}
 	}
 
-	// fmt.Println("roots", roots)
 	for _, root := range roots {
 		_, _, stBa := PointLine(root, Line0, Line1)
 		_, _, stBb := PointArc(root, Arc0, Arc1, Arc2)
 
 		added := false
-		// fmt.Println(root, stBa, stBb, "   arc   ", root, Arc0, Arc1, Arc2)
 
 		if stBa.Has(OnSegment) &&
 			(stBb.Has(OnSegment) || stBb.Has(OnPoint0Segment) || stBb.Has(OnPoint1Segment)) {
@@ -954,7 +906,6 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 		return AngleBetween(center, to, mid, from, a)
 	}
 	// CounterClockwisePoints
-	//fmt.Println("AngleBetween :::", center, from, mid, to, a)
 
 	ps := []Point{from, mid, to, a}
 	for i := range ps {
@@ -963,22 +914,18 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 
 	// angle for rotate
 	// 	angle0 := 0.0
-	angle0 := -(math.Atan2(ps[0].Y, ps[0].X) + math.Pi)
-
-	//fmt.Println("angle0", angle0)
+	angle0 := -(math.Atan2(ps[0].Y, ps[0].X) + math.Pi - 0.01)
 
 	// rotate
 	for i := range ps {
 		ps[i] = Rotate(0, 0, +angle0, ps[i])
 	}
-	//fmt.Println("PS: ", ps)
 
 	// points angles
 	var b []float64
 	for i := range ps {
 		b = append(b, math.Atan2(ps[i].Y, ps[i].X))
 	}
-	//fmt.Println("B: ", b)
 
 	if b[0] < b[3] && b[3] < b[2] {
 		return true
