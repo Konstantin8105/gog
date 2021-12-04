@@ -1,6 +1,7 @@
 package gog
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 )
@@ -44,9 +45,47 @@ func (m Model) String() string {
 }
 
 // Dxf return string in dxf drawing format
+// https://images.autodesk.com/adsk/files/autocad_2012_pdf_dxf-reference_enu.pdf
 func (m Model) Dxf() string {
-	// TODO
-	return ""
+	// create buffer
+	var buf bytes.Buffer
+
+	// start dxf
+	fmt.Fprintf(&buf, "0\nSECTION\n")
+	fmt.Fprintf(&buf, "2\nENTITIES\n")
+
+	line := func(st, en Point, layer string) {
+		fmt.Fprintf(&buf, "0\nLINE\n")
+		fmt.Fprintf(&buf, "8\n%s\n", layer) // layer
+		fmt.Fprintf(&buf, "10\n%f\n", st.X) // start point X
+		fmt.Fprintf(&buf, "20\n%f\n", st.Y) // start point Y
+		fmt.Fprintf(&buf, "30\n%f\n", 0.0)  // start point Z
+		fmt.Fprintf(&buf, "11\n%f\n", en.X) // end point X
+		fmt.Fprintf(&buf, "21\n%f\n", en.Y) // end point Y
+		fmt.Fprintf(&buf, "31\n%f\n", 0.0)  // end point Z
+	}
+
+	// draw lines
+	for i := range m.Lines {
+		line(m.Points[m.Lines[i][0]], m.Points[m.Lines[i][1]], "lines")
+	}
+	// draw arc
+	for i := range m.Arcs {
+		line(m.Points[m.Arcs[i][0]], m.Points[m.Arcs[i][1]], "arcs")
+		line(m.Points[m.Arcs[i][1]], m.Points[m.Arcs[i][2]], "arcs")
+	}
+	// draw triangles
+	for i := range m.Triangles {
+		line(m.Points[m.Triangles[i][0]], m.Points[m.Triangles[i][1]], "triangles")
+		line(m.Points[m.Triangles[i][1]], m.Points[m.Triangles[i][2]], "triangles")
+		line(m.Points[m.Triangles[i][2]], m.Points[m.Triangles[i][0]], "triangles")
+	}
+
+	// end dxf
+	fmt.Fprintf(&buf, "0\nENDSEC\n")
+	fmt.Fprintf(&buf, "0\nEOF\n")
+
+	return buf.String()
 }
 
 // AddPoint return index in model slice point

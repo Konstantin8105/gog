@@ -2,22 +2,39 @@ package gog
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
 func ExampleModel() {
 	var m Model
+	var state int
+	// view result in dxf format
+	view := func() {
+		if err := ioutil.WriteFile(fmt.Sprintf("stage%02d.dxf", state), []byte(m.Dxf()), 0644); err != nil {
+			panic(err)
+		}
+		state++
+	}
 	m.AddCircle(0, 0, 1, 1)
 	m.AddLine(Point{-1, 0}, Point{1, 0}, 2)
 	m.AddLine(Point{0, -1}, Point{0, 1}, 3)
 	fmt.Fprintf(os.Stdout, "Only structural lines:\n%s", m)
+	view()
 	m.Intersection()
+	view()
 	m.Split(0.2)
+	view()
 	m.ArcsToLines()
+	view()
 	m.RemoveEmptyPoints()
+	view()
 	m.ConvexHullTriangles()
+	view()
 	m.Intersection()
+	view()
 	m.RemoveEmptyPoints()
+	view()
 	fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
 	fmt.Fprintf(os.Stdout, "Minimal distance between points:\n%.4f", m.MinPointDistance())
 	// Output:
