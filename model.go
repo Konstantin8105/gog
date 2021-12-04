@@ -373,7 +373,86 @@ func (m *Model) Intersection() {
 		},
 
 		// point-arc intersection
-		// TODO
+		func() (ai int) {
+			var (
+				intersectArcs = make([]bool, len(m.Arcs))
+				sizeArcs      = len(m.Arcs)
+			)
+			for ip := 0; ip < len(m.Points); ip++ {
+				for ja := 0; ja < sizeArcs; ja++ {
+					// ignore intersection lines
+					if intersectArcs[ja] {
+						continue
+					}
+					// ignore arc middle points only if not by another
+					// line or arc
+					if Distance(m.Points[m.Arcs[ja][1]], m.Points[ip]) < Eps {
+						ignore := true
+						for i := range m.Lines {
+							if m.Lines[i][0] == ip || m.Lines[i][1] == ip {
+								ignore = false
+							}
+						}
+						for i := range m.Arcs {
+							if i == ja {
+								continue
+							}
+							if m.Arcs[i][0] == ip || m.Arcs[i][1] == ip || m.Arcs[i][2] == ip {
+								ignore = false
+							}
+						}
+						if ignore {
+							continue
+						}
+					}
+
+					// analyse
+					pi, _, stB := PointArc(
+						// Point
+						m.Points[ip],
+						// Arc
+						m.Points[m.Arcs[ja][0]],
+						m.Points[m.Arcs[ja][1]],
+						m.Points[m.Arcs[ja][2]],
+					)
+					// not acceptable zero length lines
+					if stB.Has(ZeroLengthSegment) {
+						panic(fmt.Errorf("zero lenght error"))
+					}
+					// intersection on arc B
+					//
+					// for cases - no need update the line:
+					// OnPoint0SegmentB, OnPoint1SegmentB
+					//
+					if stB.Has(OnSegment) {
+						tag := m.Arcs[ja][3]
+						res, err := ArcSplitByPoint(
+							m.Points[m.Arcs[ja][0]],
+							m.Points[m.Arcs[ja][1]],
+							m.Points[m.Arcs[ja][2]],
+							pi...)
+						if err != nil {
+							// TODO	panic(err)
+							err = nil
+						} else {
+							for i := range res {
+								intersectArcs[ja] = true
+								m.AddArc(res[i][0], res[i][1], res[i][2], tag)
+							}
+						}
+					}
+				}
+			}
+			for i := sizeArcs - 1; 0 <= i; i-- {
+				if intersectArcs[i] {
+					// add to amount intersections
+					ai++
+					// remove intersection arcs
+					m.Arcs = append(m.Arcs[:i], m.Arcs[i+1:]...)
+				}
+			}
+			return
+		},
 
 		// point-line intersection
 		// TODO
@@ -382,7 +461,47 @@ func (m *Model) Intersection() {
 		// TODO
 
 		// point-triangle intersection
-		// TODO
+		func() (ai int) {
+			var (
+				intersectTr = make([]bool, len(m.Triangles))
+				sizeTrs     = len(m.Triangles)
+			)
+			for ip := 0; ip < len(m.Points); ip++ {
+				for jt := 0; jt < sizeTrs; jt++ {
+					// ignore intersection lines
+					if intersectTr[jt] {
+						continue
+					}
+					tag := m.Triangles[jt][3]
+					res, err := TriangleSplitByPoint(
+						// Point
+						m.Points[ip],
+						// Triangle
+						m.Points[m.Triangles[jt][0]],
+						m.Points[m.Triangles[jt][1]],
+						m.Points[m.Triangles[jt][2]],
+					)
+					if err != nil {
+						// TODO	panic(err)
+						err = nil
+					} else {
+						for i := range res {
+							intersectTr[jt] = true
+							m.AddTriangle(res[i][0], res[i][1], res[i][2], tag)
+						}
+					}
+				}
+			}
+			for i := sizeTrs - 1; 0 <= i; i-- {
+				if intersectTr[i] {
+					// add to amount intersections
+					ai++
+					// remove intersection triangles
+					m.Triangles = append(m.Triangles[:i], m.Triangles[i+1:]...)
+				}
+			}
+			return
+		},
 	}
 	ai := 0
 	for _, f := range fs {
