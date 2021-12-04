@@ -411,6 +411,7 @@ func (m *Model) RemovePoint() {
 }
 
 func (m *Model) RemoveEmptyPoints() {
+	// find all used points
 	pt := make([]bool, len(m.Points))
 	for i := range m.Lines {
 		for j := 0; j < 2; j++ {
@@ -427,19 +428,39 @@ func (m *Model) RemoveEmptyPoints() {
 			pt[m.Triangles[i][j]] = true
 		}
 	}
-	// amount empty points
-	empty := 0
-	for i := range pt {
-		if pt[i] {
+
+	for r := len(m.Points) - 1; 0 <= r; r-- {
+		if pt[r] {
+			// ignore used point
 			continue
 		}
-		empty++
+		// remove points in lines
+		for i := range m.Lines {
+			for j := 0; j < 2; j++ {
+				if r < m.Lines[i][j] {
+					m.Lines[i][j]--
+				}
+			}
+		}
+		// remove points in arcs
+		for i := range m.Arcs {
+			for j := 0; j < 3; j++ {
+				if r < m.Arcs[i][j] {
+					m.Arcs[i][j]--
+				}
+			}
+		}
+		// remove points in triangles
+		for i := range m.Triangles {
+			for j := 0; j < 3; j++ {
+				if r < m.Triangles[i][j] {
+					m.Triangles[i][j]--
+				}
+			}
+		}
+		// remove points
+		m.Points = append(m.Points[:r], m.Points[r+1:]...)
 	}
-	if 0 < empty {
-		panic(empty)
-	}
-
-	// TODO
 }
 
 func (m *Model) Split(d float64) {
@@ -499,10 +520,8 @@ func (m *Model) Split(d float64) {
 			})
 
 			for iter := 0; iter < 100; iter++ {
+				// preliminary calculation arc length
 				distance := 2.0 * Distance(arcs[len(arcs)-1][0], arcs[len(arcs)-1][1])
-				// preliminary calculation arc length for
-				// typical 90 degree arcs
-				distance *= math.Pi / (2.0 * math.Sqrt(2.0))
 				if distance <= d {
 					break
 				}
@@ -554,6 +573,20 @@ func (m Model) MinPointDistance() (distance float64) {
 		}
 	}
 	return
+}
+
+// ArcsToLines convert arc to lines
+func (m *Model) ArcsToLines() {
+	// center point of arc is ignore
+	for i := range m.Arcs {
+		m.AddLine(
+			m.Points[m.Arcs[i][0]],
+			m.Points[m.Arcs[i][2]],
+			m.Arcs[i][3],
+		)
+	}
+	// remove arcs
+	m.Arcs = nil
 }
 
 // ConvexHullTriangles add triangles of model convex hull
