@@ -751,6 +751,6 @@ func (m *Model) ArcsToLines() {
 func (m *Model) ConvexHullTriangles() {
 	cps := ConvexHull(m.Points) // points on convex hull
 	for i := 2; i < len(cps); i++ {
-		m.AddTriangle(cps[i-2], cps[i-1], cps[i], -1)
+		m.AddTriangle(cps[0], cps[i-2], cps[i-1], -1)
 	}
 }

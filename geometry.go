@@ -745,6 +745,18 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 // slice of arcs.
 //	DO NOT CHECKED POINT ON ARC
 func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err error) {
+	switch Orientation(Arc0, Arc1, Arc2) {
+	case CollinearPoints:
+		panic("collinear")
+	case ClockwisePoints:
+		res, err = ArcSplitByPoint(Arc2, Arc1, Arc0, pi...)
+		for i := range res {
+			res[i][0], res[i][2] = res[i][2], res[i][0]
+		}
+		return
+	}
+	// CounterClockwisePoints
+
 	for _, c := range [...]struct {
 		isTrue bool
 	}{
@@ -784,10 +796,7 @@ againRemove:
 	xc, yc, r := Arc(Arc0, Arc1, Arc2)
 
 	// angle for rotate
-	angle0 := math.Min(
-		math.Atan2(Arc0.Y-yc, Arc0.X-xc),
-		math.Atan2(Arc2.Y-yc, Arc2.X-xc),
-	) - math.Pi
+	angle0 := -math.Atan2(Arc0.Y-yc, Arc0.X-xc) - math.Pi + 0.01
 
 	// rotate
 	ps := []Point{
@@ -826,16 +835,9 @@ again:
 	}
 	sort.Float64s(b)
 
-	// generate result arcs
-	if Orientation(Arc0, Arc1, Arc2) == ClockwisePoints {
-		// ClockwisePoints
-		// invert angles
-		for i := 0; i < len(b)/2; i++ {
-			j := len(b) - i - 1
-			b[i], b[j] = b[j], b[i]
-		}
+	if b[0] < -math.Pi {
+		panic(fmt.Errorf("debug: %v", b))
 	}
-	// CounterClockwisePoints
 
 	ps = []Point{}
 	for _, angle := range b {
@@ -919,7 +921,7 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 	}
 
 	// angle for rotate
-	angle0 := -(math.Atan2(ps[0].Y, ps[0].X) + math.Pi - 0.01)
+	angle0 := -math.Atan2(ps[0].Y, ps[0].X) - math.Pi + 0.01
 
 	// rotate
 	for i := range ps {
@@ -930,6 +932,10 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 	var b []float64
 	for i := range ps {
 		b = append(b, math.Atan2(ps[i].Y, ps[i].X))
+	}
+
+	if b[0] < -math.Pi {
+		panic(fmt.Errorf("debug : %v", b))
 	}
 
 	if b[0] < b[3] && b[3] < b[2] {
