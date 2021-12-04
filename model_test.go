@@ -16,25 +16,26 @@ func ExampleModel() {
 		}
 		state++
 	}
+	// create model
 	m.AddCircle(0, 0, 1, 1)
 	m.AddLine(Point{-1, 0}, Point{1, 0}, 2)
 	m.AddLine(Point{0, -1}, Point{0, 1}, 3)
 	fmt.Fprintf(os.Stdout, "Only structural lines:\n%s", m)
-	view()
+	view() // 0
 	m.Intersection()
-	view()
+	view() // 1
 	m.Split(0.2)
-	view()
+	view() // 2
 	m.ArcsToLines()
-	view()
+	view() // 3
 	m.RemoveEmptyPoints()
-	view()
+	view() // 4
 	m.ConvexHullTriangles()
-	view()
+	view() // 5
 	m.Intersection()
-	view()
+	view() // 6
 	m.RemoveEmptyPoints()
-	view()
+	view() // 7
 	fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
 	fmt.Fprintf(os.Stdout, "Minimal distance between points:\n%.4f", m.MinPointDistance())
 	// Output:
