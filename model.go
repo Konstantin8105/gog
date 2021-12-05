@@ -108,9 +108,6 @@ func (m *Model) AddLine(start, end Point, tag int) {
 		st = m.AddPoint(start)
 		en = m.AddPoint(end)
 	)
-	if en < st {
-		st, en = en, st
-	}
 	// do not add line with same id
 	for i := range m.Lines {
 		if m.Lines[i][0] == st && m.Lines[i][1] == en {
@@ -130,9 +127,6 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 		mi = m.AddPoint(middle)
 		en = m.AddPoint(end)
 	)
-	if en < st {
-		st, en = en, st
-	}
 	// do not add line with same id
 	for i := range m.Arcs {
 		if (m.Arcs[i][0] == st && m.Arcs[i][1] == mi && m.Arcs[i][2] == en) ||
@@ -153,9 +147,6 @@ func (m *Model) AddTriangle(start, middle, end Point, tag int) {
 		mi = m.AddPoint(middle)
 		en = m.AddPoint(end)
 	)
-	if en < st {
-		st, en = en, st
-	}
 	// do not add line with same id
 	for i := range m.Triangles {
 		if (m.Triangles[i][0] == st && m.Triangles[i][1] == mi && m.Triangles[i][2] == en) ||

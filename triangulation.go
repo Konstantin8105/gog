@@ -1,87 +1,103 @@
 package gog
 
 type Mesh struct {
+	model     Model
+	Triangles []Triangle
 	// TODO
 }
 
-func New(model Model) (m *Mesh) {
-	// 	cps := ConvexHull(model.Points) // points on convex hull
-	// 	for i := 2; i < len(cps); i++ {
-	// 		m.AddTriangle(cps[i-2], cps[i-1], cps[i], -1)
-	// 	}
+func New(model Model) (mesh *Mesh) {
+	// create a new Mesh
+	mesh = new(Mesh)
+	// convex
+	cps := ConvexHull(model.Points) // points on convex hull
+	// prepare mesh triangles
+	for i := 2; i < len(cps); i++ {
+		var (
+			p0 = mesh.model.AddPoint(cps[0])
+			p1 = mesh.model.AddPoint(cps[i-2])
+			p2 = mesh.model.AddPoint(cps[i-1])
+		)
+		mesh.model.AddTriangle(cps[0], cps[i-2], cps[i-1], -1)
+		if i == 2 {
+			mesh.Triangles = append(mesh.Triangles, Triangle{
+				nodes: [3]int{p0, p1, p2},
+				tr:    [3]int{-1, -1, 1},
+			})
+		} else {
+			mesh.Triangles = append(mesh.Triangles, Triangle{
+				nodes: [3]int{p0, p1, p2},
+				tr:    [3]int{i - 2, -1, i - 1},
+			})
+		}
+	}
+	mesh.Triangles[len(mesh.Triangles)-1].tr[2] = -1 // last not exist triangle
+	// add all points of model
+	for i := range model.Points {
+		mesh.AddPoint(model.Points[i])
+	}
 
+	// TODO
 	return
-	//  i := 0
-	//  i++;
-	//  nodes.add(points.get(0));
-	//  int indexPoint0 = nodes.size() - 1;
-	//  i++;
-	//  nodes.add(points.get(1));
-	//  int indexPoint1 = nodes.size() - 1;
-	//  int commonRib = getIdRib();
-	//  TriangleStructure commonTriangle = null;
-	//
-	//  int k = 0;
-	//  while (i + k < points.size()) {
-	//      i++;
-	//      nodes.add(points.get(i - 1));
-	//      int indexPoint2 = nodes.size() - 1;
-	//      int rib12 = getIdRib();
-	//      int rib20 = getIdRib();
-	//
-	//      TriangleStructure triangle = new TriangleStructure();
-	//      triangle.iNodes = new int[]{indexPoint0, indexPoint1, indexPoint2};
-	//      triangle.iRibs = new int[]{commonRib, rib12, rib20};
-	//      triangle.triangles = new TriangleStructure[]{commonTriangle, null, null};
-	//      if (commonTriangle != null) {
-	//          commonTriangle.triangles[1] = triangle;
-	//      }
-	//
-	//      triangleList.add(triangle);
-	//
-	//      if (i + k >= points.size())
-	//          break;
-	//
-	//      int indexPoint0_next = indexPoint0;
-	//      int indexPoint1_next = indexPoint2;
-	//      k++;
-	//      nodes.add(points.get(points.size() - k));
-	//      int indexPoint2_next = nodes.size() - 1;
-	//
-	//      int rib12_next = getIdRib();
-	//      int rib20_next = getIdRib();
-	//
-	//      TriangleStructure triangle2 = new TriangleStructure();
-	//      triangle2.iNodes = new int[]{indexPoint0_next, indexPoint1_next, indexPoint2_next};
-	//      triangle2.iRibs = new int[]{rib20, rib12_next, rib20_next};
-	//      triangle2.triangles = new TriangleStructure[]{
-	//              triangle, null, null
-	//      };
-	//      triangle.triangles[2] = triangle2;
-	//      triangleList.add(triangle2);
-	//
-	//
-	//      indexPoint0 = indexPoint2_next;
-	//      indexPoint1 = indexPoint1_next;
-	//      commonRib = rib12_next;
-	//      commonTriangle = triangle2;
-	//  }
-	//
-	//  BorderBox borderBox = new BorderBox();
-	//  for (Point point : points) {
-	//      borderBox.addPoint(point);
-	//  }
-	//  return borderBox;
-
-	// TODO
 }
 
-func (m Mesh) ConvexHull() {
-	// TODO
-}
+func (m *Mesh) AddPoint(p Point) {
+	// TODO : add to delanay flip linked list
+	for i := range m.Triangles {
+		res, err := TriangleSplitByPoint(
+			p,
+			m.model.Points[m.Triangles[i].nodes[0]],
+			m.model.Points[m.Triangles[i].nodes[1]],
+			m.model.Points[m.Triangles[i].nodes[2]],
+		)
+		if err != nil {
+			panic(err)
+		}
+		switch len(res) {
+		case 2:
+			// point on some line
+			// find intersect side and near triangle if exist
+			// TODO
+			return
 
-func (m *Mesh) AddPoint() {
-	// TODO
+		case 3:
+			// point inside triangle
+
+
+//         TriangleStructure[] triangles = new TriangleStructure[3];
+//         for (int i = 0; i < 3; i++) {
+//             triangles[i] = new TriangleStructure();
+//         }
+//
+//         triangles[0].iNodes = new int[]{beginTriangle.iNodes[0], beginTriangle.iNodes[1], pointIndex};
+//         triangles[0].iRibs = new int[]{beginTriangle.iRibs[0], rib1, rib0};
+//
+//         triangles[1].iNodes = new int[]{beginTriangle.iNodes[1], beginTriangle.iNodes[2], pointIndex};
+//         triangles[1].iRibs = new int[]{beginTriangle.iRibs[1], rib2, rib1};
+//
+//         triangles[2].iNodes = new int[]{beginTriangle.iNodes[2], beginTriangle.iNodes[0], pointIndex};
+//         triangles[2].iRibs = new int[]{beginTriangle.iRibs[2], rib0, rib2};
+//
+//         triangles[0].triangles = new TriangleStructure[]{beginTriangle.triangles[0], triangles[1], triangles[2]};
+//         triangles[1].triangles = new TriangleStructure[]{beginTriangle.triangles[1], triangles[2], triangles[0]};
+//         triangles[2].triangles = new TriangleStructure[]{beginTriangle.triangles[2], triangles[0], triangles[1]};
+//
+//         addInverseLinkOnTriangle(triangles);
+//
+//         for (int i = 0; i < 3; i++) {
+//             flipper.add(triangles[i], 0);
+//             triangleList.add(triangles[i]);
+//         }
+//     }
+
+
+
+			// TODO
+			return
+		}
+	}
+
+	panic("point outside triangles")
 }
 
 func (m *Mesh) AddSide() {
@@ -89,14 +105,26 @@ func (m *Mesh) AddSide() {
 }
 
 func (m *Mesh) Delanay() {
+	// triangle is success by delanay, if all points is outside of circle
+	// from 3 triangle points
+
+	// if (!isPointInCircle(
+	//         new Point[]{
+	//                 triangulation.getNode(next.triangle.triangles[next.side].iNodes[0]),
+	//                 triangulation.getNode(next.triangle.triangles[next.side].iNodes[1]),
+	//                 triangulation.getNode(next.triangle.triangles[next.side].iNodes[2])},
+	//         triangulation.getNode(next.triangle.iNodes[normalizeSizeBy3(next.side - 1)])))
+	//     continue;
+	// triangulation.flipTriangles(next.triangle, next.side);
+
 	// TODO
 }
 
 func (m *Mesh) Smooth() {
-	// TODO
-}
-
-func (m *Mesh) Sweep() {
+	// for acceptable movable points calculate all side distances from that
+	// point to points near triangles and move to average distance.
+	//
+	// split sides with maximal side distance
 	// TODO
 }
 
@@ -105,6 +133,7 @@ func (m *Mesh) MaxArea() {
 }
 
 func (m *Mesh) MinAngle() {
+	//
 	// TODO
 }
 
@@ -133,413 +162,16 @@ func (m *Mesh) MinAngle() {
 //
 type Triangle struct {
 	nodes [3]int // indexes of triangle points
-	ribs  [3]int // indexes of triangle ribs
-	tr    [3]int // indexes of near triangles
+	// ribs  [3]int // indexes of triangle ribs
+	tr [3]int // indexes of near triangles
 }
 
 func (t *Triangle) swap() {
-	t.nodes[0], t.nodes[1] = t.nodes[1], t.nodes[0]
-	t.ribs[1], t.ribs[2] = t.ribs[2], t.ribs[1]
+	// 	t.nodes[0], t.nodes[1] = t.nodes[1], t.nodes[0]
+	// 	t.ribs[1], t.ribs[2] = t.ribs[2], t.ribs[1]
 	t.tr[1], t.tr[2] = t.tr[2], t.tr[1]
 }
 
-//
-// public class FlipStructure {
-//     public final TriangleStructure triangle;
-//     public final int side;
-//
-//     public FlipStructure(TriangleStructure triangle, int side) {
-//         this.triangle = triangle;
-//         this.side = side;
-//     }
-// }
-//
-// public interface Fliper {
-//     void add(TriangleStructure triangle, int index);
-//
-//     void run();
-// }
-//
-//     public enum PointTriangleState {
-//         POINT_ON_LINE_0,
-//         POINT_ON_LINE_1,
-//         POINT_ON_LINE_2,
-//         POINT_ON_CORNER,
-//         POINT_INSIDE,
-//     }
-//
-//
-//
-// public interface Searcher {
-//     TriangleStructure getSearcher();
-//
-//     void setSearcher(TriangleStructure searcher);
-//
-//     void chooseSearcher(Point point);
-//
-//     GeometryPointTriangle.PointTriangleState movingByConvexHull(Point point);
-// }
-//
-//
-// public class FastSearcher implements Searcher {
-//
-//     public static double AMOUNT_SEARCHER_FACTOR = 0.5D;
-//
-//     private final TriangleStructure[] searcher;
-//     private final double[] elevations;
-//     private int positionSearcher = 0;
-//     private TriangulationDelaunay triangulation = new TriangulationDelaunay();
-//
-//     public FastSearcher(TriangulationDelaunay triangulation, TriangleStructure init, BorderBox box, int amountOfPoints) {
-//         this.triangulation = triangulation;
-//         searcher = new TriangleStructure[(int) Math.max(1.0D, AMOUNT_SEARCHER_FACTOR * Math.sqrt((double) amountOfPoints))];
-//         for (int i = 0; i < searcher.length; i++) {
-//             searcher[i] = init;
-//         }
-//         double heightStep = (box.getY_max() - box.getY_min()) / (double) searcher.length;
-//         elevations = new double[searcher.length];
-//         for (int i = 0; i < elevations.length; i++) {
-//             elevations[i] = box.getY_min() + i * heightStep;
-//         }
-//     }
-//
-//
-//     public TriangleStructure getSearcher() {
-//         return searcher[positionSearcher];
-//     }
-//
-//
-//     public void setSearcher(TriangleStructure searcher) {
-//         this.searcher[positionSearcher] = searcher;
-//     }
-//
-//
-//     public void chooseSearcher(Point point) {
-//         for (int i = searcher.length - 1; i >= 0; i--) {
-//             if (point.Y > elevations[i] - Precision.epsilon()) {
-//                 positionSearcher = i;
-//                 break;
-//             }
-//         }
-//
-//         if (searcher[positionSearcher].triangles != null)
-//             return;
-//
-//         for (int i = 0; i < searcher.length; i++) {
-//             if (searcher[ArrayIndexCorrection.normalize(positionSearcher + i, searcher.length)].triangles != null) {
-//                 searcher[positionSearcher] = searcher[ArrayIndexCorrection.normalize(positionSearcher + i, searcher.length)];
-//                 return;
-//             }
-//         }
-//     }
-//
-//     /**
-//      * Found next triangle
-//      * Performance - O(n) in worst case and O(sqrt(n)) is average case.
-//      *
-//      * param point - next point
-//      * return GeometryPointTriangle.PointTriangleState
-//      * see Point
-//      * see GeometryPointTriangle.PointTriangleState
-//      */
-//     private Geometry.POINT_ON_LINE[] value = new Geometry.POINT_ON_LINE[3];
-//     private Point[] trianglePoint = new Point[3];
-//
-//
-//     public GeometryPointTriangle.PointTriangleState movingByConvexHull(Point point) {
-//         TriangleStructure beginTriangle = getSearcher();
-//         while (true) {
-//             //add reserve searching
-//             value[0] = PointOnLine(triangulation.getNode(beginTriangle.iNodes[0]), triangulation.getNode(beginTriangle.iNodes[1]), point);
-//             if (Geometry.isAtRightOf(value[0])) {
-//                 beginTriangle = beginTriangle.triangles[0];
-//             } else {
-//                 int whichOp = 0;
-//                 value[1] = PointOnLine(triangulation.getNode(beginTriangle.iNodes[1]), triangulation.getNode(beginTriangle.iNodes[2]), point);
-//                 if (Geometry.isAtRightOf(value[1])) {
-//                     whichOp += 1;
-//                 }
-//                 value[2] = PointOnLine(triangulation.getNode(beginTriangle.iNodes[2]), triangulation.getNode(beginTriangle.iNodes[0]), point);
-//                 if (Geometry.isAtRightOf(value[2])) {
-//                     whichOp += 2;
-//                 }
-//                 if (whichOp == 0) {
-//                     break;
-//                 } else if (whichOp == 1) {
-//                     beginTriangle = beginTriangle.triangles[1];
-//                 } else if (whichOp == 2) {
-//                     beginTriangle = beginTriangle.triangles[2];
-//                 } else {
-//                     if (Geometry.distanceLineAndPoint(triangulation.getNode(beginTriangle.iNodes[1]), triangulation.getNode(beginTriangle.iNodes[2]), point) >
-//                             Geometry.distanceLineAndPoint(triangulation.getNode(beginTriangle.iNodes[2]), triangulation.getNode(beginTriangle.iNodes[0]), point)) {
-//                         beginTriangle = beginTriangle.triangles[1];
-//                     } else {
-//                         beginTriangle = beginTriangle.triangles[2];
-//                     }
-//                 }
-//             }
-//         }
-//         trianglePoint = new Point[]{
-//                 triangulation.getNode(beginTriangle.iNodes[0]),
-//                 triangulation.getNode(beginTriangle.iNodes[1]),
-//                 triangulation.getNode(beginTriangle.iNodes[2])
-//         };
-//         setSearcher(beginTriangle);
-//         return GeometryPointTriangle.statePointInTriangle(point, trianglePoint, value);
-//     }
-// }
-//
-//
-//
-// public class FliperDelaunay implements Fliper {
-//     private final Stack<FlipStructure> buffer = new Stack<>();
-//     private TriangulationDelaunay triangulation = new TriangulationDelaunay();
-//
-//     public FliperDelaunay(TriangulationDelaunay triangulation) {
-//         this.triangulation = triangulation;
-//     }
-//
-//
-//     public void add(TriangleStructure triangle, int index) {
-//         buffer.add(new FlipStructure(triangle, index));
-//     }
-//
-//
-//     public void run() {
-//         while (!buffer.empty()) {
-//             FlipStructure next = buffer.pop();
-//
-//             if (next.triangle.triangles == null)
-//                 continue;
-//
-//             if (next.triangle.triangles[next.side] == null)
-//                 continue;
-//
-//             if (!isPointInCircle(
-//                     new Point[]{
-//                             triangulation.getNode(next.triangle.triangles[next.side].iNodes[0]),
-//                             triangulation.getNode(next.triangle.triangles[next.side].iNodes[1]),
-//                             triangulation.getNode(next.triangle.triangles[next.side].iNodes[2])},
-//                     triangulation.getNode(next.triangle.iNodes[normalizeSizeBy3(next.side - 1)])))
-//                 continue;
-//             triangulation.flipTriangles(next.triangle, next.side);
-//
-//             // TODO: 20.09.2016 add to another class
-// //            Point p0 = triangulation.getNode(next.triangle.iNodes[normSizeBy3(next.side - 1)]);
-// //            Point p1 = triangulation.getNode(next.triangle.triangles[next.side].iNodes[0]);
-// //            Point p2 = triangulation.getNode(next.triangle.triangles[next.side].iNodes[1]);
-// //            Point p3 = triangulation.getNode(next.triangle.triangles[next.side].iNodes[2]);
-// //
-// //            double s1 = (p0.X - p1.X) * (p0.Y - p3.Y) - (p0.X - p3.X) * (p0.Y - p1.Y);
-// //            double s2 = (p2.X - p3.X) * (p2.X - p1.X) + (p2.Y - p3.Y) * (p2.Y - p1.Y);
-// //            double s3 = (p0.X - p1.X) * (p0.X - p3.X) + (p0.Y - p1.Y) * (p0.Y - p3.Y);
-// //            double s4 = (p2.X - p3.X) * (p2.Y - p1.Y) - (p2.X - p1.X) * (p2.Y - p3.Y);
-// //            if (s1 * s2 + s3 * s4 >= 0)
-// //                continue;
-// //            else
-// //                triangulation.flipTriangles(next.triangle, next.side);
-//         }
-//     }
-//
-// public class TriangulationDelaunay {
-//     // Array of nodes - type: Point
-//     private final List<Point> nodes = new ArrayList<>();
-//
-//     protected Point getNode(int index) {
-//         return nodes.get(index);
-//     }
-//
-//
-//     private Fliper flipper;
-//     private Searcher searcher;
-//     private final TriangleList triangleList = new TriangleList();
-//
-//     public static double AMOUNT_CLEANING_FACTOR_TRIANGLE_STRUCTURE = 2.4D;
-//     public static final double RATIO_DELETING_CONVEX_POINT_FROM_POINT_LIST = 0.2D;
-//     public static int MINIMAL_POINTS_FOR_CLEANING = 10000;
-//
-//     // constructor for create convexHull region at the base on points
-//     public TriangulationDelaunay(Point[] points) {
-//         run(points);
-//     }
-//
-//     public TriangulationDelaunay() {
-//     }
-//
-//     public void run(Point[] input) {
-//         flipper = new FliperDelaunay(this);
-//         List<Point>[] pointArray = convexHullDouble(input);
-//         if (pointArray == null)
-//             return;
-//         List<Point> convexPoints = pointArray[0];
-//         BorderBox box = createConvexHullTriangles(convexPoints);
-//         searcher = new FastSearcher(this, triangleList.getfirstNotNullableElement(), box, pointArray[1].size());
-//
-//         if (pointArray[1].size() >= MINIMAL_POINTS_FOR_CLEANING) {
-//             int amount = (int) (AMOUNT_CLEANING_FACTOR_TRIANGLE_STRUCTURE * pointArray[1].size());
-//             amount = amount < 1 ? 1 : amount;
-//             triangleList.setMaxAmountNullableElements(amount);
-//         }
-//         for (int i = 0; i < pointArray[1].size(); i++) {
-//             addNextPoint(pointArray[1].get(i));
-//             flipper.run();
-// //            if (i % 1000 == 0)
-// //                System.err.println(i);
-//         }
-//         flipper.run();
-//     }
-//
-//     private void addNextPoint(Point nextPoint) {
-//
-//         searcher.chooseSearcher(nextPoint);
-//
-//         GeometryPointTriangle.PointTriangleState state = searcher.movingByConvexHull(nextPoint);
-//
-//         switch (state) {
-//             case POINT_INSIDE:
-//                 addNextPointInTriangle(nextPoint);
-//                 break;
-//             case POINT_ON_LINE_0:
-//                 addNextPointOnLine(nextPoint, 0);
-//                 break;
-//             case POINT_ON_LINE_1:
-//                 addNextPointOnLine(nextPoint, 1);
-//                 break;
-//             case POINT_ON_LINE_2:
-//                 addNextPointOnLine(nextPoint, 2);
-//                 break;
-//             case POINT_ON_CORNER:
-//                 break;
-//             default:
-//                 System.out.println("STRANGE POINT : " + nextPoint);
-//         }
-//     }
-//
-//
-//     // Linked list of triangles
-//     private class TriangleList {
-//
-//         private int amountNullableElements = 0;
-//         private final List<TriangleStructure> triangleStructureList = new LinkedList<>();
-//         private int maxAmountNullableElements = Integer.MAX_VALUE / 2;
-//
-//         public void add(TriangleStructure triangle) {
-//             triangleStructureList.add(triangle);
-//         }
-//
-//         public void addAll(TriangleStructure[] triangles) {
-//             Collections.addAll(triangleStructureList, triangles);
-//         }
-//
-//         private void removeNullTriangles() {
-//             amountNullableElements = 0;
-//             Iterator<TriangleStructure> iterator = triangleStructureList.iterator();
-//             while (iterator.hasNext()) {
-//                 if (iterator.next().triangles == null)
-//                     iterator.remove();
-//             }
-//         }
-//
-//         public int size() {
-//             return triangleStructureList.size();
-//         }
-//
-//         public List<TriangleStructure> get() {
-//             removeNullTriangles();
-//             return triangleStructureList;
-//         }
-//
-//         public void setMaxAmountNullableElements(int maxAmountNullableElements) {
-//             this.maxAmountNullableElements = maxAmountNullableElements;
-//         }
-//
-//         public TriangleStructure getfirstNotNullableElement() {
-//             for (TriangleStructure triangle : triangleStructureList)
-//                 if (triangle.triangles != null)
-//                     return triangle;
-//             return null;
-//         }
-//
-//         private void NullableTriangle(TriangleStructure triangle) {
-//             triangle.triangles = null;
-//             amountNullableElements++;
-//             if (amountNullableElements > maxAmountNullableElements) {
-//                 removeNullTriangles();
-//             }
-//         }
-//     }
-//
-//     private int idMaximalRibs = 0;
-//
-//     private int getIdRib() {
-//         return idMaximalRibs++;
-//     }
-//
-//     private BorderBox createConvexHullTriangles(List<Point> points) {
-//         int i = 0;
-//         i++;
-//         nodes.add(points.get(0));
-//         int indexPoint0 = nodes.size() - 1;
-//         i++;
-//         nodes.add(points.get(1));
-//         int indexPoint1 = nodes.size() - 1;
-//         int commonRib = getIdRib();
-//         TriangleStructure commonTriangle = null;
-//
-//         int k = 0;
-//         while (i + k < points.size()) {
-//             i++;
-//             nodes.add(points.get(i - 1));
-//             int indexPoint2 = nodes.size() - 1;
-//             int rib12 = getIdRib();
-//             int rib20 = getIdRib();
-//
-//             TriangleStructure triangle = new TriangleStructure();
-//             triangle.iNodes = new int[]{indexPoint0, indexPoint1, indexPoint2};
-//             triangle.iRibs = new int[]{commonRib, rib12, rib20};
-//             triangle.triangles = new TriangleStructure[]{commonTriangle, null, null};
-//             if (commonTriangle != null) {
-//                 commonTriangle.triangles[1] = triangle;
-//             }
-//
-//             triangleList.add(triangle);
-//
-//             if (i + k >= points.size())
-//                 break;
-//
-//             int indexPoint0_next = indexPoint0;
-//             int indexPoint1_next = indexPoint2;
-//             k++;
-//             nodes.add(points.get(points.size() - k));
-//             int indexPoint2_next = nodes.size() - 1;
-//
-//             int rib12_next = getIdRib();
-//             int rib20_next = getIdRib();
-//
-//             TriangleStructure triangle2 = new TriangleStructure();
-//             triangle2.iNodes = new int[]{indexPoint0_next, indexPoint1_next, indexPoint2_next};
-//             triangle2.iRibs = new int[]{rib20, rib12_next, rib20_next};
-//             triangle2.triangles = new TriangleStructure[]{
-//                     triangle, null, null
-//             };
-//             triangle.triangles[2] = triangle2;
-//             triangleList.add(triangle2);
-//
-//
-//             indexPoint0 = indexPoint2_next;
-//             indexPoint1 = indexPoint1_next;
-//             commonRib = rib12_next;
-//             commonTriangle = triangle2;
-//         }
-//
-//         BorderBox borderBox = new BorderBox();
-//         for (Point point : points) {
-//             borderBox.addPoint(point);
-//         }
-//         return borderBox;
-//     }
-//
-//
 //     protected void flipTriangles(TriangleStructure triangle, int indexTriangle) {
 //         TriangleStructure[] region = new TriangleStructure[4];
 //
@@ -797,44 +429,6 @@ func (t *Triangle) swap() {
 //         triangleList.addAll(triangles);
 //     }
 //
-//     private void addNextPointInTriangle(Point nextPoint) {
-//
-//         TriangleStructure beginTriangle = searcher.getSearcher();
-//
-//         nodes.add(nextPoint);
-//         int pointIndex = nodes.size() - 1;
-//         int rib0 = getIdRib();
-//         int rib1 = getIdRib();
-//         int rib2 = getIdRib();
-//
-//         TriangleStructure[] triangles = new TriangleStructure[3];
-//         for (int i = 0; i < 3; i++) {
-//             triangles[i] = new TriangleStructure();
-//         }
-//
-//         triangles[0].iNodes = new int[]{beginTriangle.iNodes[0], beginTriangle.iNodes[1], pointIndex};
-//         triangles[0].iRibs = new int[]{beginTriangle.iRibs[0], rib1, rib0};
-//
-//         triangles[1].iNodes = new int[]{beginTriangle.iNodes[1], beginTriangle.iNodes[2], pointIndex};
-//         triangles[1].iRibs = new int[]{beginTriangle.iRibs[1], rib2, rib1};
-//
-//         triangles[2].iNodes = new int[]{beginTriangle.iNodes[2], beginTriangle.iNodes[0], pointIndex};
-//         triangles[2].iRibs = new int[]{beginTriangle.iRibs[2], rib0, rib2};
-//
-//         triangles[0].triangles = new TriangleStructure[]{beginTriangle.triangles[0], triangles[1], triangles[2]};
-//         triangles[1].triangles = new TriangleStructure[]{beginTriangle.triangles[1], triangles[2], triangles[0]};
-//         triangles[2].triangles = new TriangleStructure[]{beginTriangle.triangles[2], triangles[0], triangles[1]};
-//
-//         triangleList.NullableTriangle(beginTriangle);
-//
-//         searcher.setSearcher(triangles[0]);
-//         addInverseLinkOnTriangle(triangles);
-//
-//         for (int i = 0; i < 3; i++) {
-//             flipper.add(triangles[i], 0);
-//             triangleList.add(triangles[i]);
-//         }
-//     }
 //
 //
 //     private void addInverseLinkOnTriangle(TriangleStructure[] triangles) {
@@ -867,83 +461,3 @@ func (t *Triangle) swap() {
 //             addInverseLinkOnTriangle(triangles);
 //         }
 //     }
-//
-//
-//
-//     public List<Point[]> getTriangles() {
-//         List<TriangleStructure> triangles = triangleList.get();
-//         List<Point[]> trianglesPoints = new ArrayList<>();
-//         for (TriangleStructure tri : triangles) {
-//             Point[] points = new Point[3];
-//             for (int i = 0; i < 3; i++) {
-//                 points[i] = new Point(nodes.get(tri.iNodes[i]));
-//             }
-//             trianglesPoints.add(points);
-//         }
-//         return trianglesPoints;
-//     }
-//
-// }
-
-//Performance O(n*log(n)) in worst case
-// Point[0][] - convex points
-// Point[1][] - sorted list of all points
-// func ConvexHull(ps []Point) (res []Point) {
-// 	// 	        List<Integer> removedIndex = new ArrayList<>();
-// 	// 	        for (int i = 1; i < array.size(); i++) {
-// 	// 	            if (array.get(i - 1).equals(array.get(i))) {
-// 	// 	                removedIndex.add(i);
-// 	// 	            }
-// 	// 	        }
-// 	// 	        for (int i = removedIndex.size() - 1; i >= 0; i--) {
-// 	// 	            int position = removedIndex.get(i);
-// 	// 	            array.remove(position);
-// 	// 	        }
-// 	// 	        List<Point> convexPoints = new ArrayList<>();
-// 	// 	        if (k > 1) {
-// 	// 	            H = Arrays.copyOfRange(H, 0, k - 1); // remove non-hull vertices after k; remove k - 1 which is a duplicate
-// 	// 	            boolean[] removed = new boolean[k - 1];
-// 	// 	            for (int position0 = 0; position0 < removed.length; position0++) {
-// 	// 	                int position1 = position0 + 1 >= removed.length ? position0 + 1 - removed.length : position0 + 1;
-// 	// 	                int position2 = position0 + 2 >= removed.length ? position0 + 2 - removed.length : position0 + 2;
-// 	// 	                if (Geometry.is3pointsCollinear(
-// 	// 	                        H[position0],
-// 	// 	                        H[position1],
-// 	// 	                        H[position2])) {
-// 	// 	                    removed[position1] = true;
-// 	// 	                }
-// 	// 	            }
-// 	// 	            for (int i = 0; i < removed.length; i++) {
-// 	// 	                if (!removed[i])
-// 	// 	                    convexPoints.add(H[i]);
-// 	// 	            }
-// 	// 	            if (array.size() > 5) {
-// 	// 	                if ((double) convexPoints.size() / (double) array.size() > RATIO_DELETING_CONVEX_POINT_FROM_POINT_LIST) {
-// 	// 	                    boolean[] delete = new boolean[array.size()];
-// 	// 	                    int position = 0;
-// 	// 	                    for (int i = 0; i < array.size(); i++) {
-// 	// 	                        if (array.get(i).equals(convexPoints.get(position))) {
-// 	// 	                            delete[i] = true;
-// 	// 	                            position++;
-// 	// 	                        }
-// 	// 	                    }
-// 	// 	                    for (int i = array.size() - 1; i >= 0; i--) {
-// 	// 	                        if (position >= convexPoints.size())
-// 	// 	                            break;
-// 	// 	                        if (array.get(i).equals(convexPoints.get(position))) {
-// 	// 	                            delete[i] = true;
-// 	// 	                            position++;
-// 	// 	                        }
-// 	// 	                    }
-// 	// 	                    ArrayList<Point> newList = new ArrayList<>();
-// 	// 	                    for (int i = 0; i < array.size(); i++) {
-// 	// 	                        if (!delete[i])
-// 	// 	                            newList.add(array.get(i));
-// 	// 	                    }
-// 	// 	                    array = newList;
-// 	// 	                }
-// 	// 	            }
-// 	// 	        }
-// 	// 	//
-// 	// 	        return new List[]{convexPoints, array};
-// }
