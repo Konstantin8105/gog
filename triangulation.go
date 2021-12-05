@@ -5,10 +5,10 @@ type Mesh struct {
 }
 
 func New(model Model) (m *Mesh) {
-	cps := ConvexHull(model.Points) // points on convex hull
-	for i := 2; i < len(cps); i++ {
-		m.AddTriangle(cps[i-2], cps[i-1], cps[i], -1)
-	}
+	// 	cps := ConvexHull(model.Points) // points on convex hull
+	// 	for i := 2; i < len(cps); i++ {
+	// 		m.AddTriangle(cps[i-2], cps[i-1], cps[i], -1)
+	// 	}
 
 	return
 	//  i := 0
