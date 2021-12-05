@@ -568,6 +568,10 @@ func (m *Model) RemovePoint() {
 	// TODO
 }
 
+func (m *Model) Delaunay() {
+	// TODO
+}
+
 func (m *Model) RemoveEmptyPoints() {
 	// find all used points
 	pt := make([]bool, len(m.Points))

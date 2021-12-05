@@ -4,77 +4,13 @@ type Mesh struct {
 	// TODO
 }
 
-func (m Mesh) ConvexHull() {
-	// TODO
-}
+func New(model Model) (m *Mesh) {
+	cps := ConvexHull(model.Points) // points on convex hull
+	for i := 2; i < len(cps); i++ {
+		m.AddTriangle(cps[i-2], cps[i-1], cps[i], -1)
+	}
 
-func (m *Mesh) AddPoint() {
-	// TODO
-}
-
-func (m *Mesh) AddSide() {
-	// TODO
-}
-
-func (m *Mesh) Delanay() {
-	// TODO
-}
-
-func (m *Mesh) Smooth() {
-	// TODO
-}
-
-func (m *Mesh) Sweep() {
-	// TODO
-}
-
-func (m *Mesh) MaxArea() {
-	// TODO
-}
-
-func (m *Mesh) MinAngle() {
-	// TODO
-}
-
-// Triangle is data structure "Nodes, ribs и triangles" created by
-// book "Algoritm building and analyse triangulation", A.B.Skvorcov
-//
-//	Scketch:
-//	+------------------------------------+
-//	|              tr[0]                 |
-//	|  nodes[0]    ribs[0]      nodes[1] |
-//	| o------------------------o         |
-//	|  \                      /          |
-//	|   \                    /           |
-//	|    \                  /            |
-//	|     \                /             |
-//	|      \              /              |
-//	|       \            /  ribs[1]      |
-//	|        \          /   tr[1]        |
-//	|  ribs[2]\        /                 |
-//	|  tr[2]   \      /                  |
-//	|           \    /                   |
-//	|            \  /                    |
-//	|             \/                     |
-//	|              o  nodes[2]           |
-//	+------------------------------------+
-//
-type Triangle struct {
-	nodes    [3]int       // indexes of triangle points
-	ribs     [3]int       // indexes of triangle ribs
-	tr       [3]*Triangle // indexes of near triangles
-	material int          // material of triangle
-}
-
-func (t *Triangle) swap() {
-	t.nodes[0], t.nodes[1] = t.nodes[1], t.nodes[0]
-	t.ribs[1], t.ribs[2] = t.ribs[2], t.ribs[1]
-	t.tr[1], t.tr[2] = t.tr[2], t.tr[1]
-}
-
-func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
-	//cps := ConvexHull(points) // points on convex hull
-
+	return
 	//  i := 0
 	//  i++;
 	//  nodes.add(points.get(0));
@@ -136,7 +72,75 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 	//      borderBox.addPoint(point);
 	//  }
 	//  return borderBox;
-	return
+
+	// TODO
+}
+
+func (m Mesh) ConvexHull() {
+	// TODO
+}
+
+func (m *Mesh) AddPoint() {
+	// TODO
+}
+
+func (m *Mesh) AddSide() {
+	// TODO
+}
+
+func (m *Mesh) Delanay() {
+	// TODO
+}
+
+func (m *Mesh) Smooth() {
+	// TODO
+}
+
+func (m *Mesh) Sweep() {
+	// TODO
+}
+
+func (m *Mesh) MaxArea() {
+	// TODO
+}
+
+func (m *Mesh) MinAngle() {
+	// TODO
+}
+
+// Triangle is data structure "Nodes, ribs и triangles" created by
+// book "Algoritm building and analyse triangulation", A.B.Skvorcov
+//
+//	Scketch:
+//	+------------------------------------+
+//	|              tr[0]                 |
+//	|  nodes[0]    ribs[0]      nodes[1] |
+//	| o------------------------o         |
+//	|  \                      /          |
+//	|   \                    /           |
+//	|    \                  /            |
+//	|     \                /             |
+//	|      \              /              |
+//	|       \            /  ribs[1]      |
+//	|        \          /   tr[1]        |
+//	|  ribs[2]\        /                 |
+//	|  tr[2]   \      /                  |
+//	|           \    /                   |
+//	|            \  /                    |
+//	|             \/                     |
+//	|              o  nodes[2]           |
+//	+------------------------------------+
+//
+type Triangle struct {
+	nodes [3]int // indexes of triangle points
+	ribs  [3]int // indexes of triangle ribs
+	tr    [3]int // indexes of near triangles
+}
+
+func (t *Triangle) swap() {
+	t.nodes[0], t.nodes[1] = t.nodes[1], t.nodes[0]
+	t.ribs[1], t.ribs[2] = t.ribs[2], t.ribs[1]
+	t.tr[1], t.tr[2] = t.tr[2], t.tr[1]
 }
 
 //
@@ -162,9 +166,6 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //         POINT_ON_LINE_2,
 //         POINT_ON_CORNER,
 //         POINT_INSIDE,
-//         POINT_OUTSIDE_LINE_0,
-//         POINT_OUTSIDE_LINE_1,
-//         POINT_OUTSIDE_LINE_2,
 //     }
 //
 //
@@ -202,17 +203,17 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //         }
 //     }
 //
-//     Override
+//
 //     public TriangleStructure getSearcher() {
 //         return searcher[positionSearcher];
 //     }
 //
-//     Override
+//
 //     public void setSearcher(TriangleStructure searcher) {
 //         this.searcher[positionSearcher] = searcher;
 //     }
 //
-//     Override
+//
 //     public void chooseSearcher(Point point) {
 //         for (int i = searcher.length - 1; i >= 0; i--) {
 //             if (point.Y > elevations[i] - Precision.epsilon()) {
@@ -244,21 +245,21 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //     private Geometry.POINT_ON_LINE[] value = new Geometry.POINT_ON_LINE[3];
 //     private Point[] trianglePoint = new Point[3];
 //
-//     Override
+//
 //     public GeometryPointTriangle.PointTriangleState movingByConvexHull(Point point) {
 //         TriangleStructure beginTriangle = getSearcher();
 //         while (true) {
 //             //add reserve searching
-//             value[0] = Geometry.calculateValuePointOnLine(triangulation.getNode(beginTriangle.iNodes[0]), triangulation.getNode(beginTriangle.iNodes[1]), point);
+//             value[0] = PointOnLine(triangulation.getNode(beginTriangle.iNodes[0]), triangulation.getNode(beginTriangle.iNodes[1]), point);
 //             if (Geometry.isAtRightOf(value[0])) {
 //                 beginTriangle = beginTriangle.triangles[0];
 //             } else {
 //                 int whichOp = 0;
-//                 value[1] = Geometry.calculateValuePointOnLine(triangulation.getNode(beginTriangle.iNodes[1]), triangulation.getNode(beginTriangle.iNodes[2]), point);
+//                 value[1] = PointOnLine(triangulation.getNode(beginTriangle.iNodes[1]), triangulation.getNode(beginTriangle.iNodes[2]), point);
 //                 if (Geometry.isAtRightOf(value[1])) {
 //                     whichOp += 1;
 //                 }
-//                 value[2] = Geometry.calculateValuePointOnLine(triangulation.getNode(beginTriangle.iNodes[2]), triangulation.getNode(beginTriangle.iNodes[0]), point);
+//                 value[2] = PointOnLine(triangulation.getNode(beginTriangle.iNodes[2]), triangulation.getNode(beginTriangle.iNodes[0]), point);
 //                 if (Geometry.isAtRightOf(value[2])) {
 //                     whichOp += 2;
 //                 }
@@ -298,12 +299,12 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //         this.triangulation = triangulation;
 //     }
 //
-//     Override
+//
 //     public void add(TriangleStructure triangle, int index) {
 //         buffer.add(new FlipStructure(triangle, index));
 //     }
 //
-//     Override
+//
 //     public void run() {
 //         while (!buffer.empty()) {
 //             FlipStructure next = buffer.pop();
@@ -324,7 +325,7 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //             triangulation.flipTriangles(next.triangle, next.side);
 //
 //             // TODO: 20.09.2016 add to another class
-// //            Point p0 = triangulation.getNode(next.triangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(next.side - 1)]);
+// //            Point p0 = triangulation.getNode(next.triangle.iNodes[normSizeBy3(next.side - 1)]);
 // //            Point p1 = triangulation.getNode(next.triangle.triangles[next.side].iNodes[0]);
 // //            Point p2 = triangulation.getNode(next.triangle.triangles[next.side].iNodes[1]);
 // //            Point p3 = triangulation.getNode(next.triangle.triangles[next.side].iNodes[2]);
@@ -542,7 +543,7 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //     protected void flipTriangles(TriangleStructure triangle, int indexTriangle) {
 //         TriangleStructure[] region = new TriangleStructure[4];
 //
-//         int pointNewTriangle = triangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexTriangle - 1)];
+//         int pointNewTriangle = triangle.iNodes[normSizeBy3(indexTriangle - 1)];
 //         int commonRib = triangle.iRibs[indexTriangle];
 //         TriangleStructure[] baseTriangles = new TriangleStructure[]{
 //                 triangle,
@@ -561,26 +562,26 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //             }
 //             TriangleStructure t1 = new TriangleStructure();
 //             t1.iRibs = new int[]{
-//                     internalTriangle.iRibs[ArrayIndexCorrection.normalizeSizeBy3(indexCommonRib + 1)]
+//                     internalTriangle.iRibs[normSizeBy3(indexCommonRib + 1)]
 //             };
 //             t1.iNodes = new int[]{
-//                     internalTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexCommonRib + 1)],
-//                     internalTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexCommonRib - 1)]
+//                     internalTriangle.iNodes[normSizeBy3(indexCommonRib + 1)],
+//                     internalTriangle.iNodes[normSizeBy3(indexCommonRib - 1)]
 //             };
 //             t1.triangles = new TriangleStructure[]{
-//                     internalTriangle.triangles[ArrayIndexCorrection.normalizeSizeBy3(indexCommonRib + 1)]
+//                     internalTriangle.triangles[normSizeBy3(indexCommonRib + 1)]
 //             };
 //             region[position++] = t1;
 //             TriangleStructure t2 = new TriangleStructure();
 //             t2.iRibs = new int[]{
-//                     internalTriangle.iRibs[ArrayIndexCorrection.normalizeSizeBy3(indexCommonRib - 1)]
+//                     internalTriangle.iRibs[normSizeBy3(indexCommonRib - 1)]
 //             };
 //             t2.iNodes = new int[]{
-//                     internalTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexCommonRib - 1)],
-//                     internalTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexCommonRib)]
+//                     internalTriangle.iNodes[normSizeBy3(indexCommonRib - 1)],
+//                     internalTriangle.iNodes[normSizeBy3(indexCommonRib)]
 //             };
 //             t2.triangles = new TriangleStructure[]{
-//                     internalTriangle.triangles[ArrayIndexCorrection.normalizeSizeBy3(indexCommonRib - 1)]
+//                     internalTriangle.triangles[normSizeBy3(indexCommonRib - 1)]
 //             };
 //             region[position++] = t2;
 //         }
@@ -686,25 +687,25 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //
 //
 //         triangles[0].iNodes = new int[]{
-//                 beginTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle)],
+//                 beginTriangle.iNodes[normSizeBy3(indexLineInTriangle)],
 //                 pointIndex,
-//                 beginTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle - 1)]
+//                 beginTriangle.iNodes[normSizeBy3(indexLineInTriangle - 1)]
 //         };
 //
 //         triangles[1].iNodes = new int[]{
 //                 pointIndex,
-//                 beginTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle + 1)],
-//                 beginTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle - 1)]
+//                 beginTriangle.iNodes[normSizeBy3(indexLineInTriangle + 1)],
+//                 beginTriangle.iNodes[normSizeBy3(indexLineInTriangle - 1)]
 //         };
 //
 //         triangles[0].iRibs = new int[]{
 //                 rib0,
 //                 rib2,
-//                 beginTriangle.iRibs[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle - 1)]
+//                 beginTriangle.iRibs[normSizeBy3(indexLineInTriangle - 1)]
 //         };
 //         triangles[1].iRibs = new int[]{
 //                 rib1,
-//                 beginTriangle.iRibs[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle + 1)],
+//                 beginTriangle.iRibs[normSizeBy3(indexLineInTriangle + 1)],
 //                 rib2
 //         };
 //
@@ -712,11 +713,11 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //         triangles[0].triangles = new TriangleStructure[]{
 //                 null,
 //                 triangles[1],
-//                 beginTriangle.triangles[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle - 1)]
+//                 beginTriangle.triangles[normSizeBy3(indexLineInTriangle - 1)]
 //         };
 //         triangles[1].triangles = new TriangleStructure[]{
 //                 null,
-//                 beginTriangle.triangles[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle + 1)],
+//                 beginTriangle.triangles[normSizeBy3(indexLineInTriangle + 1)],
 //                 triangles[0]
 //         };
 //
@@ -750,37 +751,37 @@ func ConvexHullTriangles(points []Point) (m Mesh, tr []Triangle) {
 //
 //         triangles[2].iNodes = new int[]{
 //                 pointIndex,
-//                 beginTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle + 1)],
-//                 beginTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle - 1)]
+//                 beginTriangle.iNodes[normSizeBy3(indexLineInTriangle + 1)],
+//                 beginTriangle.iNodes[normSizeBy3(indexLineInTriangle - 1)]
 //         };
 //         triangles[3].iNodes = new int[]{
 //                 beginTriangle.iNodes[indexLineInTriangle],
 //                 pointIndex,
-//                 beginTriangle.iNodes[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle - 1)]
+//                 beginTriangle.iNodes[normSizeBy3(indexLineInTriangle - 1)]
 //         };
 //
 //
 //         triangles[2].iRibs = new int[]{
 //                 rib0,
-//                 beginTriangle.iRibs[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle + 1)],
+//                 beginTriangle.iRibs[normSizeBy3(indexLineInTriangle + 1)],
 //                 rib3
 //         };
 //         triangles[3].iRibs = new int[]{
 //                 rib1,
 //                 rib3,
-//                 beginTriangle.iRibs[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle - 1)]
+//                 beginTriangle.iRibs[normSizeBy3(indexLineInTriangle - 1)]
 //         };
 //
 //         triangles[2].triangles = new TriangleStructure[]{
 //                 triangles[0],
-//                 beginTriangle.triangles[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle + 1)],
+//                 beginTriangle.triangles[normSizeBy3(indexLineInTriangle + 1)],
 //                 triangles[3]
 //         };
 //
 //         triangles[3].triangles = new TriangleStructure[]{
 //                 triangles[1],
 //                 triangles[2],
-//                 beginTriangle.triangles[ArrayIndexCorrection.normalizeSizeBy3(indexLineInTriangle - 1)]
+//                 beginTriangle.triangles[normSizeBy3(indexLineInTriangle - 1)]
 //         };
 //
 //         addInverseLinkOnTriangle(triangles);
