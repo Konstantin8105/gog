@@ -11,6 +11,8 @@ type Mesh struct {
 	// TODO
 }
 
+const Debug = false
+
 const (
 	Boundary  = -1
 	Removed   = -2
@@ -43,26 +45,30 @@ func New(model Model) (mesh *Mesh, err error) {
 	mesh.Clockwise()
 	// add all points of model
 	for i := range model.Points {
-		// TODO remove
-		err = mesh.Check()
-		if err != nil {
-			return
+		if Debug {
+			err = mesh.Check()
+			if err != nil {
+				return
+			}
 		}
 		err = mesh.AddPoint(model.Points[i])
 		if err != nil {
 			return
 		}
-		// TODO remove
+		if Debug {
+			err = mesh.Check()
+			if err != nil {
+				return
+			}
+		}
+	}
+	if Debug {
 		err = mesh.Check()
 		if err != nil {
 			return
 		}
 	}
-	// TODO remove
-	err = mesh.Check()
-	if err != nil {
-		return
-	}
+	// TODO add ribs
 	return
 }
 
@@ -679,10 +685,11 @@ func (mesh *Mesh) Delanay() (err error) {
 		}
 		return
 	}
-	// TODO remove
-	err = mesh.Check()
-	if err != nil {
-		return
+	if Debug {
+		err = mesh.Check()
+		if err != nil {
+			return
+		}
 	}
 
 	// loop of triangles
@@ -698,13 +705,14 @@ func (mesh *Mesh) Delanay() (err error) {
 				if err != nil {
 					return
 				}
-				// TODO remove
-				err = mesh.Check()
-				if err != nil {
-					return
-				}
 				if flip {
 					counter++
+					if Debug {
+						err = mesh.Check()
+						if err != nil {
+							return
+						}
+					}
 					break
 				}
 			}
@@ -715,10 +723,11 @@ func (mesh *Mesh) Delanay() (err error) {
 		if iter == 5000 {
 			return fmt.Errorf("global delanay infinite loop")
 		}
-		// TODO remove
-		err = mesh.Check()
-		if err != nil {
-			return
+		if Debug {
+			err = mesh.Check()
+			if err != nil {
+				return
+			}
 		}
 	}
 	return nil
@@ -767,25 +776,28 @@ func (mesh *Mesh) Split(d float64) (err error) {
 
 	// add all points of model
 	for i := range pnts {
-		// TODO remove
-		err = mesh.Check()
-		if err != nil {
-			return
+		if Debug {
+			err = mesh.Check()
+			if err != nil {
+				return
+			}
 		}
 		err = mesh.AddPoint(pnts[i])
 		if err != nil {
 			return
 		}
-		// TODO remove
+		if Debug {
+			err = mesh.Check()
+			if err != nil {
+				return
+			}
+		}
+	}
+	if Debug {
 		err = mesh.Check()
 		if err != nil {
 			return
 		}
-	}
-	// TODO remove
-	err = mesh.Check()
-	if err != nil {
-		return
 	}
 
 	err = mesh.Delanay()
