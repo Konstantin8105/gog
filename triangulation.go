@@ -730,6 +730,77 @@ func (mesh *Mesh) Smooth() {
 	// TODO
 }
 
+func (mesh *Mesh) Split(d float64) (err error) {
+	defer func() {
+		err2 := mesh.Delanay()
+		if err2 != nil {
+			err = fmt.Errorf("%v.%v", err2, err)
+		}
+	}()
+	var pnts []Point
+
+	addpoint := func(p1, p2 Point) {
+		dist := Distance(p1, p2)
+		amount := int(dist / d)
+		if amount < 1 {
+			return
+		}
+		var (
+			dx = (p2.X - p1.X) / float64(amount+1)
+			dy = (p2.Y - p1.Y) / float64(amount+1)
+		)
+		for i := 0; i < amount; i++ {
+			pnts = append(pnts, Point{
+				X: p1.X + dx*float64(i+1),
+				Y: p1.Y + dy*float64(i+1),
+			})
+		}
+	}
+
+	for i := range mesh.model.Triangles {
+		if mesh.model.Triangles[i][0] == Removed {
+			continue
+		}
+		addpoint(
+			mesh.model.Points[mesh.model.Triangles[i][0]],
+			mesh.model.Points[mesh.model.Triangles[i][1]],
+		)
+		addpoint(
+			mesh.model.Points[mesh.model.Triangles[i][1]],
+			mesh.model.Points[mesh.model.Triangles[i][2]],
+		)
+		addpoint(
+			mesh.model.Points[mesh.model.Triangles[i][2]],
+			mesh.model.Points[mesh.model.Triangles[i][0]],
+		)
+	}
+
+	// add all points of model
+	for i := range pnts {
+		// TODO remove
+		err = mesh.Check()
+		if err != nil {
+			return
+		}
+		err = mesh.AddPoint(pnts[i])
+		if err != nil {
+			return
+		}
+		// TODO remove
+		err = mesh.Check()
+		if err != nil {
+			return
+		}
+	}
+	// TODO remove
+	err = mesh.Check()
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func (mesh *Mesh) MaxArea() {
 	// TODO
 }

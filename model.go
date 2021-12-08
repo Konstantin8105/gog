@@ -65,6 +65,14 @@ func (m Model) Dxf() string {
 		fmt.Fprintf(&buf, "31\n%f\n", 0.0)  // end point Z
 	}
 
+	// draw convex
+	{
+		cps := ConvexHull(m.Points)
+		for i := 1; i < len(cps); i++ {
+			line(cps[i-1], cps[i], "convex")
+		}
+		line(cps[len(cps)-1], cps[0], "convex")
+	}
 	// draw lines
 	for i := range m.Lines {
 		line(m.Points[m.Lines[i][0]], m.Points[m.Lines[i][1]], "lines")
