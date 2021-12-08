@@ -22,6 +22,8 @@ func New(model Model) (mesh *Mesh, err error) {
 	mesh = new(Mesh)
 	// convex
 	cps := ConvexHull(model.Points) // points on convex hull
+	// add last point for last triangle
+	cps = append(cps, cps[0])
 	// prepare mesh triangles
 	for i := 3; i < len(cps); i++ {
 		mesh.model.AddTriangle(cps[0], cps[i-2], cps[i-1], Boundary)
