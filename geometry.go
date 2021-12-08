@@ -950,6 +950,7 @@ func TriangleSplitByPoint(
 	tr0, tr1, tr2 Point,
 ) (
 	res [][3]Point,
+	lineIntersect int,
 	err error,
 ) {
 	// check valid triangle
@@ -1000,8 +1001,9 @@ func TriangleSplitByPoint(
 	}
 	// point on the side ?
 	for _, line := range []struct {
-		Line [2]Point
-		Free Point
+		Line  [2]Point
+		Free  Point
+		state int
 	}{
 		{
 			// tr0 --- pt --- tr1  //
@@ -1009,8 +1011,9 @@ func TriangleSplitByPoint(
 			//    \         /      //
 			//     \       /       //
 			//      \ tr2 /        //
-			Line: [2]Point{tr0, tr1},
-			Free: tr2,
+			Line:  [2]Point{tr0, tr1},
+			Free:  tr2,
+			state: 0,
 		},
 		{
 			// tr0 ---------- tr1  //
@@ -1018,8 +1021,9 @@ func TriangleSplitByPoint(
 			//    \         pt     //
 			//     \       /       //
 			//      \ tr2 /        //
-			Line: [2]Point{tr1, tr2},
-			Free: tr0,
+			Line:  [2]Point{tr1, tr2},
+			Free:  tr0,
+			state: 1,
 		},
 		{
 			// tr0 ---------- tr1  //
@@ -1027,12 +1031,13 @@ func TriangleSplitByPoint(
 			//    pt        /      //
 			//     \       /       //
 			//      \ tr2 /        //
-			Line: [2]Point{tr2, tr0},
-			Free: tr1,
+			Line:  [2]Point{tr2, tr0},
+			Free:  tr1,
+			state: 2,
 		},
 	} {
-		_, _, stB := PointLine(pt, line.Line[0], line.Line[1])
-		if !stB.Has(OnSegment) {
+		_, _, stBl := PointLine(pt, line.Line[0], line.Line[1])
+		if !stBl.Has(OnSegment) {
 			// point is outside side
 			continue
 		}
@@ -1051,6 +1056,7 @@ func TriangleSplitByPoint(
 		default:
 			panic("strange situation")
 		}
+		lineIntersect = line.state
 		return
 	}
 
@@ -1075,33 +1081,37 @@ func TriangleSplitByPoint(
 	return
 }
 
-func Det(a [3][3]float64) float64 {
-	return a[0][0]*a[1][1]*a[2][2] +
-		a[1][0]*a[2][1]*a[0][2] +
-		a[0][1]*a[1][2]*a[2][0] -
-		a[0][2]*a[1][1]*a[2][0] -
-		a[0][1]*a[1][0]*a[2][2] -
-		a[1][2]*a[2][1]*a[0][0]
-}
+// TODO : remve
+// func Det(a [3][3]float64) float64 {
+// 	return a[0][0]*a[1][1]*a[2][2] +
+// 		a[1][0]*a[2][1]*a[0][2] +
+// 		a[0][1]*a[1][2]*a[2][0] -
+// 		a[0][2]*a[1][1]*a[2][0] -
+// 		a[0][1]*a[1][0]*a[2][2] -
+// 		a[1][2]*a[2][1]*a[0][0]
+// }
 
-func PointInCircle(point Point, circle []Point) bool {
-	var (
-		x1x = circle[0].X - point.X
-		y1y = circle[0].Y - point.Y
-
-		x2x = circle[1].X - point.X
-		y2y = circle[1].Y - point.Y
-
-		x3x = circle[2].X - point.X
-		y3y = circle[2].Y - point.Y
-	)
-
-	result := Det([3][3]float64{
-		[3]float64{x1x*x1x + y1y*y1y, x1x, y1y},
-		[3]float64{x2x*x2x + y2y*y2y, x2x, y2y},
-		[3]float64{x3x*x3x + y3y*y3y, x3x, y3y},
-	})
-	return Eps < result
+func PointInCircle(point Point, circle [3]Point) bool {
+	// TODO : remve
+	// 	var (
+	// 		x1x = circle[0].X - point.X
+	// 		y1y = circle[0].Y - point.Y
+	//
+	// 		x2x = circle[1].X - point.X
+	// 		y2y = circle[1].Y - point.Y
+	//
+	// 		x3x = circle[2].X - point.X
+	// 		y3y = circle[2].Y - point.Y
+	// 	)
+	//
+	// 	result := Det([3][3]float64{
+	// 		[3]float64{x1x*x1x + y1y*y1y, x1x, y1y},
+	// 		[3]float64{x2x*x2x + y2y*y2y, x2x, y2y},
+	// 		[3]float64{x3x*x3x + y3y*y3y, x3x, y3y},
+	// 	})
+	// 	return Eps < result
+	xc, yc, r := Arc(circle[0], circle[1], circle[2])
+	return Distance(Point{xc, yc}, point) + Eps < r
 }
 
 // ConvexHull return chain of convex points

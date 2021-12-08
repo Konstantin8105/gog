@@ -140,7 +140,7 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 }
 
 // AddTriangle add triangle into model with specific tag/material
-func (m *Model) AddTriangle(start, middle, end Point, tag int) {
+func (m *Model) AddTriangle(start, middle, end Point, tag int) (index int) {
 	// add points
 	var (
 		st = m.AddPoint(start)
@@ -152,11 +152,14 @@ func (m *Model) AddTriangle(start, middle, end Point, tag int) {
 		if (m.Triangles[i][0] == st && m.Triangles[i][1] == mi && m.Triangles[i][2] == en) ||
 			(m.Triangles[i][2] == st && m.Triangles[i][1] == mi && m.Triangles[i][0] == en) {
 			m.Triangles[i][3] = tag
+			index = i
 			return
 		}
 	}
 	// add arc
 	m.Triangles = append(m.Triangles, [4]int{st, mi, en, tag})
+	index = len(m.Triangles) - 1
+	return
 }
 
 // AddCircle add arcs based on circle geometry into model with specific tag
@@ -503,7 +506,7 @@ func (m *Model) Intersection() {
 						continue
 					}
 					tag := m.Triangles[jt][3]
-					res, err := TriangleSplitByPoint(
+					res, _, err := TriangleSplitByPoint(
 						// Point
 						m.Points[ip],
 						// Triangle
