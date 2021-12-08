@@ -7,6 +7,7 @@ import (
 
 type Mesh struct {
 	model     Model
+	Points    []int // tags for points
 	Triangles []Triangle
 	// TODO
 }
@@ -17,6 +18,8 @@ const (
 	Boundary  = -1
 	Removed   = -2
 	Undefined = -3
+	Fixed     = 100
+	Movable   = 200
 )
 
 func New(model Model) (mesh *Mesh, err error) {
@@ -51,7 +54,7 @@ func New(model Model) (mesh *Mesh, err error) {
 				return
 			}
 		}
-		err = mesh.AddPoint(model.Points[i])
+		err = mesh.AddPoint(model.Points[i], Fixed)
 		if err != nil {
 			return
 		}
@@ -68,7 +71,25 @@ func New(model Model) (mesh *Mesh, err error) {
 			return
 		}
 	}
+	// add fixed tags
+	if Debug {
+		if len(mesh.Points) != len(mesh.model.Points) {
+			err = fmt.Errorf("not equal points size")
+			return
+		}
+	}
+	for i := range model.Points {
+		mesh.Points[i] = Fixed
+	}
 	// TODO add ribs
+	// Point tags:
+	//	0 fixed
+	//	1 free
+	// for i := range model.Lines {
+	// 	// Line tags:
+	// 	//	0 fixed
+	// 	//	1 free
+	// }
 	return
 }
 
@@ -187,6 +208,9 @@ func (mesh Mesh) Check() (err error) {
 			}
 		}
 	}
+
+	// TODO add error for undefined mesh.Points
+
 	// no error
 	return nil
 }
@@ -223,7 +247,7 @@ func (mesh *Mesh) Clockwise() {
 	}
 }
 
-func (mesh *Mesh) AddPoint(p Point) (err error) {
+func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 	// ignore points if on corner
 	for _, pt := range mesh.model.Points {
 		if Distance(p, pt) < Eps {
@@ -259,6 +283,10 @@ func (mesh *Mesh) AddPoint(p Point) (err error) {
 		}
 		// index of new point
 		idp := mesh.model.AddPoint(p)
+		for i := len(mesh.Points) - 1; i < idp; i++ {
+			mesh.Points = append(mesh.Points, Undefined)
+		}
+		mesh.Points[idp] = tag
 		// removed triangles
 		removedTriangles := []int{i}
 
@@ -284,37 +312,6 @@ func (mesh *Mesh) AddPoint(p Point) (err error) {
 	// outside of triangles or on corners
 	return nil
 }
-
-// func (mesh *Mesh) addPointInTriangle(
-// 	p Point,
-// 	triangle int,
-// ) {
-// 	// index of new point
-// 	ip := m.model.AddPoint(p)
-// 	// create a new triangles
-// 	m.model.AddTriangle(
-// 		m.model.Points[m.Triangles[triangle].tr[0]],
-// 		p,
-// 		m.model.Points[m.Triangles[triangle].tr[1]],
-// 		Undefined,
-// 	)
-// 	mesh.Triangles = append(mesh.Triangles, Triangle{
-// 		nodes: [3]int{p0, p1, p2},
-// 		tr:    [3]int{Boundary, Boundary, 1},
-// 	})
-// 	mesh.model.AddTriangle(
-// 		m.model.Points[m.Triangles[triangle].tr[1]],
-// 		p,
-// 		m.model.Points[m.Triangles[triangle].tr[2]],
-// 		Undefined,
-// 	)
-// 	mesh.model.AddTriangle(
-// 		m.model.Points[m.Triangles[triangle].tr[2]],
-// 		p,
-// 		m.model.Points[m.Triangles[triangle].tr[0]],
-// 		Undefined,
-// 	)
-// }
 
 // shiftTriangle is shift numbers on right on one
 func (mesh *Mesh) shiftTriangle(i int) {
@@ -782,7 +779,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 				return
 			}
 		}
-		err = mesh.AddPoint(pnts[i])
+		err = mesh.AddPoint(pnts[i], Movable)
 		if err != nil {
 			return
 		}
