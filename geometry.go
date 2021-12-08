@@ -1081,35 +1081,7 @@ func TriangleSplitByPoint(
 	return
 }
 
-// TODO : remve
-// func Det(a [3][3]float64) float64 {
-// 	return a[0][0]*a[1][1]*a[2][2] +
-// 		a[1][0]*a[2][1]*a[0][2] +
-// 		a[0][1]*a[1][2]*a[2][0] -
-// 		a[0][2]*a[1][1]*a[2][0] -
-// 		a[0][1]*a[1][0]*a[2][2] -
-// 		a[1][2]*a[2][1]*a[0][0]
-// }
-
 func PointInCircle(point Point, circle [3]Point) bool {
-	// TODO : remve
-	// 	var (
-	// 		x1x = circle[0].X - point.X
-	// 		y1y = circle[0].Y - point.Y
-	//
-	// 		x2x = circle[1].X - point.X
-	// 		y2y = circle[1].Y - point.Y
-	//
-	// 		x3x = circle[2].X - point.X
-	// 		y3y = circle[2].Y - point.Y
-	// 	)
-	//
-	// 	result := Det([3][3]float64{
-	// 		[3]float64{x1x*x1x + y1y*y1y, x1x, y1y},
-	// 		[3]float64{x2x*x2x + y2y*y2y, x2x, y2y},
-	// 		[3]float64{x3x*x3x + y3y*y3y, x3x, y3y},
-	// 	})
-	// 	return Eps < result
 	xc, yc, r := Arc(circle[0], circle[1], circle[2])
 	return Distance(Point{xc, yc}, point) + Eps < r
 }

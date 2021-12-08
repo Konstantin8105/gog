@@ -54,6 +54,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
 	}
+	// mesh.Split(0.2)
 	m.Get(mesh)
 	view() // 9
 	// fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)

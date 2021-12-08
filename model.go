@@ -140,7 +140,7 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 }
 
 // AddTriangle add triangle into model with specific tag/material
-func (m *Model) AddTriangle(start, middle, end Point, tag int) (index int) {
+func (m *Model) AddTriangle(start, middle, end Point, tag int) {
 	// add points
 	var (
 		st = m.AddPoint(start)
@@ -152,13 +152,12 @@ func (m *Model) AddTriangle(start, middle, end Point, tag int) (index int) {
 		if (m.Triangles[i][0] == st && m.Triangles[i][1] == mi && m.Triangles[i][2] == en) ||
 			(m.Triangles[i][2] == st && m.Triangles[i][1] == mi && m.Triangles[i][0] == en) {
 			m.Triangles[i][3] = tag
-			index = i
+			panic("add tri")
 			return
 		}
 	}
 	// add arc
 	m.Triangles = append(m.Triangles, [4]int{st, mi, en, tag})
-	index = len(m.Triangles) - 1
 	return
 }
 
