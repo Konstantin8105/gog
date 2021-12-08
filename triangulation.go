@@ -731,30 +731,18 @@ func (mesh *Mesh) Smooth() {
 }
 
 func (mesh *Mesh) Split(d float64) (err error) {
-	defer func() {
-		err2 := mesh.Delanay()
-		if err2 != nil {
-			err = fmt.Errorf("%v.%v", err2, err)
-		}
-	}()
 	var pnts []Point
 
 	addpoint := func(p1, p2 Point) {
 		dist := Distance(p1, p2)
-		amount := int(dist / d)
-		if amount < 1 {
+		if dist < d {
 			return
 		}
-		var (
-			dx = (p2.X - p1.X) / float64(amount+1)
-			dy = (p2.Y - p1.Y) / float64(amount+1)
-		)
-		for i := 0; i < amount; i++ {
-			pnts = append(pnts, Point{
-				X: p1.X + dx*float64(i+1),
-				Y: p1.Y + dy*float64(i+1),
-			})
-		}
+		// add middle point
+		pnts = append(pnts, Point{
+			X: p1.X*0.5 + p2.X*0.5,
+			Y: p1.Y*0.5 + p2.Y*0.5,
+		})
 	}
 
 	for i := range mesh.model.Triangles {
@@ -796,6 +784,15 @@ func (mesh *Mesh) Split(d float64) (err error) {
 	err = mesh.Check()
 	if err != nil {
 		return
+	}
+
+	err = mesh.Delanay()
+	if err != nil {
+		return
+	}
+
+	if 0 < len(pnts) {
+		return mesh.Split(d)
 	}
 
 	return
