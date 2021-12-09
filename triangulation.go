@@ -765,6 +765,7 @@ func (mesh *Mesh) Smooth() {
 	// point to points near triangles and move to average distance.
 	//
 	// split sides with maximal side distance
+	// 
 	// TODO
 }
 
@@ -785,6 +786,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		}
 		// add middle point
 		pnts = append(pnts, mesh.middlePoint(p1, p2))
+		// TODO points free or fixed
 	}
 
 	for i := range mesh.model.Triangles {
