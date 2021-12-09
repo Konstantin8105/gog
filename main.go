@@ -54,9 +54,16 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
 	}
-	mesh.Split(0.075)
 	m.Get(mesh)
 	view() // 9
+	m.Triangles = nil
+	mesh.Split(0.2)
+	m.Get(mesh)
+	view() // 10
+	m.Triangles = nil
+	mesh.Split(0.1)
+	m.Get(mesh)
+	view() // 11
 	// fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
 	// fmt.Fprintf(os.Stdout, "Minimal distance between points:\n%.4f", m.MinPointDistance())
 }

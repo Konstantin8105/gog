@@ -12,7 +12,7 @@ type Mesh struct {
 	// TODO
 }
 
-const Debug = false
+const Debug = true // false
 
 const (
 	Boundary  = -1
@@ -71,6 +71,17 @@ func New(model Model) (mesh *Mesh, err error) {
 			return
 		}
 	}
+	// delanay
+	err = mesh.Delanay()
+	if err != nil {
+		return
+	}
+	if Debug {
+		err = mesh.Check()
+		if err != nil {
+			return
+		}
+	}
 	// add fixed tags
 	if Debug {
 		if len(mesh.Points) != len(mesh.model.Points) {
@@ -81,15 +92,25 @@ func New(model Model) (mesh *Mesh, err error) {
 	for i := range model.Points {
 		mesh.Points[i] = Fixed
 	}
-	// TODO add ribs
-	// Point tags:
-	//	0 fixed
-	//	1 free
-	// for i := range model.Lines {
-	// 	// Line tags:
-	// 	//	0 fixed
-	// 	//	1 free
-	// }
+
+	// add fixed lines
+	for i := range model.Lines {
+		err = mesh.AddLine(
+			model.Points[model.Lines[i][0]],
+			model.Points[model.Lines[i][1]],
+			Fixed,
+		)
+		if err != nil {
+			return
+		}
+		if Debug {
+			err = mesh.Check()
+			if err != nil {
+				return
+			}
+		}
+	}
+
 	return
 }
 
@@ -567,6 +588,7 @@ func (mesh *Mesh) Swap(elem, from, to int) {
 	}
 }
 
+// TODO delanay only for some triangles, if list empty then for  all triangles
 func (mesh *Mesh) Delanay() (err error) {
 	// triangle is success by delanay, if all points is outside of circle
 	// from 3 triangle points
@@ -596,6 +618,10 @@ func (mesh *Mesh) Delanay() (err error) {
 				mesh.model.Points[mesh.model.Triangles[tr][2]],
 			},
 		) {
+			// flip only if middle side is not fixed
+			// TODO: 			for i := range mesh.model.Line {
+			// TODO: dsdasdas
+			// TODO: 			}
 			// flip
 			flip = true
 			for iter := 0; ; iter++ {
@@ -730,12 +756,23 @@ func (mesh *Mesh) Delanay() (err error) {
 	return nil
 }
 
+func (mesh *Mesh) Materials() {
+	// TODO
+}
+
 func (mesh *Mesh) Smooth() {
 	// for acceptable movable points calculate all side distances from that
 	// point to points near triangles and move to average distance.
 	//
 	// split sides with maximal side distance
 	// TODO
+}
+
+func (mesh *Mesh) middlePoint(p1, p2 Point) Point {
+	return Point{
+		X: p1.X*0.5 + p2.X*0.5,
+		Y: p1.Y*0.5 + p2.Y*0.5,
+	}
 }
 
 func (mesh *Mesh) Split(d float64) (err error) {
@@ -747,10 +784,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			return
 		}
 		// add middle point
-		pnts = append(pnts, Point{
-			X: p1.X*0.5 + p2.X*0.5,
-			Y: p1.Y*0.5 + p2.Y*0.5,
-		})
+		pnts = append(pnts, mesh.middlePoint(p1, p2))
 	}
 
 	for i := range mesh.model.Triangles {
@@ -814,8 +848,74 @@ func (mesh *Mesh) MaxArea() {
 }
 
 func (mesh *Mesh) MinAngle() {
-	//
 	// TODO
+}
+
+func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
+	// get point index
+	idp1 := mesh.model.AddPoint(p1)
+	idp2 := mesh.model.AddPoint(p2)
+	// find triangle with that points
+	for _, tri := range mesh.model.Triangles {
+		if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
+			continue
+		}
+		if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
+			continue
+		}
+		mesh.model.AddLine(p1, p2, tag)
+		return
+	}
+	// possible a few triangles on line
+
+	// add middle point
+	mid := mesh.middlePoint(p1, p2)
+	err = mesh.AddPoint(mid, tag)
+	if err != nil {
+		return
+	}
+	if Debug {
+		err = mesh.Check()
+		if err != nil {
+			return
+		}
+	}
+
+	// delanay
+	err = mesh.Delanay()
+	if err != nil {
+		return
+	}
+	if Debug {
+		err = mesh.Check()
+		if err != nil {
+			return
+		}
+	}
+
+	// add both lines
+	err = mesh.AddLine(p1, mid, tag)
+	if err != nil {
+		return
+	}
+	if Debug {
+		err = mesh.Check()
+		if err != nil {
+			return
+		}
+	}
+	err = mesh.AddLine(mid, p2, tag)
+	if err != nil {
+		return
+	}
+	if Debug {
+		err = mesh.Check()
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 // Triangle is data structure "Nodes, ribs и triangles" created by
@@ -846,9 +946,3 @@ type Triangle struct {
 	// ribs  [3]int // indexes of triangle ribs
 	tr [3]int // indexes of near triangles
 }
-
-// func (t *Triangle) swap() {
-// 	// 	t.nodes[0], t.nodes[1] = t.nodes[1], t.nodes[0]
-// 	// 	t.ribs[1], t.ribs[2] = t.ribs[2], t.ribs[1]
-// 	t.tr[1], t.tr[2] = t.tr[2], t.tr[1]
-// }
