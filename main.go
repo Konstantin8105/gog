@@ -81,6 +81,7 @@ func main() {
 	mesh.Smooth()
 	mesh.Split(0.1)
 	mesh.Smooth()
+	mesh.Materials()
 	err = mesh.Check()
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)

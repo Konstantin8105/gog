@@ -597,10 +597,6 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 	return nil
 }
 
-func (mesh *Mesh) AddSide() {
-	// TODO
-}
-
 func (mesh *Mesh) Swap(elem, from, to int) {
 	if elem == Boundary {
 		return
@@ -930,14 +926,6 @@ func (mesh *Mesh) Split(d float64) (err error) {
 	}
 
 	return
-}
-
-func (mesh *Mesh) MaxArea() {
-	// TODO
-}
-
-func (mesh *Mesh) MinAngle() {
-	// TODO
 }
 
 func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
