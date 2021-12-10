@@ -14,7 +14,7 @@ type Mesh struct {
 	// TODO
 }
 
-const Debug = true // false
+const Debug = false
 
 const (
 	Boundary  = -1
@@ -33,6 +33,7 @@ func New(model Model) (mesh *Mesh, err error) {
 	cps = append(cps, cps[0])
 	// prepare mesh triangles
 	for i := 3; i < len(cps); i++ {
+		// TODO : triangles is not boundary, side is boundary
 		mesh.model.AddTriangle(cps[0], cps[i-2], cps[i-1], Boundary)
 		if i == 3 {
 			mesh.Triangles = append(mesh.Triangles, Triangle{
@@ -247,7 +248,7 @@ func (model *Model) Get(mesh *Mesh) {
 			mesh.model.Points[tr[0]],
 			mesh.model.Points[tr[1]],
 			mesh.model.Points[tr[2]],
-			0,
+			tr[3],
 		)
 	}
 }
@@ -774,8 +775,86 @@ func (mesh *Mesh) Delanay() (err error) {
 	return nil
 }
 
-func (mesh *Mesh) Materials() {
-	// TODO
+func (mesh *Mesh) Materials() (err error) {
+	marks := make([]bool, len(mesh.model.Triangles))
+
+	var mark func(from, to, counter int) error
+	mark = func(from, to, counter int) (err error) {
+		if Debug {
+			if to == Removed {
+				err = fmt.Errorf("triangle `to` is removed")
+				return
+			}
+		}
+		// boundary
+		if to == Boundary {
+			return
+		}
+		// triangle is mark
+		if marks[to] {
+			return
+		}
+		// find line between 2 triangles
+		var points []int
+		points = append(points, mesh.model.Triangles[from][:3]...)
+		points = append(points, mesh.model.Triangles[to][:3]...)
+		sort.Ints(points)
+		var uniq []int
+		for i := 1; i < len(points); i++ {
+			if points[i-1] == points[i] {
+				uniq = append(uniq, points[i])
+			}
+		}
+		if Debug {
+			if len(uniq) != 2 {
+				err = fmt.Errorf("not 2 points: %v. %v", uniq, points)
+				return
+			}
+		}
+		// have line and fixed
+		for _, line := range mesh.model.Lines {
+			if line[0] != uniq[0] && line[0] != uniq[1] {
+				continue
+			}
+			if line[1] != uniq[0] && line[1] != uniq[1] {
+				continue
+			}
+			if line[2] == Fixed {
+				return
+			}
+		}
+		// mark
+		marks[to] = true
+		mesh.model.Triangles[to][3] = counter
+		for side := 0; side < 3; side++ {
+			err = mark(to, mesh.Triangles[to].tr[side], counter)
+			if err != nil {
+				return
+			}
+		}
+		return nil
+	}
+
+	counter := 50
+	for i := range mesh.model.Triangles {
+		if marks[i] {
+			continue
+		}
+		if mesh.model.Triangles[i][0] == Removed {
+			continue
+		}
+		mesh.model.Triangles[i][3] = counter
+		for side := 0; side < 3; side++ {
+			from := i
+			to := mesh.Triangles[i].tr[side]
+			err = mark(from, to, counter)
+			if err != nil {
+				return
+			}
+		}
+		counter++
+	}
+	return
 }
 
 func (mesh *Mesh) Smooth() {
