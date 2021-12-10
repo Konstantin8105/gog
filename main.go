@@ -24,8 +24,8 @@ func main() {
 	m.AddCircle(0, 0, 1, 1)
 	m.AddCircle(0, 0, 0.5, 1)
 	m.AddCircle(0, 0, 0.75, 1)
-	m.AddLine(gog.Point{-1, 0},gog.Point{1, 0}, 2)
-	m.AddLine(gog.Point{0, -1},gog.Point{0, 1}, 3)
+	m.AddLine(gog.Point{-1, 0}, gog.Point{1, 0}, 2)
+	m.AddLine(gog.Point{0, -1}, gog.Point{0, 1}, 3)
 	//fmt.Fprintf(os.Stdout, "Only structural lines:\n%s", m)
 	view() // 0
 	m.Intersection()
@@ -64,6 +64,28 @@ func main() {
 	mesh.Split(0.1)
 	m.Get(mesh)
 	view() // 11
-	// fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
-	// fmt.Fprintf(os.Stdout, "Minimal distance between points:\n%.4f", m.MinPointDistance())
+	m.Triangles = nil
+	mesh.Split(0.1)
+	mesh.Smooth()
+	err = mesh.Check()
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
+		// return
+	}
+	m.Get(mesh)
+	view() // 12
+	m.Triangles = nil
+	mesh.Split(0.1)
+	mesh.Smooth()
+	mesh.Split(0.1)
+	mesh.Smooth()
+	mesh.Split(0.1)
+	mesh.Smooth()
+	err = mesh.Check()
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
+		// return
+	}
+	m.Get(mesh)
+	view() // 13
 }

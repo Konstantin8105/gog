@@ -3,6 +3,8 @@ package gog
 import (
 	"bytes"
 	"fmt"
+	"math"
+	"sort"
 )
 
 type Mesh struct {
@@ -276,9 +278,36 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 		}
 	}
 
+	// add points on line
+	for i, size := 0, len(mesh.model.Lines); i < size; i++ {
+		if mesh.model.Lines[i][2] == Removed {
+			continue
+		}
+		_, _, stB := PointLine(
+			p,
+			mesh.model.Points[mesh.model.Lines[i][0]],
+			mesh.model.Points[mesh.model.Lines[i][1]],
+		)
+		if !stB.Has(OnSegment) {
+			continue
+		}
+		// replace point tag
+		tag = Fixed
+		// index of new point
+		idp := mesh.model.AddPoint(p)
+		for i := len(mesh.Points) - 1; i < idp; i++ {
+			mesh.Points = append(mesh.Points, Undefined)
+		}
+		mesh.Points[idp] = tag
+		// add new lines
+		mesh.model.AddLine(mesh.model.Points[mesh.model.Lines[i][0]], p,
+			mesh.model.Lines[i][2])
+		mesh.model.AddLine(mesh.model.Points[mesh.model.Lines[i][1]], p,
+			mesh.model.Lines[i][2])
+	}
+
 	// TODO : add to delanay flip linked list
-	size := len(mesh.Triangles)
-	for i := 0; i < size; i++ {
+	for i, size := 0, len(mesh.Triangles); i < size; i++ {
 		// ignore removed triangle
 		if mesh.model.Triangles[i][0] == Removed {
 			continue
@@ -600,111 +629,104 @@ func (mesh *Mesh) Delanay() (err error) {
 		if neartr == Boundary {
 			return
 		}
+		// rotate near triangle
 		for iter := 0; ; iter++ {
 			if iter == 50 {
 				err = fmt.Errorf("delanay infinite loop 1")
 				return
 			}
-			if mesh.model.Triangles[tr][side] == mesh.model.Triangles[neartr][0] {
+			if mesh.model.Triangles[tr][side] == mesh.model.Triangles[neartr][1] {
 				break
 			}
 			mesh.shiftTriangle(neartr)
 		}
-		if PointInCircle(
-			mesh.model.Points[mesh.model.Triangles[neartr][1]],
+		//       0 1       //       0 0       //       0 2       //
+		//      /| |\      //      /| |\      //      /| |\      //
+		//     / | | \     //     / | | \     //     / | | \     //
+		//   2/  | |  \1   //   2/  | |  \0   //   2/  | |  \2   //
+		//   /   | |   \   //   /   | |   \   //   /   | |   \   //
+		//  /    | |    \  //  /    | |    \  //  /    | |    \  //
+		// 2 near| | tr  2 // 2 near| | tr  1 // 2 near| | tr  0 //
+		//  \   0| |0   /  //  \   0| |2   /  //  \   0| |1   /  //
+		//   \   | |   /   //   \   | |   /   //   \   | |   /   //
+		//   1\  | |  /2   //   1\  | |  /1   //   1\  | |  /0   //
+		//     \ | | /     //     \ | | /     //     \ | | /     //
+		//      \| |/      //      \| |/      //      \| |/      //
+		//       1 0       //       1 2       //       1 1       //
+
+		// is point in circle
+		if !PointInCircle(
+			mesh.model.Points[mesh.model.Triangles[neartr][2]],
 			[3]Point{
 				mesh.model.Points[mesh.model.Triangles[tr][0]],
 				mesh.model.Points[mesh.model.Triangles[tr][1]],
 				mesh.model.Points[mesh.model.Triangles[tr][2]],
 			},
 		) {
-			// flip only if middle side is not fixed
-			// TODO: 			for i := range mesh.model.Line {
-			// TODO: dsdasdas
-			// TODO: 			}
-			// flip
-			flip = true
-			for iter := 0; ; iter++ {
-				if iter == 50 {
-					err = fmt.Errorf("delanay infinite loop 2")
+			return
+		}
+
+		// flip only if middle side is not fixed
+		{
+			idp0 := mesh.model.AddPoint(mesh.model.Points[mesh.model.Triangles[neartr][0]])
+			idp1 := mesh.model.AddPoint(mesh.model.Points[mesh.model.Triangles[neartr][1]])
+			for _, line := range mesh.model.Lines {
+				if line[0] != idp0 && line[0] != idp1 {
+					continue
+				}
+				if line[1] != idp0 && line[1] != idp1 {
+					continue
+				}
+				if line[2] == Fixed {
 					return
 				}
-				if mesh.model.Triangles[tr][0] == mesh.model.Triangles[neartr][0] {
-					break
-				}
-				mesh.shiftTriangle(tr)
 			}
+		}
 
-			switch {
-			case mesh.model.Triangles[tr][1] == mesh.model.Triangles[neartr][2]:
-				// before:         // after:          //
-				//       2 1       //        2        //
-				//      /| |\      //      /   \      //
-				//     / | | \-->  //     /     \-->  //
-				//   1/  | |  \1   //   1/       \2   //
-				//   /   | |   \   //   /   blu   \   //
-				//  /    | |    \  //  /     0     \  //
-				// 1 blu | | red 2 // 1-------------0 //
-				//  \   2| |0   /  // 1-------------2 //
-				//   \   | |   /   //  \     1     /  //
-				//   0\  | |  /2   //   \   red   /   //
-				//  <--\ | | /     //   0\       /2   //
-				//      \| |/      //  <--\     /     //
-				//       0 0       //      \   /      //
-				//                 //        0        //
-				{
-					// flip points
-					red := &mesh.model.Triangles[tr]
-					blu := &mesh.model.Triangles[neartr]
-					red[1], blu[0] =
-						blu[1], red[2]
-				}
-				{
-					// flip near triangles
-					red := &mesh.Triangles[tr].tr
-					blu := &mesh.Triangles[neartr].tr
-					mesh.Swap(red[1], tr, neartr)
-					mesh.Swap(blu[0], neartr, tr)
-					red[0], red[1], blu[0], blu[2] =
-						blu[0], red[0], blu[2], red[1]
-				}
-
-			case mesh.model.Triangles[tr][2] == mesh.model.Triangles[neartr][1]:
-				// before:         // after :         //
-				//       0 0       //        0        //
-				//      /| |\      //      /   \      //
-				//     / | | \     //     /     \-->  //
-				//   2/  | |  \0   //   2/       \0   //
-				//   /   | |   \   //   /   blu   \   //
-				//  /    | |    \  //  /     1     \  //
-				// 2 blu | | red 1 // 2-------------1 //
-				//  \   0| |2   /  // 0-------------1 //
-				//   \   | |   /   //  \     0     /  //
-				//   1\  | |  /1   //   \   red   /   //
-				//     \ | | /     //   2\       /1   //
-				//      \| |/      //  <--\     /     //
-				//       1 2       //      \   /      //
-				//                 //        2        //
-				{
-					// flip points
-					red := &mesh.model.Triangles[tr]
-					blu := &mesh.model.Triangles[neartr]
-					red[0], blu[1] =
-						blu[2], red[1]
-				}
-				{
-					// flip near triangles
-					red := &mesh.Triangles[tr].tr
-					blu := &mesh.Triangles[neartr].tr
-					mesh.Swap(red[0], tr, neartr)
-					mesh.Swap(blu[1], neartr, tr)
-					red[0], red[2], blu[0], blu[1] =
-						red[2], blu[1], red[0], blu[0]
-				}
-
-			default:
-				panic("not clear")
+		// rotate triangle tr
+		for iter := 0; ; iter++ {
+			if iter == 50 {
+				err = fmt.Errorf("delanay infinite loop 2")
+				return
 			}
+			if mesh.model.Triangles[tr][0] == mesh.model.Triangles[neartr][1] {
+				break
+			}
+			mesh.shiftTriangle(tr)
+		}
+
+		// flip
+		flip = true
+
+		// before:         // after:        //
+		//       0 1       //       0       //
+		//      /| |\      //      / \      //
+		//     / | | \-->  //     /   \-->  //
+		//   2/  | |  \1   //   2/     \0   //
+		//   /   | |   \   //   /  red  \   //
+		//  /    | |    \  //  /    1    \  //
+		// 2 red | | blu 2 // 2-----------1 //
+		//  \   0| |0   /  // 1\    1    /2 //
+		//   \   | |   /   //   \  blu  /   //
+		//   1\  | |  /2   //   0\     /2   //
+		//  <--\ | | /     //  <--\   /     //
+		//      \| |/      //      \ /      //
+		//       1 0       //       0       //
+		{
+			// flip points
+			red := &mesh.model.Triangles[neartr]
+			blu := &mesh.model.Triangles[tr]
+			red[1], blu[1] =
+				blu[2], red[2]
+		}
+		{
+			// flip near triangles
+			red := &mesh.Triangles[neartr].tr
+			blu := &mesh.Triangles[tr].tr
+			red[0], red[1], blu[0], blu[1] =
+				blu[1], red[0], red[1], blu[0]
+			mesh.Swap(red[0], tr, neartr)
+			mesh.Swap(blu[0], neartr, tr)
 		}
 		return
 	}
@@ -765,8 +787,73 @@ func (mesh *Mesh) Smooth() {
 	// point to points near triangles and move to average distance.
 	//
 	// split sides with maximal side distance
-	// 
-	// TODO
+
+	type Store struct {
+		index int   // point index
+		near  []int // index of near points
+	}
+	var store []Store
+
+	// create list of all movable points
+	for i := range mesh.model.Points {
+		if mesh.Points[i] != Movable {
+			continue
+		}
+		if mesh.Points[i] == Fixed {
+			continue
+		}
+		{
+			fix := false
+			for _, line := range mesh.model.Lines {
+				if line[0] != i && line[1] != i {
+					continue
+				}
+				if line[2] == Fixed {
+					fix = true
+				}
+			}
+			if fix {
+				continue
+			}
+		}
+		// find near triangles
+		var near []int
+		for _, tri := range mesh.model.Triangles {
+			if i != tri[0] && i != tri[1] && i != tri[2] {
+				continue
+			}
+			near = append(near, tri[0:3]...)
+		}
+		// uniq points
+		sort.Ints(near)
+		uniq := []int{near[0]}
+		for i := 1; i < len(near); i++ {
+			if near[i-1] != near[i] {
+				uniq = append(uniq, near[i])
+			}
+		}
+		store = append(store, Store{
+			index: i,
+			near:  near,
+		})
+	}
+
+	max := 1.0
+	for iter := 0; iter < 100 && Eps < max; iter++ {
+		max = 0.0
+		for _, st := range store {
+			var x, y float64
+			for _, n := range st.near {
+				x += mesh.model.Points[n].X
+				y += mesh.model.Points[n].Y
+			}
+			x /= float64(len(st.near))
+			y /= float64(len(st.near))
+			max = math.Max(max, Distance(mesh.model.Points[st.index], Point{x, y}))
+			mesh.model.Points[st.index].X = x
+			mesh.model.Points[st.index].Y = y
+		}
+	}
 }
 
 func (mesh *Mesh) middlePoint(p1, p2 Point) Point {

@@ -65,6 +65,10 @@ func (m Model) Dxf() string {
 		fmt.Fprintf(&buf, "31\n%f\n", 0.0)  // end point Z
 	}
 
+	// TODO
+	// text := func(str string, p1, p2 Point) {
+	// }
+
 	// draw convex
 	{
 		cps := ConvexHull(m.Points)
