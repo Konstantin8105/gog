@@ -304,6 +304,13 @@ func (mesh Mesh) Check() (err error) {
 }
 
 func (model *Model) Get(mesh *Mesh) {
+	for i := range mesh.model.Lines {
+		model.AddLine(
+			mesh.model.Points[mesh.model.Lines[i][0]],
+			mesh.model.Points[mesh.model.Lines[i][1]],
+			mesh.model.Lines[i][2],
+		)
+	}
 	for _, tr := range mesh.model.Triangles {
 		if tr[0] == Removed {
 			continue
@@ -407,6 +414,8 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 		idp := add()
 		// removed triangles
 		removedTriangles := []int{i}
+
+		// TODO : point on boundary triangle side have tag = fixed
 
 		// repair near triangles
 
@@ -982,7 +991,7 @@ func (mesh *Mesh) Smooth() {
 		if mesh.Points[i] == Fixed {
 			continue
 		}
-		{
+		{ // point is not on fixed line
 			fix := false
 			for _, line := range mesh.model.Lines {
 				if line[0] != i && line[1] != i {
@@ -1004,6 +1013,39 @@ func (mesh *Mesh) Smooth() {
 			}
 			nearPoints = append(nearPoints, tri[0:3]...)
 			nearTriangles = append(nearTriangles, index)
+		}
+		{ // point is not on boundary triangle side
+			onBoundary := false
+			for _, tr := range nearTriangles{
+				switch i {
+				case mesh.model.Triangles[tr][0]:
+					if mesh.Triangles[tr].tr[0] == -1 {
+						onBoundary = true
+					}
+					if mesh.Triangles[tr].tr[2] == -1 {
+						onBoundary = true
+					}
+
+				case mesh.model.Triangles[tr][1]:
+					if mesh.Triangles[tr].tr[0] == -1 {
+						onBoundary = true
+					}
+					if mesh.Triangles[tr].tr[1] == -1 {
+						onBoundary = true
+					}
+
+				case mesh.model.Triangles[tr][2]:
+					if mesh.Triangles[tr].tr[1] == -1 {
+						onBoundary = true
+					}
+					if mesh.Triangles[tr].tr[2] == -1 {
+						onBoundary = true
+					}
+				}
+			}
+			if onBoundary {
+				continue
+			}
 		}
 		// uniq points
 		sort.Ints(nearPoints)

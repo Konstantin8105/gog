@@ -194,10 +194,10 @@ func TestTriangulation(t *testing.T) {
 			f      func(size int) []Point
 			noLine bool
 		}{
-			{"random", getRandomPoints,false},
-			{"circle", getCirclePoints,false},
+			{"random", getRandomPoints, false},
+			{"circle", getCirclePoints, false},
 			{"lineonline", getLineOnLine, true},
-			{"intriangle", getInTriangles,false},
+			{"intriangle", getInTriangles, true},
 		} {
 			t := convert(
 				fmt.Sprintf("%s%02d", f.name, size),
@@ -227,12 +227,6 @@ func TestTriangulation(t *testing.T) {
 			}()
 			mesh, err := New(ts.model)
 			if err != nil {
-				ts.model.Get(mesh)
-				if err := ioutil.WriteFile(
-					"check1.dxf",
-					[]byte(ts.model.Dxf()), 0644); err != nil {
-					t.Error(err)
-				}
 				t.Fatal(err)
 			}
 			err = mesh.Delanay()
@@ -276,6 +270,15 @@ func TestTriangulation(t *testing.T) {
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 5: %v", err)
+			}
+			// write dxf file
+			ts.model.Get(mesh)
+			if err := ioutil.WriteFile(
+				ts.name+".dxf",
+				[]byte(ts.model.Dxf()),
+				0644,
+			); err != nil {
+				t.Error(err)
 			}
 		})
 	}
