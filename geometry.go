@@ -115,8 +115,7 @@ var (
 	FindRayIntersection bool = true
 
 	// Eps is epsilon - precision of intersection
-	// TODO add more precision - need 1e-10
-	Eps float64 = 1e-6
+	Eps float64 = 1e-12
 )
 
 func PointPoint(
@@ -972,6 +971,7 @@ func Linear(
 			x, y = y, x
 		}()
 	}
+	// float64 algoritm
 	y = (b2 - a21/a11*b1) / (a22 - a21/a11*a12)
 	x = (b1 - a12*y) * 1 / a11
 	return

@@ -133,6 +133,9 @@ func Example() {
 	// 12	                 1000000000000	not found
 }
 
+// sqrt(2.0) / 2.0 =
+const sqrt2div2 = 0.70710678118654752440084436210484903928483593768847
+
 var tcs = []TestCase{
 	{ // 0
 		// *1,3,4 //
@@ -611,10 +614,10 @@ var tcs = []TestCase{
 	},
 	{ // 36
 		ps: []Point{
-			{2, 2 + 0.70710678*2}, {2 + 0.70710678*2, 2},
+			{2, 2 + sqrt2div2*2}, {2 + sqrt2div2*2, 2},
 			{2, 3}, {3, 2}, {2, 1}},
 
-		pi:  []Point{{2 + 0.70710678, 2 + 0.70710678}},
+		pi:  []Point{{2 + sqrt2div2, 2 + sqrt2div2}},
 		itA: OnSegment,
 		itB: OnSegment,
 	},
@@ -823,8 +826,8 @@ func Test(t *testing.T) {
 			if len(pi) != len(tc.pi) {
 				t.Errorf("not valid sizes %d != %d", len(pi), len(tc.pi))
 				t.Errorf("Points  : %v", tc.ps)
-				t.Errorf("Actual  : %v", pi)
-				t.Errorf("Expected: %v", tc.pi)
+				t.Errorf("Actual  : %.12f", pi)
+				t.Errorf("Expected: %.12f", tc.pi)
 			} else {
 				bs := make([]bool, len(pi))
 				for i := range pi {
@@ -1045,7 +1048,7 @@ func TestOrientation(t *testing.T) {
 
 func ExampleOrientation() {
 	delta := 1.0
-	for i := 1; i < 11; i++ {
+	for i := 1; i < 20; i++ {
 		value := Orientation(Point{0, 1}, Point{delta, 0}, Point{0, 0})
 		fmt.Fprintf(os.Stdout, "%.1e\t%v\n", delta, value)
 		delta /= 10.0
@@ -1059,9 +1062,18 @@ func ExampleOrientation() {
 	// 1.0e-04	0
 	// 1.0e-05	0
 	// 1.0e-06	0
-	// 1.0e-07	-1
-	// 1.0e-08	-1
-	// 1.0e-09	-1
+	// 1.0e-07	0
+	// 1.0e-08	0
+	// 1.0e-09	0
+	// 1.0e-10	0
+	// 1.0e-11	0
+	// 1.0e-12	0
+	// 1.0e-13	-1
+	// 1.0e-14	-1
+	// 1.0e-15	-1
+	// 1.0e-16	-1
+	// 1.0e-17	-1
+	// 1.0e-18	-1
 }
 
 func TestTriangleSplitByPoint(t *testing.T) {
