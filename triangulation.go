@@ -14,7 +14,7 @@ type Mesh struct {
 	// TODO
 }
 
-const Debug = false
+var Debug = false
 
 const (
 	Boundary  = -1
@@ -25,10 +25,19 @@ const (
 )
 
 func New(model Model) (mesh *Mesh, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("New: %v", err)
+		}
+	}()
 	// create a new Mesh
 	mesh = new(Mesh)
 	// convex
 	cps := ConvexHull(model.Points) // points on convex hull
+	if len(cps) < 3 {
+		err = fmt.Errorf("not enought points for convex")
+		return
+	}
 	// add last point for last triangle
 	cps = append(cps, cps[0])
 	// prepare mesh triangles
@@ -118,6 +127,11 @@ func New(model Model) (mesh *Mesh, err error) {
 }
 
 func (mesh Mesh) Check() (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Check: %v", err)
+		}
+	}()
 	// amount of triangles
 	if len(mesh.model.Triangles) != len(mesh.Triangles) {
 		return fmt.Errorf("sizes is not same")
@@ -272,6 +286,11 @@ func (mesh *Mesh) Clockwise() {
 }
 
 func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("AddPoint: %v", err)
+		}
+	}()
 	// ignore points if on corner
 	for _, pt := range mesh.model.Points {
 		if Distance(p, pt) < Eps {
@@ -616,6 +635,11 @@ func (mesh *Mesh) Swap(elem, from, to int) {
 
 // TODO delanay only for some triangles, if list empty then for  all triangles
 func (mesh *Mesh) Delanay() (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Delanay: %v", err)
+		}
+	}()
 	// triangle is success by delanay, if all points is outside of circle
 	// from 3 triangle points
 	delanay := func(tr, side int) (flip bool, err error) {
@@ -776,6 +800,11 @@ func (mesh *Mesh) Delanay() (err error) {
 }
 
 func (mesh *Mesh) Materials() (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Materials: %v", err)
+		}
+	}()
 	marks := make([]bool, len(mesh.model.Triangles))
 
 	var mark func(from, to, counter int) error
@@ -939,6 +968,11 @@ func (mesh *Mesh) middlePoint(p1, p2 Point) Point {
 }
 
 func (mesh *Mesh) Split(d float64) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Split: %v", err)
+		}
+	}()
 	var pnts []Point
 
 	addpoint := func(p1, p2 Point) {
@@ -1008,6 +1042,11 @@ func (mesh *Mesh) Split(d float64) (err error) {
 }
 
 func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("AddLine: %v", err)
+		}
+	}()
 	// get point index
 	idp1 := mesh.model.AddPoint(p1)
 	idp2 := mesh.model.AddPoint(p2)
