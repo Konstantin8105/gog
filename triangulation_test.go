@@ -8,7 +8,7 @@ import (
 )
 
 func TestTriangulation(t *testing.T) {
-	tcs := [][]Point{
+	pnts := [][]Point{
 		{ // 0
 			Point{48, 47},
 			Point{39, 0},
@@ -160,20 +160,65 @@ func TestTriangulation(t *testing.T) {
 		}()
 	}
 
-	for i, ts := range tcs {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					t.Fatal(r)
-				}
-			}()
+	type testcase struct {
+		name  string
+		model Model
+	}
+	tcs := []testcase{}
+
+	convert := func(name string, pnts []Point) (t []testcase) {
+		for _, lines := range []bool{false, true} {
 			var model Model
-			for i := range ts {
-				model.AddPoint(ts[i])
+			for i := range pnts {
+				model.AddPoint(pnts[i])
 			}
-			// TODO add lines
-			dist := model.MinPointDistance()
-			mesh, err := New(model)
+			if lines {
+				for i := 1; i < len(pnts); i += 2 {
+					model.AddLine(pnts[i-1], pnts[i], 8)
+				}
+				model.Intersection()
+			}
+			t = append(t, testcase{
+				name:  fmt.Sprintf("%s.%v", name, lines),
+				model: model,
+			})
+		}
+		return
+	}
+
+	// other models
+	for _, size := range []int{5, 10} {
+		for _, f := range []struct {
+			name string
+			f    func(size int) []Point
+		}{
+			{"random", getRandomPoints},
+			{"circle", getCirclePoints},
+		// TODO	{"lineonline", getLineOnLine},
+			{"intriangle", getInTriangles},
+		} {
+			tcs = append(tcs, convert(
+				fmt.Sprintf("%s%02d", f.name, size),
+				f.f(size))...)
+		}
+	}
+
+	// model with/without lines
+	for index, pnt := range pnts {
+		tcs = append(tcs, convert(
+			fmt.Sprintf("t%02d", index),
+			pnt)...)
+	}
+
+	for _, ts := range tcs {
+		t.Run(fmt.Sprintf("%s", ts.name), func(t *testing.T) {
+			t.Logf("%#v", ts.model)
+			//	defer func() {
+			//		if r := recover(); r != nil {
+			//			t.Fatal(r)
+			//		}
+			//	}()
+			mesh, err := New(ts.model)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -184,6 +229,18 @@ func TestTriangulation(t *testing.T) {
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 1: %v", err)
+			}
+			// distance
+			var dist float64
+			dist = ts.model.MinPointDistance()
+			{
+				xmax := -math.MaxFloat64
+				xmin := +math.MaxFloat64
+				for i := range ts.model.Points {
+					xmax = math.Max(xmax, ts.model.Points[i].X)
+					xmin = math.Min(xmin, ts.model.Points[i].X)
+				}
+				dist = math.Max(dist, math.Abs(xmax-xmin)/10.0)
 			}
 			mesh.Split(dist)
 			err = mesh.Check()

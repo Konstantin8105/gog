@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"sort"
+
+	eTree "github.com/Konstantin8105/errors"
 )
 
 type Mesh struct {
@@ -97,7 +99,10 @@ func New(model Model) (mesh *Mesh, err error) {
 	// add fixed tags
 	if Debug {
 		if len(mesh.Points) != len(mesh.model.Points) {
-			err = fmt.Errorf("not equal points size")
+			err = fmt.Errorf("not equal points size: %d != %d ",
+				len(mesh.Points),
+				len(mesh.model.Points),
+			)
 			return
 		}
 	}
@@ -107,12 +112,11 @@ func New(model Model) (mesh *Mesh, err error) {
 
 	// add fixed lines
 	for i := range model.Lines {
-		err = mesh.AddLine(
+		if err = mesh.AddLine(
 			model.Points[model.Lines[i][0]],
 			model.Points[model.Lines[i][1]],
 			Fixed,
-		)
-		if err != nil {
+		); err != nil {
 			return
 		}
 		if Debug {
@@ -132,18 +136,54 @@ func (mesh Mesh) Check() (err error) {
 			err = fmt.Errorf("Check: %v", err)
 		}
 	}()
+	et := eTree.New("check")
 	// amount of triangles
 	if len(mesh.model.Triangles) != len(mesh.Triangles) {
-		return fmt.Errorf("sizes is not same")
+		et.Add(fmt.Errorf("sizes is not same"))
 	}
+	// same points
+	for i := range mesh.model.Points {
+		for j := range mesh.model.Points {
+			if i <= j {
+				continue
+			}
+			if Distance(mesh.model.Points[i], mesh.model.Points[j]) < Eps {
+				et.Add(fmt.Errorf("same points %v and %v", i, j))
+			}
+		}
+	}
+	for i := range mesh.model.Triangles {
+		if mesh.model.Triangles[i][0] == Removed {
+			continue
+		}
+		if Distance(
+			mesh.model.Points[mesh.model.Triangles[i][0]],
+			mesh.model.Points[mesh.model.Triangles[i][1]],
+		) < Eps {
+			et.Add(fmt.Errorf("triangle same points %d: 0 1", i))
+		}
+		if Distance(
+			mesh.model.Points[mesh.model.Triangles[i][1]],
+			mesh.model.Points[mesh.model.Triangles[i][2]],
+		) < Eps {
+			et.Add(fmt.Errorf("triangle same points %d: 1 2", i))
+		}
+		if Distance(
+			mesh.model.Points[mesh.model.Triangles[i][2]],
+			mesh.model.Points[mesh.model.Triangles[i][0]],
+		) < Eps {
+			et.Add(fmt.Errorf("triangle same points %d: 2 0", i))
+		}
+	}
+
 	// undefined triangles
 	for i := range mesh.model.Triangles {
 		for j := 0; j < 3; j++ {
 			if mesh.model.Triangles[i][j] == Undefined {
-				return fmt.Errorf("undefined point of triangle")
+				et.Add(fmt.Errorf("undefined point of triangle"))
 			}
 			if mesh.Triangles[i].tr[j] == Undefined {
-				return fmt.Errorf("undefined triangle of triangle")
+				et.Add(fmt.Errorf("undefined triangle of triangle"))
 			}
 		}
 	}
@@ -158,9 +198,11 @@ func (mesh Mesh) Check() (err error) {
 			mesh.model.Points[mesh.model.Triangles[i][2]],
 		)
 		if or != ClockwisePoints {
-			return fmt.Errorf("not clockwise: %d. IsCounterClock %v",
+			et.Add(fmt.Errorf("not clockwise: %d.{IsCounterClock %v. isCollinear %v}",
 				i,
-				or == CounterClockwisePoints)
+				or == CounterClockwisePoints,
+				or == CollinearPoints,
+			))
 		}
 	}
 	// same triangles - self linked
@@ -170,14 +212,14 @@ func (mesh Mesh) Check() (err error) {
 		}
 		for j := 0; j < 3; j++ {
 			if mesh.Triangles[i].tr[j] == i {
-				return fmt.Errorf("self linked triangle: %v %d", mesh.Triangles[i].tr, i)
+				et.Add(fmt.Errorf("self linked triangle: %v %d", mesh.Triangles[i].tr, i))
 			}
 		}
 	}
 	// correct remove
 	for i := range mesh.Triangles {
 		if mesh.Triangles[i].tr[0] == Removed && mesh.model.Triangles[i][0] != Removed {
-			return fmt.Errorf("uncorrect removing")
+			et.Add(fmt.Errorf("uncorrect removing"))
 		}
 	}
 	// double triangles
@@ -187,13 +229,13 @@ func (mesh Mesh) Check() (err error) {
 		}
 		tri := mesh.Triangles[i].tr
 		if tri[0] == tri[1] && tri[0] != Boundary {
-			return fmt.Errorf("double triangles 0: %d %v %v", i, tri, mesh.Triangles[tri[0]])
+			et.Add(fmt.Errorf("double triangles 0: %d %v %v", i, tri, mesh.Triangles[tri[0]]))
 		}
 		if tri[1] == tri[2] && tri[1] != Boundary {
-			return fmt.Errorf("double triangles 1: %d %v %v", i, tri, mesh.Triangles[tri[1]])
+			et.Add(fmt.Errorf("double triangles 1: %d %v %v", i, tri, mesh.Triangles[tri[1]]))
 		}
 		if tri[2] == tri[0] && tri[2] != Boundary {
-			return fmt.Errorf("double triangles 2: %d %v %v", i, tri, mesh.Triangles[tri[2]])
+			et.Add(fmt.Errorf("double triangles 2: %d %v %v", i, tri, mesh.Triangles[tri[2]]))
 		}
 	}
 	// near triangle
@@ -208,11 +250,11 @@ func (mesh Mesh) Check() (err error) {
 			if i != mesh.Triangles[mesh.Triangles[i].tr[j]].tr[0] &&
 				i != mesh.Triangles[mesh.Triangles[i].tr[j]].tr[1] &&
 				i != mesh.Triangles[mesh.Triangles[i].tr[j]].tr[2] {
-				return fmt.Errorf("near-near triangle: %d, %v, %v",
+				et.Add(fmt.Errorf("near-near triangle: %d, %v, %v",
 					i,
 					mesh.Triangles[i].tr,
 					mesh.Triangles[mesh.Triangles[i].tr[j]].tr,
-				)
+				))
 			}
 		}
 	}
@@ -242,12 +284,16 @@ func (mesh Mesh) Check() (err error) {
 				fmt.Fprintf(&buf, "near triangle points = %+2d\n", mesh.model.Triangles[mesh.Triangles[i].tr[j]])
 				fmt.Fprintf(&buf, "1: %v\n", mesh.model.Triangles)
 				fmt.Fprintf(&buf, "2: %v\n", mesh.Triangles)
-				return fmt.Errorf(buf.String())
+				et.Add(fmt.Errorf(buf.String()))
 			}
 		}
 	}
 
 	// TODO add error for undefined mesh.Points
+
+	if et.IsError() {
+		return et
+	}
 
 	// no error
 	return nil
@@ -291,9 +337,21 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 			err = fmt.Errorf("AddPoint: %v", err)
 		}
 	}()
+
+	add := func() (idp int) {
+		// index of new point
+		idp = mesh.model.AddPoint(p)
+		for i := len(mesh.Points) - 1; i < idp; i++ {
+			mesh.Points = append(mesh.Points, Undefined)
+		}
+		mesh.Points[idp] = tag
+		return
+	}
+
 	// ignore points if on corner
 	for _, pt := range mesh.model.Points {
 		if Distance(p, pt) < Eps {
+			_ = add()
 			return
 		}
 	}
@@ -314,11 +372,7 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 		// replace point tag
 		tag = Fixed
 		// index of new point
-		idp := mesh.model.AddPoint(p)
-		for i := len(mesh.Points) - 1; i < idp; i++ {
-			mesh.Points = append(mesh.Points, Undefined)
-		}
-		mesh.Points[idp] = tag
+		_ = add()
 		// add new lines
 		mesh.model.AddLine(mesh.model.Points[mesh.model.Lines[i][0]], p,
 			mesh.model.Lines[i][2])
@@ -330,12 +384,6 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 	for i, size := 0, len(mesh.Triangles); i < size; i++ {
 		// ignore removed triangle
 		if mesh.model.Triangles[i][0] == Removed {
-			continue
-		}
-		if mesh.model.Triangles[i][1] == Removed {
-			continue
-		}
-		if mesh.model.Triangles[i][2] == Removed {
 			continue
 		}
 		// split triangle
@@ -352,11 +400,7 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 			continue
 		}
 		// index of new point
-		idp := mesh.model.AddPoint(p)
-		for i := len(mesh.Points) - 1; i < idp; i++ {
-			mesh.Points = append(mesh.Points, Undefined)
-		}
-		mesh.Points[idp] = tag
+		idp := add()
 		// removed triangles
 		removedTriangles := []int{i}
 
@@ -368,19 +412,14 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 			// point on some line
 			if mesh.Triangles[i].tr[state] != Boundary {
 				removedTriangles = append(removedTriangles, mesh.Triangles[i].tr[state])
-				err = mesh.repairTriangles(idp, removedTriangles, 100+state)
-				if err != nil {
-					err = fmt.Errorf("%v\npreliminary split triangles: %v", err, res)
-					return err
-				}
-				return nil
+				return mesh.repairTriangles(idp, removedTriangles, 100+state)
 			}
 			return mesh.repairTriangles(idp, removedTriangles, 200+state)
 		}
 		return mesh.repairTriangles(idp, removedTriangles, 300)
 	}
 	// outside of triangles or on corners
-	return nil
+	return
 }
 
 // shiftTriangle is shift numbers on right on one
@@ -402,6 +441,18 @@ func (mesh *Mesh) shiftTriangle(i int) {
 //	200 - point on line with 1 boundary triangle
 //	300 - point in triangle
 func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("repairTriangles: state{%v}, remove{%v} %v",
+				state, rt, err)
+		}
+	}()
+	if Debug {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 0: %v", err)
+			return
+		}
+	}
 	// create a chains
 	//
 	//	left|          | right
@@ -455,18 +506,32 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 			// repair triangles sides
 			return mesh.repairTriangles(ap, rt, state)
 		}
-		// 2 ------------- 0 1 ------------ 2 //
-		//  \         2    | |    1        /  //
-		//   \             | |            /   //
-		//     --   rt[1]  | | rt[0]    --    //
-		//       \         | |         /      //
-		//        --      0| |0      --       //
-		//          \ 1    * *    2 /         //
-		//           --    | |    --          //
-		//             \   | |   /            //
-		//              -- | | --             //
-		//                \| |/               //
-		//                 1 0                //
+		if Debug {
+			if mesh.model.Triangles[rt[0]][0] != mesh.model.Triangles[rt[1]][1] &&
+				mesh.model.Triangles[rt[0]][1] != mesh.model.Triangles[rt[1]][0] {
+				err = fmt.Errorf("not valid rotation")
+				return
+			}
+		}
+
+		//         0 1                      1 0         //
+		//        /| |\                    /| |\        //
+		//       / | | \                  / | | \       //
+		//      /  | |  \                /  | |  \      //
+		//     /   | |   \              /   | |   \     //
+		//    /2   | |   1\            /1   | |   1\    //
+		//   /     | |     \          /     | |     \   //
+		//  /  rt1 | | rt0  \        /      | |      \  //
+		// 2      0| |0      2      0-------2 2-------1 //
+		// |       | |       |      1-------2 2-------0 //
+		//  \      | |      /        \      | |      /  //
+		//   \     | |     /          \     | |     /   //
+		//    \1   | |   2/            \1   | |   1/    //
+		//     \   | |   /              \   | |   /     //
+		//      \  | |  /                \  | |  /      //
+		//       \ | | /                  \ | | /       //
+		//        \| |/                    \| |/        //
+		//         1 0                      0 1         //
 
 		// create chains
 		chains = []chain{{
@@ -613,6 +678,12 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 		mesh.Triangles[rem].tr[0] = Removed
 		mesh.Triangles[rem].tr[1] = Removed
 		mesh.Triangles[rem].tr[2] = Removed
+	}
+	if Debug {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 1: %v. chains: %#v", err, chains)
+			return
+		}
 	}
 	return nil
 }
@@ -893,8 +964,9 @@ func (mesh *Mesh) Smooth() {
 	// split sides with maximal side distance
 
 	type Store struct {
-		index int   // point index
-		near  []int // index of near points
+		index         int   // point index
+		nearPoints    []int // index of near points
+		nearTriangles []int // index of near triangles
 	}
 	var store []Store
 
@@ -921,24 +993,26 @@ func (mesh *Mesh) Smooth() {
 			}
 		}
 		// find near triangles
-		var near []int
-		for _, tri := range mesh.model.Triangles {
+		var nearPoints, nearTriangles []int
+		for index, tri := range mesh.model.Triangles {
 			if i != tri[0] && i != tri[1] && i != tri[2] {
 				continue
 			}
-			near = append(near, tri[0:3]...)
+			nearPoints = append(nearPoints, tri[0:3]...)
+			nearTriangles = append(nearTriangles, index)
 		}
 		// uniq points
-		sort.Ints(near)
-		uniq := []int{near[0]}
-		for i := 1; i < len(near); i++ {
-			if near[i-1] != near[i] {
-				uniq = append(uniq, near[i])
+		sort.Ints(nearPoints)
+		uniq := []int{nearPoints[0]}
+		for i := 1; i < len(nearPoints); i++ {
+			if nearPoints[i-1] != nearPoints[i] {
+				uniq = append(uniq, nearPoints[i])
 			}
 		}
 		store = append(store, Store{
-			index: i,
-			near:  near,
+			index:         i,
+			nearPoints:    nearPoints,
+			nearTriangles: nearTriangles,
 		})
 	}
 
@@ -947,23 +1021,36 @@ func (mesh *Mesh) Smooth() {
 		max = 0.0
 		for _, st := range store {
 			var x, y float64
-			for _, n := range st.near {
+			for _, n := range st.nearPoints {
 				x += mesh.model.Points[n].X
 				y += mesh.model.Points[n].Y
 			}
-			x /= float64(len(st.near))
-			y /= float64(len(st.near))
-			max = math.Max(max, Distance(mesh.model.Points[st.index], Point{x, y}))
+			x /= float64(len(st.nearPoints))
+			y /= float64(len(st.nearPoints))
+			// move only if all triangles will be clockwise
+			last := Point{
+				X: mesh.model.Points[st.index].X,
+				Y: mesh.model.Points[st.index].Y,
+			}
 			mesh.model.Points[st.index].X = x
 			mesh.model.Points[st.index].Y = y
+			isValid := true
+			for _, index := range st.nearTriangles {
+				if Orientation(
+					mesh.model.Points[mesh.model.Triangles[index][0]],
+					mesh.model.Points[mesh.model.Triangles[index][1]],
+					mesh.model.Points[mesh.model.Triangles[index][2]],
+				) != ClockwisePoints {
+					isValid = false
+					break
+				}
+			}
+			if !isValid {
+				mesh.model.Points[st.index] = last
+				continue
+			}
+			max = math.Max(max, Distance(last, Point{x, y}))
 		}
-	}
-}
-
-func (mesh *Mesh) middlePoint(p1, p2 Point) Point {
-	return Point{
-		X: p1.X*0.5 + p2.X*0.5,
-		Y: p1.Y*0.5 + p2.Y*0.5,
 	}
 }
 
@@ -981,7 +1068,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			return
 		}
 		// add middle point
-		pnts = append(pnts, mesh.middlePoint(p1, p2))
+		pnts = append(pnts, MiddlePoint(p1, p2))
 		// TODO points free or fixed
 	}
 
@@ -1047,6 +1134,31 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 			err = fmt.Errorf("AddLine: %v", err)
 		}
 	}()
+	if Debug {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 0: %v", err)
+			return
+		}
+	}
+	// add points of points
+	if err = mesh.AddPoint(p1, tag); err != nil {
+		return
+	}
+	if Debug {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 1: %v", err)
+			return
+		}
+	}
+	if err = mesh.AddPoint(p2, tag); err != nil {
+		return
+	}
+	if Debug {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 2: %v", err)
+			return
+		}
+	}
 	// get point index
 	idp1 := mesh.model.AddPoint(p1)
 	idp2 := mesh.model.AddPoint(p2)
@@ -1059,53 +1171,61 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 			continue
 		}
 		mesh.model.AddLine(p1, p2, tag)
+		if Debug {
+			if err = mesh.Check(); err != nil {
+				err = fmt.Errorf("check 3: %v", err)
+				return
+			}
+		}
 		return
 	}
 	// possible a few triangles on line
 
 	// add middle point
-	mid := mesh.middlePoint(p1, p2)
-	err = mesh.AddPoint(mid, tag)
-	if err != nil {
+	mid := MiddlePoint(p1, p2)
+	if Debug {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 4: %v", err)
+			return
+		}
+	}
+	if err = mesh.AddPoint(mid, tag); err != nil {
 		return
 	}
 	if Debug {
-		err = mesh.Check()
-		if err != nil {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 5: %v", err)
 			return
 		}
 	}
 
 	// delanay
-	err = mesh.Delanay()
-	if err != nil {
+	if err = mesh.Delanay(); err != nil {
 		return
 	}
 	if Debug {
-		err = mesh.Check()
-		if err != nil {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 6: %v", err)
 			return
 		}
 	}
 
 	// add both lines
-	err = mesh.AddLine(p1, mid, tag)
-	if err != nil {
+	if err = mesh.AddLine(p1, mid, tag); err != nil {
 		return
 	}
 	if Debug {
-		err = mesh.Check()
-		if err != nil {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 7: %v", err)
 			return
 		}
 	}
-	err = mesh.AddLine(mid, p2, tag)
-	if err != nil {
+	if err = mesh.AddLine(mid, p2, tag); err != nil {
 		return
 	}
 	if Debug {
-		err = mesh.Check()
-		if err != nil {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 8: %v", err)
 			return
 		}
 	}

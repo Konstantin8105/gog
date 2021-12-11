@@ -3,6 +3,7 @@ package gog
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"sort"
 
 	"github.com/Konstantin8105/errors"
@@ -330,6 +331,37 @@ func LineLine(
 	return
 }
 
+func MiddlePoint(p0, p1 Point) Point {
+	const prec = 128
+
+	var (
+		half = new(big.Float).SetPrec(prec).SetFloat64(0.5)
+		x0   = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
+		x1   = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
+		y0   = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
+		y1   = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
+	)
+	x0.Mul(x0, half)
+	x1.Mul(x1, half)
+	y0.Mul(y0, half)
+	y1.Mul(y1, half)
+
+	x0.Add(x0, x1)
+	y0.Add(y0, y1)
+
+	x, _ := x0.Float64()
+	y, _ := y0.Float64()
+
+	mid := Point{X: x, Y: y}
+
+	// Simple float64 algoritm:
+	// mid := Point{
+	// 	X: p1.X*0.5 + p2.X*0.5,
+	// 	Y: p1.Y*0.5 + p2.Y*0.5,
+	// }
+	return mid
+}
+
 // LinePointDistance return distance between line and point
 //
 // Equation of line:
@@ -373,9 +405,33 @@ func Line(p0, p1 Point) (A, B, C float64) {
 	return
 }
 
+func Distance128(p0, p1 Point) float64 {
+	const prec = 128
+
+	var (
+		x0   = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
+		x1   = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
+		y0   = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
+		y1   = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
+		x    = new(big.Float).SetPrec(prec).Sub(x0, x1)
+		y    = new(big.Float).SetPrec(prec).Sub(y0, y1)
+		xx   = new(big.Float).SetPrec(prec).Mul(x, x)
+		yy   = new(big.Float).SetPrec(prec).Mul(y, y)
+		summ = new(big.Float).SetPrec(prec).Add(xx, yy)
+		s    = new(big.Float).SetPrec(prec).Sqrt(summ)
+	)
+
+	sf, _ := s.Float64()
+	return sf
+}
+
 // Distance between two points
 func Distance(p0, p1 Point) float64 {
-	return math.Hypot(p0.X-p1.X, p0.Y-p1.Y)
+	v := math.Hypot(p0.X-p1.X, p0.Y-p1.Y)
+	if 100*Eps < v {
+		return v
+	}
+	return Distance128(p0, p1)
 }
 
 // Rotate point about (xc,yc) on angle
@@ -420,6 +476,44 @@ const (
 
 func Orientation(p1, p2, p3 Point) OrientationPoints {
 	v := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
+	if 100*Eps < math.Abs(v) {
+		switch {
+		case math.Abs(v) < Eps:
+			return CollinearPoints
+		case 0 < v:
+			return ClockwisePoints
+		}
+		return CounterClockwisePoints
+	}
+	return Orientation128(p1, p2, p3)
+}
+
+func Orientation128(p1, p2, p3 Point) OrientationPoints {
+	const prec = 128
+
+	var (
+		x1 = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
+		x2 = new(big.Float).SetPrec(prec).SetFloat64(p2.X)
+		x3 = new(big.Float).SetPrec(prec).SetFloat64(p3.X)
+
+		y1 = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
+		y2 = new(big.Float).SetPrec(prec).SetFloat64(p2.Y)
+		y3 = new(big.Float).SetPrec(prec).SetFloat64(p3.Y)
+
+		y21 = new(big.Float).SetPrec(prec).Sub(y2, y1)
+		y32 = new(big.Float).SetPrec(prec).Sub(y3, y2)
+
+		x21 = new(big.Float).SetPrec(prec).Sub(x2, x1)
+		x32 = new(big.Float).SetPrec(prec).Sub(x3, x2)
+
+		left  = new(big.Float).SetPrec(prec).Mul(y21, x32)
+		right = new(big.Float).SetPrec(prec).Mul(x21, y32)
+
+		s = new(big.Float).SetPrec(prec).Sub(left, right)
+	)
+
+	v, _ := s.Float64()
+
 	switch {
 	case math.Abs(v) < Eps:
 		return CollinearPoints
@@ -1083,7 +1177,7 @@ func TriangleSplitByPoint(
 
 func PointInCircle(point Point, circle [3]Point) bool {
 	xc, yc, r := Arc(circle[0], circle[1], circle[2])
-	return Distance(Point{xc, yc}, point) + Eps < r
+	return Distance(Point{xc, yc}, point)+Eps < r
 }
 
 // ConvexHull return chain of convex points
