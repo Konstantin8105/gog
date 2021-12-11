@@ -12,6 +12,13 @@ const (
 	ClockwisePoints                          = 0
 	CounterClockwisePoints                   = 1
 )
+const (
+	Boundary  = -1
+	Removed   = -2
+	Undefined = -3
+	Fixed     = 100
+	Movable   = 200
+)
 
 VARIABLES
 
@@ -21,8 +28,10 @@ var (
 	FindRayIntersection bool = true
 
 	// Eps is epsilon - precision of intersection
+	// TODO add more precision - need 1e-10
 	Eps float64 = 1e-6
 )
+var Debug = false
 
 FUNCTIONS
 
@@ -39,10 +48,10 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 func Check(pps ...Point) error
     Check - check input data
 
-func ConvexHull(ps *[]Point)
 func Distance(p0, p1 Point) float64
     Distance between two points
 
+func Distance128(p0, p1 Point) float64
 func Line(p0, p1 Point) (A, B, C float64)
     line parameters
 
@@ -98,6 +107,7 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	stA, stB State,
 )
+func PointInCircle(point Point, circle [3]Point) bool
 func PointLine(
 	pt Point,
 	pb0, pb1 Point,
@@ -136,15 +146,44 @@ func TriangleSplitByPoint(
 	tr0, tr1, tr2 Point,
 ) (
 	res [][3]Point,
+	lineIntersect int,
 	err error,
 )
 
 TYPES
 
+type Mesh struct {
+	Points    []int // tags for points
+	Triangles []Triangle
+	// Has unexported fields.
+}
+
+func New(model Model) (mesh *Mesh, err error)
+
+func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error)
+
+func (mesh *Mesh) AddPoint(p Point, tag int) (err error)
+
+func (mesh Mesh) Check() (err error)
+
+func (mesh *Mesh) Clockwise()
+
+func (mesh *Mesh) Delanay() (err error)
+    TODO delanay only for some triangles, if list empty then for all triangles
+
+func (mesh *Mesh) Materials() (err error)
+
+func (mesh *Mesh) Smooth()
+
+func (mesh *Mesh) Split(d float64) (err error)
+
+func (mesh *Mesh) Swap(elem, from, to int)
+
 type Model struct {
-	Points []Point  // Points is slice of points
-	Lines  [][3]int // Lines store 2 index of Points and last for tag
-	Arcs   [][4]int // Arcs store 3 index of Points and last for tag
+	Points    []Point  // Points is slice of points
+	Lines     [][3]int // Lines store 2 index of Points and last for tag
+	Arcs      [][4]int // Arcs store 3 index of Points and last for tag
+	Triangles [][4]int // Triangles store 3 index of Points and last for tag/material
 }
     Model of points, lines, arcs for prepare of triangulation
 
@@ -160,6 +199,21 @@ func (m *Model) AddLine(start, end Point, tag int)
 func (m *Model) AddPoint(p Point) (index int)
     AddPoint return index in model slice point
 
+func (m *Model) AddTriangle(start, middle, end Point, tag int)
+    AddTriangle add triangle into model with specific tag/material
+
+func (m *Model) ArcsToLines()
+    ArcsToLines convert arc to lines
+
+func (m *Model) ConvexHullTriangles()
+    ConvexHullTriangles add triangles of model convex hull
+
+func (m Model) Dxf() string
+    Dxf return string in dxf drawing format
+    https://images.autodesk.com/adsk/files/autocad_2012_pdf_dxf-reference_enu.pdf
+
+func (model *Model) Get(mesh *Mesh)
+
 func (m *Model) Intersection()
     Intersection change model with finding all model intersections
 
@@ -168,24 +222,34 @@ func (m *Model) Merge()
 func (m Model) MinPointDistance() (distance float64)
     MinPointDistance return minimal between 2 points
 
-func (m *Model) Move()
+func (m *Model) Move(dx, dy float64)
 
 func (m *Model) RemoveEmptyPoints()
 
 func (m *Model) RemovePoint()
 
-func (m *Model) Rotate()
+func (m *Model) Rotate(xc, yc, angle float64)
 
-func (m *Model) Split()
+func (m *Model) Split(d float64)
+
+func (m Model) String() string
+    String return a stantard model view
 
 type OrientationPoints int8
 
 func Orientation(p1, p2, p3 Point) OrientationPoints
 
+func Orientation128(p1, p2, p3 Point) OrientationPoints
+
 type Point struct {
 	X, Y float64
 }
     Point is store of point coordinates
+
+func ConvexHull(points []Point) (chain []Point)
+    ConvexHull return chain of convex points
+
+func MiddlePoint(p0, p1 Point) Point
 
 func MirrorLine(
 	sp0, sp1 Point,
@@ -241,6 +305,32 @@ func (s State) Not(si State) bool
 
 func (s State) String() string
     String is implementation of Stringer implementation for formating output
+
+type Triangle struct {
+	// Has unexported fields.
+}
+    Triangle is data structure "Nodes, ribs и triangles" created by book
+    "Algoritm building and analyse triangulation", A.B.Skvorcov
+
+        Scketch:
+        +------------------------------------+
+        |              tr[0]                 |
+        |  nodes[0]    ribs[0]      nodes[1] |
+        | o------------------------o         |
+        |  \                      /          |
+        |   \                    /           |
+        |    \                  /            |
+        |     \                /             |
+        |      \              /              |
+        |       \            /  ribs[1]      |
+        |        \          /   tr[1]        |
+        |  ribs[2]\        /                 |
+        |  tr[2]   \      /                  |
+        |           \    /                   |
+        |            \  /                    |
+        |             \/                     |
+        |              o  nodes[2]           |
+        +------------------------------------+
 
 
 ```
