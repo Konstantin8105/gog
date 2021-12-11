@@ -15,7 +15,11 @@ func main() {
 	var state int
 	// view result in dxf format
 	view := func() {
-		if err := ioutil.WriteFile(fmt.Sprintf("stage%02d.dxf", state), []byte(m.Dxf()), 0644); err != nil {
+		if err := ioutil.WriteFile(
+			fmt.Sprintf("stage%02d.dxf", state),
+			[]byte(m.Dxf()),
+			0644,
+		); err != nil {
 			panic(err)
 		}
 		state++
@@ -26,7 +30,6 @@ func main() {
 	m.AddCircle(0, 0, 0.75, 1)
 	m.AddLine(gog.Point{-1, 0}, gog.Point{1, 0}, 2)
 	m.AddLine(gog.Point{0, -1}, gog.Point{0, 1}, 3)
-	//fmt.Fprintf(os.Stdout, "Only structural lines:\n%s", m)
 	view() // 0
 	m.Intersection()
 	view() // 1
