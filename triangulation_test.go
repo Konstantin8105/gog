@@ -220,11 +220,11 @@ func TestTriangulation(t *testing.T) {
 	for _, ts := range tcs {
 		t.Run(fmt.Sprintf("%s", ts.name), func(t *testing.T) {
 			t.Logf("%#v", ts.model)
-			//	defer func() {
-			//		if r := recover(); r != nil {
-			//			t.Fatal(r)
-			//		}
-			//	}()
+			defer func() {
+				if r := recover(); r != nil {
+					t.Fatal(r)
+				}
+			}()
 			mesh, err := New(ts.model)
 			if err != nil {
 				ts.model.Get(mesh)
