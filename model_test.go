@@ -11,7 +11,11 @@ func ExampleModel() {
 	var state int
 	// view result in dxf format
 	view := func() {
-		if err := ioutil.WriteFile(fmt.Sprintf("stage%02d.dxf", state), []byte(m.Dxf()), 0644); err != nil {
+		if err := ioutil.WriteFile(
+			fmt.Sprintf("stage%02d.dxf", state),
+			[]byte(m.Dxf()),
+			0644,
+		); err != nil {
 			panic(err)
 		}
 		state++

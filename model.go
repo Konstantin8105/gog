@@ -562,19 +562,22 @@ func (m *Model) Merge() {
 	// TODO
 }
 
-func (m *Model) Rotate() {
-	// TODO
+func (m *Model) Rotate(xc, yc, angle float64) {
+	for i := range m.Points {
+		m.Points[i] = Rotate(xc, yc, angle, m.Points[i])
+	}
 }
 
-func (m *Model) Move() {
-	// TODO
+func (m *Model) Move(dx, dy float64) {
+	for i := range m.Points {
+		m.Points[i] = Point{
+			X: m.Points[i].X + dx,
+			Y: m.Points[i].Y + dy,
+		}
+	}
 }
 
 func (m *Model) RemovePoint() {
-	// TODO
-}
-
-func (m *Model) Delaunay() {
 	// TODO
 }
 

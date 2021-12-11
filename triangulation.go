@@ -288,8 +288,12 @@ func (mesh Mesh) Check() (err error) {
 			}
 		}
 	}
-
-	// TODO add error for undefined mesh.Points
+	// undefined points
+	// TODO : for i := range mesh.Points {
+	// TODO : 	if mesh.Points[i] == Undefined {
+	// TODO : 		et.Add(fmt.Errorf("undefined point: %d",i))
+	// TODO : 	}
+	// TODO : }
 
 	if et.IsError() {
 		return et
@@ -1069,7 +1073,6 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		}
 		// add middle point
 		pnts = append(pnts, MiddlePoint(p1, p2))
-		// TODO points free or fixed
 	}
 
 	for i := range mesh.model.Triangles {
