@@ -2,6 +2,7 @@ package gog
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"testing"
@@ -176,8 +177,8 @@ func TestTriangulation(t *testing.T) {
 				for i := 1; i < len(pnts); i += 2 {
 					model.AddLine(pnts[i-1], pnts[i], 8)
 				}
-				model.Intersection()
 			}
+			model.Intersection()
 			t = append(t, testcase{
 				name:  fmt.Sprintf("%s.%v", name, lines),
 				model: model,
@@ -189,17 +190,23 @@ func TestTriangulation(t *testing.T) {
 	// other models
 	for _, size := range []int{5, 10} {
 		for _, f := range []struct {
-			name string
-			f    func(size int) []Point
+			name   string
+			f      func(size int) []Point
+			noLine bool
 		}{
-			{"random", getRandomPoints},
-			{"circle", getCirclePoints},
-		// TODO	{"lineonline", getLineOnLine},
-			{"intriangle", getInTriangles},
+			{"random", getRandomPoints,false},
+			{"circle", getCirclePoints,false},
+			{"lineonline", getLineOnLine, true},
+			{"intriangle", getInTriangles,false},
 		} {
-			tcs = append(tcs, convert(
+			t := convert(
 				fmt.Sprintf("%s%02d", f.name, size),
-				f.f(size))...)
+				f.f(size))
+			if !f.noLine {
+				tcs = append(tcs, t...)
+			} else {
+				tcs = append(tcs, t[0])
+			}
 		}
 	}
 
@@ -220,6 +227,12 @@ func TestTriangulation(t *testing.T) {
 			//	}()
 			mesh, err := New(ts.model)
 			if err != nil {
+				ts.model.Get(mesh)
+				if err := ioutil.WriteFile(
+					"check1.dxf",
+					[]byte(ts.model.Dxf()), 0644); err != nil {
+					t.Error(err)
+				}
 				t.Fatal(err)
 			}
 			err = mesh.Delanay()
