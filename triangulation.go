@@ -883,12 +883,24 @@ func (mesh *Mesh) Delanay() (err error) {
 	return nil
 }
 
-func (mesh *Mesh) Materials() (err error) {
+// Materials indentify all triangles splitted by lines, only if points
+// sliceis empty.
+// If points slice is not empty, then return material mark number for
+// each point
+func (mesh *Mesh) Materials(ps ...Point) (materials []int, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Materials: %v", err)
 		}
 	}()
+
+	// mark materials by points
+	if 0 < len(ps) {
+		materials = make([]int, len(ps))
+		// TODO
+		return
+	}
+
 	marks := make([]bool, len(mesh.model.Triangles))
 
 	var mark func(from, to, counter int) error
@@ -1016,7 +1028,7 @@ func (mesh *Mesh) Smooth() {
 		}
 		{ // point is not on boundary triangle side
 			onBoundary := false
-			for _, tr := range nearTriangles{
+			for _, tr := range nearTriangles {
 				switch i {
 				case mesh.model.Triangles[tr][0]:
 					if mesh.Triangles[tr].tr[0] == -1 {
@@ -1063,7 +1075,7 @@ func (mesh *Mesh) Smooth() {
 	}
 
 	max := 1.0
-	for iter := 0; iter < 100 && Eps < max; iter++ {
+	for iter := 0; iter < 1000 && Eps < max; iter++ {
 		max = 0.0
 		for _, st := range store {
 			var x, y float64
