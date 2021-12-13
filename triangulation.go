@@ -303,13 +303,15 @@ func (mesh Mesh) Check() (err error) {
 	return nil
 }
 
-func (model *Model) Get(mesh *Mesh) {
-	for i := range mesh.model.Lines {
-		model.AddLine(
-			mesh.model.Points[mesh.model.Lines[i][0]],
-			mesh.model.Points[mesh.model.Lines[i][1]],
-			mesh.model.Lines[i][2],
-		)
+func (model *Model) Get(mesh *Mesh, lines bool) {
+	if lines {
+		for i := range mesh.model.Lines {
+			model.AddLine(
+				mesh.model.Points[mesh.model.Lines[i][0]],
+				mesh.model.Points[mesh.model.Lines[i][1]],
+				mesh.model.Lines[i][2],
+			)
+		}
 	}
 	for _, tr := range mesh.model.Triangles {
 		if tr[0] == Removed {

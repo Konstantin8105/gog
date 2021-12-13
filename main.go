@@ -57,15 +57,15 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
 	}
-	m.Get(mesh)
+	m.Get(mesh, false)
 	view() // 9
 	m.Triangles = nil
 	mesh.Split(0.2)
-	m.Get(mesh)
+	m.Get(mesh, false)
 	view() // 10
 	m.Triangles = nil
 	mesh.Split(0.1)
-	m.Get(mesh)
+	m.Get(mesh, false)
 	view() // 11
 	m.Triangles = nil
 	mesh.Split(0.1)
@@ -75,7 +75,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
 	}
-	m.Get(mesh)
+	m.Get(mesh, false)
 	view() // 12
 	m.Triangles = nil
 	mesh.Split(0.1)
@@ -84,7 +84,7 @@ func main() {
 	mesh.Smooth()
 	mesh.Split(0.1)
 	mesh.Smooth()
-	err = mesh.Materials()
+	_, err = mesh.Materials()
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
@@ -94,6 +94,6 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
 	}
-	m.Get(mesh)
+	m.Get(mesh, false)
 	view() // 13
 }
