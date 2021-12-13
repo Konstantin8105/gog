@@ -158,28 +158,36 @@ type Mesh struct {
 }
 
 func New(model Model) (mesh *Mesh, err error)
+    New triangulation created by model
 
 func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error)
+    AddLine is add line in triangulation with tag
 
 func (mesh *Mesh) AddPoint(p Point, tag int) (err error)
+    AddPoint is add points with tag
 
 func (mesh Mesh) Check() (err error)
+    Check triangulation on point, line, triangle rules
 
 func (mesh *Mesh) Clockwise()
+    Clockwise change all triangles to clockwise orientation
 
 func (mesh *Mesh) Delanay() (err error)
     TODO delanay only for some triangles, if list empty then for all triangles
 
-func (mesh *Mesh) Materials(ps ...Point) (materials []int, err error)
+func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error)
+    GetMaterials return materials for each point
+
+func (mesh *Mesh) Materials() (err error)
     Materials indentify all triangles splitted by lines, only if points sliceis
     empty. If points slice is not empty, then return material mark number for
     each point
 
 func (mesh *Mesh) Smooth()
+    Smooth move all movable point by average distance
 
 func (mesh *Mesh) Split(d float64) (err error)
-
-func (mesh *Mesh) Swap(elem, from, to int)
+    Split all triangles edge on distance `d`
 
 type Model struct {
 	Points    []Point  // Points is slice of points

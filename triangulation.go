@@ -26,6 +26,7 @@ const (
 	Movable   = 200
 )
 
+// New triangulation created by model
 func New(model Model) (mesh *Mesh, err error) {
 	defer func() {
 		if err != nil {
@@ -130,6 +131,7 @@ func New(model Model) (mesh *Mesh, err error) {
 	return
 }
 
+// Check triangulation on point, line, triangle rules
 func (mesh Mesh) Check() (err error) {
 	defer func() {
 		if err != nil {
@@ -326,6 +328,7 @@ func (model *Model) Get(mesh *Mesh, lines bool) {
 	}
 }
 
+// Clockwise change all triangles to clockwise orientation
 func (mesh *Mesh) Clockwise() {
 	for i := range mesh.model.Triangles {
 		switch Orientation(
@@ -344,6 +347,7 @@ func (mesh *Mesh) Clockwise() {
 	}
 }
 
+// AddPoint is add points with tag
 func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 	defer func() {
 		if err != nil {
@@ -671,7 +675,7 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 		}
 
 		tr[0] = chains[i].out
-		mesh.Swap(chains[i].out, chains[i].before, chains[i].in)
+		mesh.swap(chains[i].out, chains[i].before, chains[i].in)
 		if i == len(chains)-1 {
 			tr[1] = tc[1]
 		} else {
@@ -703,7 +707,7 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 	return nil
 }
 
-func (mesh *Mesh) Swap(elem, from, to int) {
+func (mesh *Mesh) swap(elem, from, to int) {
 	if elem == Boundary {
 		return
 	}
@@ -832,8 +836,8 @@ func (mesh *Mesh) Delanay() (err error) {
 			blu := &mesh.Triangles[tr].tr
 			red[0], red[1], blu[0], blu[1] =
 				blu[1], red[0], red[1], blu[0]
-			mesh.Swap(red[0], tr, neartr)
-			mesh.Swap(blu[0], neartr, tr)
+			mesh.swap(red[0], tr, neartr)
+			mesh.swap(blu[0], neartr, tr)
 		}
 		return
 	}
@@ -885,23 +889,115 @@ func (mesh *Mesh) Delanay() (err error) {
 	return nil
 }
 
+// GetMaterials return materials for each point
+func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("GetMaterials: %v", err)
+		}
+	}()
+
+	switch len(ps) {
+	case 0:
+		return
+	case 1:
+		// do outside switch
+	default:
+		// get material for each points
+		for _, p := range ps {
+			var mat []int
+			mat, err = mesh.GetMaterials(p)
+			if err != nil {
+				return
+			}
+			materials = append(materials, mat...)
+		}
+		return
+	}
+	// get material for one point
+	p := ps[0]
+
+	// Is point on triangulation point
+	for i := range mesh.model.Points {
+		if Eps < Distance(p, mesh.model.Points[i]) {
+			continue
+		}
+		// point on triangulation point
+
+		// find all triangles with that point
+		var near []int
+		for t, tri := range mesh.model.Triangles {
+			if i == tri[0] || i == tri[1] || i == tri[2] {
+				near = append(near, t)
+			}
+		}
+		if len(near) == 0 {
+			err = fmt.Errorf("cannot find point in triangles")
+			return
+		}
+		// add triangles shall have same materials
+		mat := mesh.model.Triangles[0][3]
+		for _, n := range near {
+			if mat != mesh.model.Triangles[n][3] {
+				err = fmt.Errorf("not equal materials")
+				return
+			}
+		}
+		materials = append(materials, mat)
+		return
+	}
+
+	// Is point on triangulation triangle
+	for i, tri := range mesh.model.Triangles {
+		if mesh.model.Triangles[i][0] == Removed {
+			continue
+		}
+		orient := [3]OrientationPoints{
+			Orientation(mesh.model.Points[tri[0]], mesh.model.Points[tri[1]], p),
+			Orientation(mesh.model.Points[tri[1]], mesh.model.Points[tri[2]], p),
+			Orientation(mesh.model.Points[tri[2]], mesh.model.Points[tri[0]], p),
+		}
+		if orient[0] == ClockwisePoints &&
+			orient[1] == ClockwisePoints &&
+			orient[2] == ClockwisePoints {
+			// point in triangle
+			mat := mesh.model.Triangles[i][3]
+			materials = append(materials, mat)
+			return
+		}
+		// point on edge
+		for j := 0; j < 3; j++ {
+			if orient[j] == CollinearPoints {
+				mat := []int{i, mesh.Triangles[i].tr[j]}
+				if mat[1] == Boundary {
+					materials = append(materials, mat[0])
+					return
+				}
+				if mat[0] != mat[1] {
+					err = fmt.Errorf("not equal materials on edge")
+					return
+				}
+				materials = append(materials, mat[0])
+				return
+			}
+		}
+	}
+
+	// possible point is outside of triangulation
+	err = fmt.Errorf("point %.3f is outside of triangulation", p)
+	return
+}
+
 // Materials indentify all triangles splitted by lines, only if points
 // sliceis empty.
 // If points slice is not empty, then return material mark number for
 // each point
-func (mesh *Mesh) Materials(ps ...Point) (materials []int, err error) {
+func (mesh *Mesh) Materials() (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Materials: %v", err)
 		}
 	}()
-
-	// mark materials by points
-	if 0 < len(ps) {
-		materials = make([]int, len(ps))
-		// TODO
-		return
-	}
 
 	marks := make([]bool, len(mesh.model.Triangles))
 
@@ -984,6 +1080,7 @@ func (mesh *Mesh) Materials(ps ...Point) (materials []int, err error) {
 	return
 }
 
+// Smooth move all movable point by average distance
 func (mesh *Mesh) Smooth() {
 	// for acceptable movable points calculate all side distances from that
 	// point to points near triangles and move to average distance.
@@ -1114,6 +1211,7 @@ func (mesh *Mesh) Smooth() {
 	}
 }
 
+// Split all triangles edge on distance `d`
 func (mesh *Mesh) Split(d float64) (err error) {
 	defer func() {
 		if err != nil {
@@ -1187,6 +1285,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 	return
 }
 
+// AddLine is add line in triangulation with tag
 func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 	defer func() {
 		if err != nil {

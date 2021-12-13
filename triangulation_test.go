@@ -263,7 +263,7 @@ func TestTriangulation(t *testing.T) {
 			if err != nil {
 				t.Fatalf("check 4: %v", err)
 			}
-			_, err = mesh.Materials()
+			err = mesh.Materials()
 			if err != nil {
 				t.Fatal(err)
 			}
