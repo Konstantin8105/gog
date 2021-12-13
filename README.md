@@ -28,8 +28,7 @@ var (
 	FindRayIntersection bool = true
 
 	// Eps is epsilon - precision of intersection
-	// TODO add more precision - need 1e-10
-	Eps float64 = 1e-6
+	Eps float64 = 1e-12
 )
 var Debug = false
 
@@ -171,7 +170,10 @@ func (mesh *Mesh) Clockwise()
 func (mesh *Mesh) Delanay() (err error)
     TODO delanay only for some triangles, if list empty then for all triangles
 
-func (mesh *Mesh) Materials() (err error)
+func (mesh *Mesh) Materials(ps ...Point) (materials []int, err error)
+    Materials indentify all triangles splitted by lines, only if points sliceis
+    empty. If points slice is not empty, then return material mark number for
+    each point
 
 func (mesh *Mesh) Smooth()
 
@@ -212,7 +214,7 @@ func (m Model) Dxf() string
     Dxf return string in dxf drawing format
     https://images.autodesk.com/adsk/files/autocad_2012_pdf_dxf-reference_enu.pdf
 
-func (model *Model) Get(mesh *Mesh)
+func (model *Model) Get(mesh *Mesh, lines bool)
 
 func (m *Model) Intersection()
     Intersection change model with finding all model intersections
