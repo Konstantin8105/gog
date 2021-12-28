@@ -421,6 +421,18 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 		// removed triangles
 		removedTriangles := []int{i}
 
+		{
+			// near triangles
+			nt := mesh.Triangles[i].tr
+			update := []int{i, nt[0], nt[1], nt[2]}
+			defer func() {
+				err2 := mesh.Delanay(update...)
+				if err2 != nil {
+					err = fmt.Errorf("%v. %v", err, err2)
+				}
+			}()
+		}
+
 		// TODO : point on boundary triangle side have tag = fixed
 
 		// repair near triangles
@@ -724,12 +736,15 @@ func (mesh *Mesh) swap(elem, from, to int) {
 }
 
 // TODO delanay only for some triangles, if list empty then for  all triangles
-func (mesh *Mesh) Delanay() (err error) {
+func (mesh *Mesh) Delanay(tri ...int) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Delanay: %v", err)
 		}
 	}()
+	if len(tri) != 0 {
+		panic(fmt.Errorf("update next triangles index"))
+	}
 	// triangle is success by delanay, if all points is outside of circle
 	// from 3 triangle points
 	delanay := func(tr, side int) (flip bool, err error) {
