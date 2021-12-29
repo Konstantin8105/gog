@@ -71,7 +71,7 @@ func New(model Model) (mesh *Mesh, err error) {
 				return
 			}
 		}
-		err = mesh.AddPoint(model.Points[i], Fixed)
+		_, err = mesh.AddPoint(model.Points[i], Fixed)
 		if err != nil {
 			return
 		}
@@ -346,7 +346,7 @@ func (mesh *Mesh) Clockwise() {
 }
 
 // AddPoint is add points with tag
-func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
+func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("AddPoint")
@@ -408,6 +408,9 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 			mesh.model.Lines[i][2])
 		mesh.model.AddLine(mesh.model.Points[mesh.model.Lines[i][1]], p,
 			mesh.model.Lines[i][2])
+		for p := 0; p < 3; p++ {
+			mesh.model.Lines[i][p] = Removed
+		}
 	}
 
 	// TODO : add to delanay flip linked list
@@ -417,7 +420,9 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 			continue
 		}
 		// split triangle
-		res, state, err := TriangleSplitByPoint(
+		var res [][3]Point
+		var state int
+		res, state, err = TriangleSplitByPoint(
 			p,
 			mesh.model.Points[mesh.model.Triangles[i][0]],
 			mesh.model.Points[mesh.model.Triangles[i][1]],
@@ -430,13 +435,14 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 			continue
 		}
 		if Debug {
-			if err = mesh.Check(); err != nil {
+			err = mesh.Check()
+			if err != nil {
 				err = fmt.Errorf("check 0a: %v", err)
-				return err
+				return
 			}
 		}
 		// index of new point
-		idp := add()
+		idp = add()
 		// removed triangles
 		removedTriangles := []int{i}
 
@@ -468,11 +474,14 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 					nt := mesh.Triangles[i].tr
 					update = append(update, i, nt[0], nt[1], nt[2])
 				}
-				return mesh.repairTriangles(idp, removedTriangles, 100+state)
+				err = mesh.repairTriangles(idp, removedTriangles, 100+state)
+				return
 			}
-			return mesh.repairTriangles(idp, removedTriangles, 200+state)
+			err = mesh.repairTriangles(idp, removedTriangles, 200+state)
+			return
 		}
-		return mesh.repairTriangles(idp, removedTriangles, 300)
+		err = mesh.repairTriangles(idp, removedTriangles, 300)
+		return
 	}
 	// outside of triangles or on corners
 	return
@@ -1188,17 +1197,17 @@ func (mesh *Mesh) Smooth(pts ...int) {
 	}
 
 	// create list of all movable points
-	for i := range pts {
-		if mesh.Points[i] != Movable {
+	for _, p := range pts {
+		if mesh.Points[p] != Movable {
 			continue
 		}
-		if mesh.Points[i] == Fixed {
+		if mesh.Points[p] == Fixed {
 			continue
 		}
 		{ // point is not on fixed line
 			fix := false
 			for _, line := range mesh.model.Lines {
-				if line[0] != i && line[1] != i {
+				if line[0] != p && line[1] != p {
 					continue
 				}
 				if line[2] == Fixed {
@@ -1212,7 +1221,7 @@ func (mesh *Mesh) Smooth(pts ...int) {
 		// find near triangles
 		var nearPoints, nearTriangles []int
 		for index, tri := range mesh.model.Triangles {
-			if i != tri[0] && i != tri[1] && i != tri[2] {
+			if p != tri[0] && p != tri[1] && p != tri[2] {
 				continue
 			}
 			nearPoints = append(nearPoints, tri[0:3]...)
@@ -1221,7 +1230,7 @@ func (mesh *Mesh) Smooth(pts ...int) {
 		{ // point is not on boundary triangle side
 			onBoundary := false
 			for _, tr := range nearTriangles {
-				switch i {
+				switch p {
 				case mesh.model.Triangles[tr][0]:
 					if mesh.Triangles[tr].tr[0] == -1 {
 						onBoundary = true
@@ -1251,6 +1260,9 @@ func (mesh *Mesh) Smooth(pts ...int) {
 				continue
 			}
 		}
+		if len(nearPoints) == 0 {
+			continue
+		}
 		// uniq points
 		sort.Ints(nearPoints)
 		uniq := []int{nearPoints[0]}
@@ -1260,7 +1272,7 @@ func (mesh *Mesh) Smooth(pts ...int) {
 			}
 		}
 		store = append(store, Store{
-			index:         i,
+			index:         p,
 			nearPoints:    nearPoints,
 			nearTriangles: nearTriangles,
 		})
@@ -1313,9 +1325,11 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			err = et
 		}
 	}()
+	d = math.Abs(d)
 
 	counter := 0
-	addpoint := func(p1, p2 Point) (added bool) {
+	var addpoint func(p1, p2 Point) (added bool, err error)
+	addpoint = func(p1, p2 Point) (added bool, err error) {
 		dist := Distance(p1, p2)
 		if dist < d {
 			return
@@ -1323,56 +1337,67 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		counter++
 		// add middle point
 		mid := MiddlePoint(p1, p2)
-
 		// add all points of model
-		err = mesh.AddPoint(mid, Movable)
+		_, err = mesh.AddPoint(mid, Movable)
 		if err != nil {
 			return
 		}
-		fmt.Println(".>>>", mid, p1, p2, mesh.model.MinPointDistance())
-		// smooth new point
-		idp := mesh.model.AddPoint(mid)
-		mesh.Smooth(idp)
-		return true
+		return true, nil
 	}
 
 	for {
 		counter = 0
+		for _, line := range mesh.model.Lines {
+			if line[2] != Fixed || line[2] == Removed {
+				continue
+			}
+			var add bool
+			add, err = addpoint(
+				mesh.model.Points[line[0]],
+				mesh.model.Points[line[1]],
+			)
+			_ = add
+			if err != nil {
+				return
+			}
+		}
 
-		ignore := make([]bool, len(mesh.model.Triangles))
+		if 0 < counter {
+			continue
+		}
 		for i := range mesh.model.Triangles {
 			if mesh.model.Triangles[i][0] == Removed {
 				continue
 			}
-			if ignore[i] {
+			// add point on triangle edge
+			t := mesh.model.Triangles[i]
+			if t[0] == Removed {
 				continue
 			}
-			near := append([]int{},
-				mesh.Triangles[i].tr[0],
-				mesh.Triangles[i].tr[1],
-				mesh.Triangles[i].tr[2],
-			)
-			// add point on triangle edge
-			for _, t := range [][2]int{{0, 1}, {1, 2}, {2, 0}} {
-				t0 := mesh.model.Triangles[i][t[0]]
-				t1 := mesh.model.Triangles[i][t[1]]
-				if addpoint(
-					mesh.model.Points[t0],
-					mesh.model.Points[t1],
-				) {
-						fmt.Println(	">>", near, ignore, len(ignore))
-					//for _, t := range near {
-// 						if t != Boundary {
-// 							ignore[t] = true
-// 						}
-				//	}
-					break
-				}
+			p0 := mesh.model.Points[t[0]]
+			p1 := mesh.model.Points[t[1]]
+			p2 := mesh.model.Points[t[2]]
+			d01 := Distance(p0, p1)
+			d12 := Distance(p1, p2)
+			d20 := Distance(p2, p0)
+			var add bool
+			switch {
+			case d01 < d12 && d20 < d12 && d < d12:
+				add, err = addpoint(p1, p2)
+			case d12 < d01 && d20 < d01 && d < d01:
+				add, err = addpoint(p0, p1)
+			case d12 < d20 && d01 < d20 && d < d20:
+				add, err = addpoint(p2, p0)
+			}
+			_ = add
+			if err != nil {
+				return
 			}
 		}
 		if Debug {
 			err = mesh.Check()
 			if err != nil {
+				err = fmt.Errorf("in loop: %v", err)
 				return
 			}
 		}
@@ -1383,12 +1408,16 @@ func (mesh *Mesh) Split(d float64) (err error) {
 
 	err = mesh.Delanay()
 	if err != nil {
+		err = fmt.Errorf("at Delanay: %v", err)
 		return
 	}
+
+	mesh.Smooth()
 
 	if Debug {
 		err = mesh.Check()
 		if err != nil {
+			err = fmt.Errorf("At the end: %v", err)
 			return
 		}
 	}
@@ -1412,27 +1441,12 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 		}
 	}
 	// add points of points
-	if err = mesh.AddPoint(p1, tag); err != nil {
+	idp1, err1 := mesh.AddPoint(p1, tag)
+	idp2, err2 := mesh.AddPoint(p2, tag)
+	if err1 != nil || err2 != nil {
+		err = fmt.Errorf("%v. %v", err1, err2)
 		return
 	}
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 1: %v", err)
-			return
-		}
-	}
-	if err = mesh.AddPoint(p2, tag); err != nil {
-		return
-	}
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 2: %v", err)
-			return
-		}
-	}
-	// get point index
-	idp1 := mesh.model.AddPoint(p1)
-	idp2 := mesh.model.AddPoint(p2)
 	// find triangle with that points
 	for _, tri := range mesh.model.Triangles {
 		if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
@@ -1460,7 +1474,7 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 			return
 		}
 	}
-	if err = mesh.AddPoint(mid, tag); err != nil {
+	if _, err = mesh.AddPoint(mid, tag); err != nil {
 		return
 	}
 	if Debug {

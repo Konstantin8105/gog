@@ -251,10 +251,10 @@ func TestTriangulation(t *testing.T) {
 				}
 				dist = math.Max(dist, math.Abs(xmax-xmin)/10.0)
 			}
-			err = mesh.Split(dist)
-			if err != nil {
-				t.Fatalf("check 1a: %v", err)
-			}
+ 			err = mesh.Split(dist)
+ 			if err != nil {
+ 				t.Fatalf("check 1a: %v", err)
+ 			}
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 2: %v", err)
@@ -264,17 +264,17 @@ func TestTriangulation(t *testing.T) {
 			if err != nil {
 				t.Fatalf("check 3: %v", err)
 			}
-			err = mesh.Check()
-			if err != nil {
-				t.Fatalf("check 4: %v", err)
-			}
 			err = mesh.Materials()
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("check 4: %v", err)
 			}
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 5: %v", err)
+			}
+			err = mesh.Check()
+			if err != nil {
+				t.Fatalf("check 6: %v", err)
 			}
 			// write dxf file
 			ts.model.Get(mesh)
