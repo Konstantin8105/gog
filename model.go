@@ -500,7 +500,54 @@ func (m *Model) Intersection() {
 		},
 
 		// point-line intersection
-		// TODO
+		func() (ai int) {
+			var (
+				intersectLines = make([]bool, len(m.Lines))
+				sizeLines      = len(m.Lines)
+			)
+			for ip := 0; ip < len(m.Points); ip++ {
+				for ja := 0; ja < sizeLines; ja++ {
+					// ignore intersection lines
+					if intersectLines[ja] {
+						continue
+					}
+					// analyse
+					pi, _, stB := PointLine(
+						// Point
+						m.Points[ip],
+						// Arc
+						m.Points[m.Lines[ja][0]],
+						m.Points[m.Lines[ja][1]],
+					)
+					// not acceptable zero length lines
+					if stB.Has(ZeroLengthSegment) {
+						panic(fmt.Errorf("zero lenght error"))
+					}
+					// intersection on line B
+					//
+					// for cases - no need update the line:
+					// OnPoint0SegmentB, OnPoint1SegmentB
+					//
+					if stB.Has(OnSegment) {
+						tag := m.Lines[ja][2]
+						for _, p := range pi {
+							intersectLines[ja] = true
+							m.AddLine(m.Points[m.Lines[ja][0]], p, tag)
+							m.AddLine(m.Points[m.Lines[ja][1]], p, tag)
+						}
+					}
+				}
+			}
+			for i := sizeLines - 1; 0 <= i; i-- {
+				if intersectLines[i] {
+					// add to amount intersections
+					ai++
+					// remove intersection arcs
+					m.Lines = append(m.Lines[:i], m.Lines[i+1:]...)
+				}
+			}
+			return
+		},
 
 		// point-point intersection
 		// TODO
