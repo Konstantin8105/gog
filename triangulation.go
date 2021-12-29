@@ -506,13 +506,40 @@ func (mesh *Mesh) shiftTriangle(i int) {
 //	200 - point on line with 1 boundary triangle
 //	300 - point in triangle
 func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
+	var v string
+	for _, r := range rt {
+		v += fmt.Sprintf("remove %d - near %v - points %v\n", r, mesh.Triangles[r].tr, mesh.model.Triangles[r][:3])
+		v += fmt.Sprintln("ori ... ",
+			Orientation(
+				mesh.model.Points[mesh.model.Triangles[r][0]],
+				mesh.model.Points[mesh.model.Triangles[r][1]],
+				mesh.model.Points[mesh.model.Triangles[r][2]],
+			) == CollinearPoints,
+			Orientation(
+				mesh.model.Points[ap],
+				mesh.model.Points[mesh.model.Triangles[r][1]],
+				mesh.model.Points[mesh.model.Triangles[r][2]],
+			) == CollinearPoints,
+			Orientation(
+				mesh.model.Points[mesh.model.Triangles[r][0]],
+				mesh.model.Points[ap],
+				mesh.model.Points[mesh.model.Triangles[r][2]],
+			) == CollinearPoints,
+			Orientation(
+				mesh.model.Points[mesh.model.Triangles[r][0]],
+				mesh.model.Points[mesh.model.Triangles[r][1]],
+				mesh.model.Points[ap],
+			) == CollinearPoints,
+		)
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("repairTriangles")
 			et.Add(fmt.Errorf("ap{%v} = %v", ap, mesh.model.Points[ap]))
 			et.Add(fmt.Errorf("state{%v}", state))
 			et.Add(fmt.Errorf("remove{%v}", rt))
-			et.Add(fmt.Errorf("error: %v", err))
+			et.Add(fmt.Errorf("%s", v))
+			et.Add(err)
 			err = et
 		}
 	}()
@@ -557,17 +584,6 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 		if len(rt) != 2 {
 			return fmt.Errorf("removed triangles: %v", rt)
 		}
-		// debug: point in not on line
-		{
-			_, _, stB := PointLine(
-				mesh.model.Points[ap],
-				mesh.model.Points[mesh.model.Triangles[rt[0]][0]],
-				mesh.model.Points[mesh.model.Triangles[rt[0]][1]],
-			)
-			if stB.Not(OnSegment) {
-				panic("point is not on line")
-			}
-		}
 		// rotate second triangle to point intersect line 0
 		if mesh.model.Triangles[rt[0]][0] != mesh.model.Triangles[rt[1]][1] ||
 			mesh.model.Triangles[rt[0]][1] != mesh.model.Triangles[rt[1]][0] {
@@ -580,6 +596,46 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 				mesh.model.Triangles[rt[0]][1] != mesh.model.Triangles[rt[1]][0] {
 				err = fmt.Errorf("not valid rotation")
 				return
+			}
+		}
+		// debug: point in not on line
+		// if Debug {
+		{
+			for k := 0; k < 2; k++ {
+				_, _, stB := PointLine(
+					mesh.model.Points[ap],
+					mesh.model.Points[mesh.model.Triangles[rt[k]][0]],
+					mesh.model.Points[mesh.model.Triangles[rt[k]][1]],
+				)
+				if stB.Not(OnSegment) {
+					et := eTree.New("State100")
+					et.Add(fmt.Errorf("point is not on line %v", k))
+
+					if _, _, stB := PointLine(
+						mesh.model.Points[ap],
+						mesh.model.Points[mesh.model.Triangles[rt[k]][0]],
+						mesh.model.Points[mesh.model.Triangles[rt[k]][1]],
+					); stB.Has(OnSegment) {
+						et.Add(fmt.Errorf("on segment 0 1"))
+					}
+					if _, _, stB := PointLine(
+						mesh.model.Points[ap],
+						mesh.model.Points[mesh.model.Triangles[rt[k]][1]],
+						mesh.model.Points[mesh.model.Triangles[rt[k]][2]],
+					); stB.Has(OnSegment) {
+						et.Add(fmt.Errorf("on segment 1 2"))
+					}
+					if _, _, stB := PointLine(
+						mesh.model.Points[ap],
+						mesh.model.Points[mesh.model.Triangles[rt[k]][2]],
+						mesh.model.Points[mesh.model.Triangles[rt[k]][0]],
+					); stB.Has(OnSegment) {
+						et.Add(fmt.Errorf("on segment 2 0"))
+					}
+
+					err = et
+					return
+				}
 			}
 		}
 
@@ -755,7 +811,7 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 			et.Add(err)
 			for i := range chains {
 				et.Add(fmt.Errorf("chains %d: %#v", i, chains[i]))
-				et.Add(fmt.Errorf("chains dist(%d,%d): Distance %e and {%e||%e}",
+				et.Add(fmt.Errorf("chains dist(%d,%d): Distance %e and {%e||%e}. Orient %v",
 					chains[i].from,
 					chains[i].to,
 					Distance128(
@@ -770,9 +826,15 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 						mesh.model.Points[ap],
 						mesh.model.Points[chains[i].to],
 					),
+					Orientation(
+						mesh.model.Points[chains[i].from],
+						mesh.model.Points[chains[i].to],
+						mesh.model.Points[ap],
+					) == CollinearPoints,
 				))
 				et.Add(fmt.Errorf("Point %d: %v", chains[i].from, mesh.model.Points[chains[i].from]))
 				et.Add(fmt.Errorf("Point %d: %v", chains[i].to, mesh.model.Points[chains[i].to]))
+				et.Add(fmt.Errorf("Point %d: %v", ap, mesh.model.Points[ap]))
 			}
 			for _, r := range rt {
 				et.Add(fmt.Errorf("remove triangle %d", r))
