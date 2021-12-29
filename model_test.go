@@ -51,7 +51,7 @@ func ExampleModel() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		return
 	}
-	m.Get(mesh, false)
+	m.Get(mesh)
 	view() // 8
 	fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
 	fmt.Fprintf(os.Stdout, "Minimal distance between points:\n%.4f", m.MinPointDistance())

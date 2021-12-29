@@ -277,7 +277,7 @@ func TestTriangulation(t *testing.T) {
 				t.Fatalf("check 5: %v", err)
 			}
 			// write dxf file
-			ts.model.Get(mesh, false)
+			ts.model.Get(mesh)
 			if err := ioutil.WriteFile(
 				ts.name+".dxf",
 				[]byte(ts.model.Dxf()),

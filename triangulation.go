@@ -311,14 +311,7 @@ func (mesh Mesh) Check() (err error) {
 	return
 }
 
-func (model *Model) Get(mesh *Mesh, lines bool) {
-	if lines {
-		for i := range mesh.model.Lines{
-			model.AddPoint(mesh.model.Points[mesh.model.Lines[i][0]])
-			model.AddPoint(mesh.model.Points[mesh.model.Lines[i][1]])
-		}
-		model.Intersection()
-	}
+func (model *Model) Get(mesh *Mesh) {
 	for _, tr := range mesh.model.Triangles {
 		if tr[0] == Removed {
 			continue
@@ -330,6 +323,7 @@ func (model *Model) Get(mesh *Mesh, lines bool) {
 			tr[3],
 		)
 	}
+	model.Intersection()
 }
 
 // Clockwise change all triangles to clockwise orientation
