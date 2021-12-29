@@ -26,10 +26,10 @@ func main() {
 	}
 	// create model
 	m.AddCircle(0, 0, 1, 1)
-// 	m.AddCircle(0, 0, 0.5, 1)
-// 	m.AddCircle(0, 0, 0.75, 1)
-// 	m.AddLine(gog.Point{-1, 0}, gog.Point{1, 0}, 2)
-// 	m.AddLine(gog.Point{0, -1}, gog.Point{0, 1}, 3)
+	m.AddCircle(0, 0, 0.5, 1)
+	m.AddCircle(0, 0, 0.75, 1)
+	m.AddLine(gog.Point{-1, 0}, gog.Point{1, 0}, 2)
+	m.AddLine(gog.Point{0, -1}, gog.Point{0, 1}, 3)
 	view() // 0
 	m.Intersection()
 	view() // 1

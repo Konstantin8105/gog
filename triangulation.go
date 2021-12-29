@@ -1317,7 +1317,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 	}()
 
 	counter := 0
-	addpoint := func(p1, p2 Point) {
+	addpoint := func(p1, p2 Point) (added bool) {
 		dist := Distance(p1, p2)
 		if dist < d {
 			return
@@ -1334,6 +1334,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		// smooth new point
 		idp := mesh.model.AddPoint(mid)
 		mesh.Smooth(idp)
+		return true
 	}
 
 	for {
@@ -1343,16 +1344,19 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			if mesh.model.Triangles[i][0] == Removed {
 				continue
 			}
+			// add point on triangle edge
 			for _, t := range [][2]int{{0, 1}, {1, 2}, {2, 0}} {
 				t0 := mesh.model.Triangles[i][t[0]]
 				t1 := mesh.model.Triangles[i][t[1]]
 				if t0 == Removed || t1 == Removed {
 					continue
 				}
-				addpoint(
+				if addpoint(
 					mesh.model.Points[t0],
 					mesh.model.Points[t1],
-				)
+				) {
+					break
+				}
 			}
 		}
 		if Debug {
