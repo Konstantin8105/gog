@@ -358,8 +358,8 @@ func MiddlePoint(p0, p1 Point) Point {
 
 	// Simple float64 algoritm:
 	// mid := Point{
-	// 	X: p1.X*0.5 + p2.X*0.5,
-	// 	Y: p1.Y*0.5 + p2.Y*0.5,
+	// 	X: p0.X*0.5 + p1.X*0.5,
+	// 	Y: p0.Y*0.5 + p1.Y*0.5,
 	// }
 	return mid
 }
@@ -994,9 +994,9 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	xc, yc = Linear(a11, a12, b1, a21, a22, b2)
 
 	//	(xi-xc)^2+(yi-yc)^2 = R^2
-	r1 := math.Hypot(x1-xc, y1-yc)
-	r2 := math.Hypot(x2-xc, y2-yc)
-	r3 := math.Hypot(x3-xc, y3-yc)
+	r1 := math.Hypot (x1-xc, y1-yc)
+	r2 := math.Hypot (x2-xc, y2-yc)
+	r3 := math.Hypot (x3-xc, y3-yc)
 	r = (r1 + r2 + r3) / 3.0
 	// find angles
 	return

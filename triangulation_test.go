@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"math/rand"
+	"runtime/debug"
 	"testing"
 )
 
@@ -222,6 +223,7 @@ func TestTriangulation(t *testing.T) {
 			t.Logf("%#v", ts.model)
 			defer func() {
 				if r := recover(); r != nil {
+					t.Logf("stacktrace from panic: %s", string(debug.Stack()))
 					t.Fatal(r)
 				}
 			}()
@@ -249,7 +251,10 @@ func TestTriangulation(t *testing.T) {
 				}
 				dist = math.Max(dist, math.Abs(xmax-xmin)/10.0)
 			}
-			mesh.Split(dist)
+			err = mesh.Split(dist)
+			if err != nil {
+				t.Fatalf("check 1a: %v", err)
+			}
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 2: %v", err)
