@@ -440,19 +440,20 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 		// removed triangles
 		removedTriangles := []int{i}
 
+		// list triangle indexes for Delanay update
+		update := make([]int, 0, 8)
 		{
-			// near triangles
+			i := removedTriangles[0]
 			nt := mesh.Triangles[i].tr
-			update := []int{i, nt[0], nt[1], nt[2]}
-			defer func() {
-				err2 := mesh.Delanay(update...)
-				if err2 != nil {
-					err = fmt.Errorf("%v. %v", err, err2)
-				}
-			}()
+			update = append(update, i, nt[0], nt[1], nt[2])
 		}
-
-		// TODO : point on boundary triangle side have tag = fixed
+		defer func() {
+			// defer Delanay near/new triangles
+			err2 := mesh.Delanay(update...)
+			if err2 != nil {
+				err = fmt.Errorf("%v. %v", err, err2)
+			}
+		}()
 
 		// repair near triangles
 
@@ -462,6 +463,11 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (err error) {
 			// point on some line
 			if mesh.Triangles[i].tr[state] != Boundary {
 				removedTriangles = append(removedTriangles, mesh.Triangles[i].tr[state])
+				{
+					i := removedTriangles[1]
+					nt := mesh.Triangles[i].tr
+					update = append(update, i, nt[0], nt[1], nt[2])
+				}
 				return mesh.repairTriangles(idp, removedTriangles, 100+state)
 			}
 			return mesh.repairTriangles(idp, removedTriangles, 200+state)
@@ -1323,6 +1329,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		if err != nil {
 			return
 		}
+		fmt.Println(".>>>", mid, p1, p2, mesh.model.MinPointDistance())
 		// smooth new point
 		idp := mesh.model.AddPoint(mid)
 		mesh.Smooth(idp)
@@ -1332,21 +1339,33 @@ func (mesh *Mesh) Split(d float64) (err error) {
 	for {
 		counter = 0
 
+		ignore := make([]bool, len(mesh.model.Triangles))
 		for i := range mesh.model.Triangles {
 			if mesh.model.Triangles[i][0] == Removed {
 				continue
 			}
+			if ignore[i] {
+				continue
+			}
+			near := append([]int{},
+				mesh.Triangles[i].tr[0],
+				mesh.Triangles[i].tr[1],
+				mesh.Triangles[i].tr[2],
+			)
 			// add point on triangle edge
 			for _, t := range [][2]int{{0, 1}, {1, 2}, {2, 0}} {
 				t0 := mesh.model.Triangles[i][t[0]]
 				t1 := mesh.model.Triangles[i][t[1]]
-				if t0 == Removed || t1 == Removed {
-					continue
-				}
 				if addpoint(
 					mesh.model.Points[t0],
 					mesh.model.Points[t1],
 				) {
+						fmt.Println(	">>", near, ignore, len(ignore))
+					//for _, t := range near {
+// 						if t != Boundary {
+// 							ignore[t] = true
+// 						}
+				//	}
 					break
 				}
 			}

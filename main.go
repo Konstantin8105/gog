@@ -57,53 +57,10 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
 	}
-	m.Get(mesh, false)
+	m.Get(mesh)
 	view() // 9
 	m.Triangles = nil
 	err = mesh.Split(0.2)
-	if err != nil {
-		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
-		// return
-	}
-	mesh.Smooth()
-	m.Get(mesh, false)
-	view() // 10
-	m.Triangles = nil
-	err = mesh.Split(0.1)
-	if err != nil {
-		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
-		// return
-	}
-	m.Get(mesh, false)
-	view() // 11
-	m.Triangles = nil
-	err = mesh.Split(0.1)
-	if err != nil {
-		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
-		// return
-	}
-	mesh.Smooth()
-	err = mesh.Check()
-	if err != nil {
-		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
-		// return
-	}
-	m.Get(mesh, false)
-	view() // 12
-	m.Triangles = nil
-	err = mesh.Split(0.1)
-	if err != nil {
-		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
-		// return
-	}
-	mesh.Smooth()
-	err = mesh.Split(0.1)
-	if err != nil {
-		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
-		// return
-	}
-	mesh.Smooth()
-	err = mesh.Split(0.1)
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
@@ -119,6 +76,6 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		// return
 	}
-	m.Get(mesh, false)
-	view() // 13
+	m.Get(mesh)
+	view() // 10
 }
