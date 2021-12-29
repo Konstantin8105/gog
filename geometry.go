@@ -994,9 +994,9 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	xc, yc = Linear(a11, a12, b1, a21, a22, b2)
 
 	//	(xi-xc)^2+(yi-yc)^2 = R^2
-	r1 := math.Sqrt(pow.E2(x1-xc) + pow.E2(y1-yc))
-	r2 := math.Sqrt(pow.E2(x2-xc) + pow.E2(y2-yc))
-	r3 := math.Sqrt(pow.E2(x3-xc) + pow.E2(y3-yc))
+	r1 := math.Hypot(x1-xc, y1-yc)
+	r2 := math.Hypot(x2-xc, y2-yc)
+	r3 := math.Hypot(x3-xc, y3-yc)
 	r = (r1 + r2 + r3) / 3.0
 	// find angles
 	return

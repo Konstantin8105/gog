@@ -188,6 +188,9 @@ func (mesh Mesh) Check() (err error) {
 				et.Add(fmt.Errorf("undefined triangle of triangle"))
 			}
 		}
+		if mesh.model.Triangles[i][3] == Undefined {
+			et.Add(fmt.Errorf("undefined tag of triangle"))
+		}
 	}
 	// clockwise triangles
 	for i := range mesh.model.Triangles {
@@ -679,7 +682,8 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (err error) {
 			mesh.model.Points[chains[i].from],
 			mesh.model.Points[chains[i].to],
 			mesh.model.Points[ap],
-			Undefined, // TODO for case with 2 triangles - not clear tag
+			// by default used tag of first triangle
+			mesh.model.Triangles[rt[0]][0],
 		)
 		tr := [3]int{Undefined, Undefined, Undefined}
 		if chains[i].before == Undefined {
@@ -742,9 +746,6 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 			err = fmt.Errorf("Delanay: %v", err)
 		}
 	}()
-	if len(tri) != 0 {
-		panic(fmt.Errorf("update next triangles index"))
-	}
 	// triangle is success by delanay, if all points is outside of circle
 	// from 3 triangle points
 	delanay := func(tr, side int) (flip bool, err error) {
@@ -867,6 +868,17 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 	for iter := 0; ; iter++ {
 		counter := 0
 		for tr := range mesh.model.Triangles {
+			if 0 < len(tri) {
+				found := false
+				for _, t := range tri {
+					if tr == t {
+						found = true
+					}
+				}
+				if !found {
+					continue
+				}
+			}
 			if mesh.model.Triangles[tr][0] == Removed {
 				continue
 			}
