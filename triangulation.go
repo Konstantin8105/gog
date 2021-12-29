@@ -313,8 +313,9 @@ func (mesh Mesh) Check() (err error) {
 
 func (model *Model) Get(mesh *Mesh, lines bool) {
 	if lines {
-		for i := range mesh.model.Points{
-			model.AddPoint(mesh.model.Points[i])
+		for i := range mesh.model.Lines{
+			model.AddPoint(mesh.model.Points[mesh.model.Lines[i][0]])
+			model.AddPoint(mesh.model.Points[mesh.model.Lines[i][1]])
 		}
 		model.Intersection()
 	}
