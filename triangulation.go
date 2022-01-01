@@ -120,7 +120,7 @@ func New(model Model) (mesh *Mesh, err error) {
 			return
 		}
 	}
-	for i := range model.Points {
+	for i := range mesh.Points {
 		mesh.Points[i] = Fixed
 	}
 
