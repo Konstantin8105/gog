@@ -22,15 +22,11 @@ const (
 
 VARIABLES
 
-var (
-	// FindRayIntersection is global variable for switch off finding
-	// intersection point on segments ray
-	FindRayIntersection bool = true
-
-	// Eps is epsilon - precision of intersection
-	Eps float64 = 1e-12
-)
 var Debug = false
+var (
+	// Eps is epsilon - precision of intersection
+	Eps float64 = 1e-10
+)
 
 FUNCTIONS
 
@@ -140,6 +136,7 @@ func PointPoint(
 	pi []Point,
 	stA, stB State,
 )
+func SamePoints(p0, p1 Point) bool
 func TriangleSplitByPoint(
 	pt Point,
 	tr0, tr1, tr2 Point,
@@ -163,7 +160,7 @@ func New(model Model) (mesh *Mesh, err error)
 func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error)
     AddLine is add line in triangulation with tag
 
-func (mesh *Mesh) AddPoint(p Point, tag int) (err error)
+func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error)
     AddPoint is add points with tag
 
 func (mesh Mesh) Check() (err error)
@@ -172,7 +169,7 @@ func (mesh Mesh) Check() (err error)
 func (mesh *Mesh) Clockwise()
     Clockwise change all triangles to clockwise orientation
 
-func (mesh *Mesh) Delanay() (err error)
+func (mesh *Mesh) Delanay(tri ...int) (err error)
     TODO delanay only for some triangles, if list empty then for all triangles
 
 func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error)
@@ -183,7 +180,7 @@ func (mesh *Mesh) Materials() (err error)
     empty. If points slice is not empty, then return material mark number for
     each point
 
-func (mesh *Mesh) Smooth()
+func (mesh *Mesh) Smooth(pts ...int) (err error)
     Smooth move all movable point by average distance
 
 func (mesh *Mesh) Split(d float64) (err error)
@@ -218,11 +215,14 @@ func (m *Model) ArcsToLines()
 func (m *Model) ConvexHullTriangles()
     ConvexHullTriangles add triangles of model convex hull
 
+func (src Model) Copy() (dst Model)
+    Copy return copy of Model
+
 func (m Model) Dxf() string
     Dxf return string in dxf drawing format
     https://images.autodesk.com/adsk/files/autocad_2012_pdf_dxf-reference_enu.pdf
 
-func (model *Model) Get(mesh *Mesh, lines bool)
+func (model *Model) Get(mesh *Mesh)
 
 func (m *Model) Intersection()
     Intersection change model with finding all model intersections
@@ -296,9 +296,6 @@ const (
 	Collinear
 
 	OnSegment // intersection point on segment
-
-	OnRay00Segment // intersection point on ray 00 segment
-	OnRay11Segment // intersection point on ray 11 segment
 
 	OnPoint0Segment // intersection point on point 0 segment
 	OnPoint1Segment // intersection point on point 1 segment

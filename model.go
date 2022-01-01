@@ -14,6 +14,23 @@ type Model struct {
 	Triangles [][4]int // Triangles store 3 index of Points and last for tag/material
 }
 
+// Copy return copy of Model
+func (src Model) Copy() (dst Model) {
+	// Points
+	dst.Points = make([]Point, len(src.Points))
+	copy(dst.Points, src.Points)
+	// Lines
+	dst.Lines = make([][3]int, len(src.Lines))
+	copy(dst.Lines, src.Lines)
+	// Arcs
+	dst.Arcs = make([][4]int, len(src.Arcs))
+	copy(dst.Arcs, src.Arcs)
+	// Triangles
+	dst.Triangles = make([][4]int, len(src.Triangles))
+	copy(dst.Triangles, src.Triangles)
+	return
+}
+
 // String return a stantard model view
 func (m Model) String() string {
 	var str string

@@ -4,7 +4,35 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"testing"
 )
+
+func TestCopy(t *testing.T) {
+	m := Model{
+		Points:    []Point{{1, 2}},
+		Lines:     [][3]int{{3, 4, 5}, {6, 7, 8}},
+		Arcs:      [][4]int{{11, 12, 13, 14}, {15, 16, 17, 18}},
+		Triangles: [][4]int{{21, 22, 23, 34}},
+	}
+	equal := func(m0, m1 *Model) bool {
+		if m0.String() == m1.String() {
+			return true
+		}
+		return false
+	}
+	var c Model
+	if equal(&m, &c) {
+		t.Fatalf("strange 1")
+	}
+	c = m.Copy()
+	if !equal(&m, &c) {
+		t.Fatalf("not full copy\n%s\n%s", m.String(), c.String())
+	}
+	c.Lines[1][1] = -4
+	if equal(&m, &c) {
+		t.Fatalf("strange 2")
+	}
+}
 
 func ExampleModel() {
 	var m Model
