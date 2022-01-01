@@ -79,12 +79,14 @@ func (m Model) Dxf() string {
 	}
 	// draw lines
 	for i := range m.Lines {
-		line(m.Points[m.Lines[i][0]], m.Points[m.Lines[i][1]], "lines")
+		name := fmt.Sprintf("lines%+2d", m.Lines[i][2])
+		line(m.Points[m.Lines[i][0]], m.Points[m.Lines[i][1]], name)
 	}
 	// draw arc
 	for i := range m.Arcs {
-		line(m.Points[m.Arcs[i][0]], m.Points[m.Arcs[i][1]], "arcs")
-		line(m.Points[m.Arcs[i][1]], m.Points[m.Arcs[i][2]], "arcs")
+		name := fmt.Sprintf("arcs%+2d", m.Arcs[i][3])
+		line(m.Points[m.Arcs[i][0]], m.Points[m.Arcs[i][1]], name)
+		line(m.Points[m.Arcs[i][1]], m.Points[m.Arcs[i][2]], name)
 	}
 	// draw triangles
 	for i := range m.Triangles {
