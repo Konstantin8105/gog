@@ -107,51 +107,55 @@ func TestTriangulation(t *testing.T) {
 			Point{3, 37},
 			Point{27, 28},
 			Point{44, 14},
-		}, { // 15
+		}, { // 16
 			Point{20, 38},
 			Point{34, 17},
 			Point{16, 8},
 			Point{43, 2},
 			Point{25, 47},
-		}, { // 16
+		}, { // 17
 			Point{0, 37},
 			Point{38, 13},
 			Point{12, 35},
 			Point{8, 33},
 			Point{32, 37},
-		}, { // 17
+		}, { // 18
 			Point{33, 16},
 			Point{9, 24},
 			Point{23, 37},
 			Point{18, 2},
 			Point{26, 28},
-		}, { // 18
+		}, { // 19
 			Point{34, 45},
 			Point{17, 25},
 			Point{0, 31},
 			Point{25, 0},
 			Point{15, 24},
-		}, { // 19
-			Point{0, 0},
-			Point{1, 1},
-			Point{1, 0},
 		}, { // 20
 			Point{0, 0},
 			Point{1, 1},
 			Point{1, 0},
-			Point{2, 0},
 		}, { // 21
 			Point{0, 0},
 			Point{1, 1},
 			Point{1, 0},
 			Point{2, 0},
-			Point{1, 0.5},
 		}, { // 22
+			Point{0, 0},
+			Point{1, 1},
+			Point{1, 0},
+			Point{2, 0},
+			Point{1, 0.5},
+		}, { // 23
 			Point{10, 40},
 			Point{36, 27},
 			Point{1, 12},
 			Point{6, 42},
 			Point{41, 24},
+		}, { // 24
+			Point{0, 0},
+			Point{1, 0},
+			Point{1, 0.1},
 		},
 	}
 
@@ -239,6 +243,17 @@ func TestTriangulation(t *testing.T) {
 			if err != nil {
 				t.Fatalf("check 1: %v", err)
 			}
+			defer func() {
+				// write dxf file
+				ts.model.Get(mesh)
+				if err := ioutil.WriteFile(
+					ts.name+".dxf",
+					[]byte(ts.model.Dxf()),
+					0644,
+				); err != nil {
+					t.Error(err)
+				}
+			}()
 			// distance
 			var dist float64
 			dist = ts.model.MinPointDistance()
@@ -251,15 +266,18 @@ func TestTriangulation(t *testing.T) {
 				}
 				dist = math.Max(dist, math.Abs(xmax-xmin)/10.0)
 			}
- 			err = mesh.Split(dist)
- 			if err != nil {
- 				t.Fatalf("check 1a: %v", err)
- 			}
+			err = mesh.Split(dist)
+			if err != nil {
+				t.Fatalf("check 1a: %v", err)
+			}
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 2: %v", err)
 			}
-			mesh.Smooth()
+			err = mesh.Smooth()
+			if err != nil {
+				t.Fatalf("check 2a: %v", err)
+			}
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 3: %v", err)
@@ -275,15 +293,6 @@ func TestTriangulation(t *testing.T) {
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 6: %v", err)
-			}
-			// write dxf file
-			ts.model.Get(mesh)
-			if err := ioutil.WriteFile(
-				ts.name+".dxf",
-				[]byte(ts.model.Dxf()),
-				0644,
-			); err != nil {
-				t.Error(err)
 			}
 		})
 	}

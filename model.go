@@ -105,7 +105,7 @@ func (m Model) Dxf() string {
 func (m *Model) AddPoint(p Point) (index int) {
 	// search in exist points
 	for i := range m.Points {
-		if Distance(p, m.Points[i]) < Eps {
+		if SamePoints(p, m.Points[i]) {
 			return i
 		}
 	}

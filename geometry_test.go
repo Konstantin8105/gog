@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Konstantin8105/cs"
+	eTree "github.com/Konstantin8105/errors"
 )
 
 func getStates() (names []string) {
@@ -105,32 +106,28 @@ func Example() {
 	// Output:
 	// Intersection point: [[2.50000e+00,2.50000e+00]]
 	// Intersection state A:
-	//  1	                            10	not found
-	//  2	                           100	not found
-	//  3	                          1000	not found
-	//  4	                         10000	not found
-	//  5	                        100000	not found
-	//  6	                       1000000	found
-	//  7	                      10000000	not found
-	//  8	                     100000000	not found
-	//  9	                    1000000000	not found
-	// 10	                   10000000000	not found
-	// 11	                  100000000000	not found
-	// 12	                 1000000000000	not found
+	//  1	               VerticalSegment	not found
+	//  2	             HorizontalSegment	not found
+	//  3	             ZeroLengthSegment	not found
+	//  4	                      Parallel	not found
+	//  5	                     Collinear	not found
+	//  6	                     OnSegment	found
+	//  7	               OnPoint0Segment	not found
+	//  8	               OnPoint1Segment	not found
+	//  9	                     ArcIsLine	not found
+	// 10	                    ArcIsPoint	not found
 	//
 	// Intersection state B:
-	//  1	                            10	not found
-	//  2	                           100	not found
-	//  3	                          1000	not found
-	//  4	                         10000	not found
-	//  5	                        100000	not found
-	//  6	                       1000000	found
-	//  7	                      10000000	not found
-	//  8	                     100000000	not found
-	//  9	                    1000000000	not found
-	// 10	                   10000000000	not found
-	// 11	                  100000000000	not found
-	// 12	                 1000000000000	not found
+	//  1	               VerticalSegment	not found
+	//  2	             HorizontalSegment	not found
+	//  3	             ZeroLengthSegment	not found
+	//  4	                      Parallel	not found
+	//  5	                     Collinear	not found
+	//  6	                     OnSegment	found
+	//  7	               OnPoint0Segment	not found
+	//  8	               OnPoint1Segment	not found
+	//  9	                     ArcIsLine	not found
+	// 10	                    ArcIsPoint	not found
 }
 
 // sqrt(2.0) / 2.0 =
@@ -381,7 +378,7 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 5, Y: 9}, // 4
 		},
-		itA: OnRay11Segment,
+		// itA: ,
 		itB: VerticalSegment,
 		pi:  []Point{},
 		dbp: 7.0710678119e-01,
@@ -399,7 +396,7 @@ var tcs = []TestCase{
 			Point{X: 5, Y: 0}, // 3
 			Point{X: 5, Y: 9}, // 4
 		},
-		itA: OnRay00Segment,
+		// itA: ,
 		itB: VerticalSegment,
 		pi:  []Point{},
 		dbp: 7.0710678119e-01,
@@ -418,7 +415,7 @@ var tcs = []TestCase{
 			Point{X: 2, Y: 2}, // 4
 		},
 		itA: VerticalSegment,
-		itB: OnRay11Segment,
+		// itB: ,
 		pi:  []Point{},
 		dbp: 6,
 	},
@@ -436,7 +433,7 @@ var tcs = []TestCase{
 			Point{X: 1, Y: 1}, // 4
 		},
 		itA: VerticalSegment,
-		itB: OnRay00Segment,
+		// itB: ,
 		pi:  []Point{},
 		dbp: 6,
 	},
@@ -447,7 +444,7 @@ var tcs = []TestCase{
 			Point{X: 1.2, Y: 2},
 			Point{X: 5, Y: 5},
 		},
-		itB: OnRay00Segment,
+		// itB: ,
 		pi:  []Point{},
 		dbp: 2.4656014677e+00,
 	},
@@ -505,7 +502,7 @@ var tcs = []TestCase{
 
 		pi:  []Point{},
 		itA: HorizontalSegment,
-		itB: VerticalSegment | OnRay11Segment | ArcIsLine,
+		itB: VerticalSegment | ArcIsLine,
 	},
 	{ // 24
 		ps: []Point{
@@ -513,8 +510,8 @@ var tcs = []TestCase{
 			{1, 0}, {1, 0}, {0, 1}},
 
 		pi:  []Point{},
-		itA: OnRay00Segment | HorizontalSegment,
-		itB: OnRay11Segment | ArcIsLine,
+		itA: HorizontalSegment,
+		itB: ArcIsLine,
 	},
 	{ // 25
 		ps: []Point{
@@ -522,8 +519,8 @@ var tcs = []TestCase{
 			{1, 0}, {0, 1}, {0, 1}},
 
 		pi:  []Point{},
-		itA: OnRay00Segment | HorizontalSegment,
-		itB: OnRay11Segment | ArcIsLine,
+		itA: HorizontalSegment,
+		itB: ArcIsLine,
 	},
 	{ // 26
 		ps: []Point{
@@ -531,7 +528,7 @@ var tcs = []TestCase{
 			{0, 1}, {0, 1}, {0, 1}},
 
 		pi:  []Point{},
-		itA: HorizontalSegment | OnRay11Segment,
+		itA: HorizontalSegment,
 		itB: ArcIsPoint | VerticalSegment | HorizontalSegment | ZeroLengthSegment,
 	},
 	{ // 27
@@ -1047,33 +1044,47 @@ func TestOrientation(t *testing.T) {
 }
 
 func ExampleOrientation() {
-	delta := 1.0
-	for i := 1; i < 20; i++ {
-		value := Orientation(Point{0, 1}, Point{delta, 0}, Point{0, 0})
-		fmt.Fprintf(os.Stdout, "%.1e\t%v\n", delta, value)
+	var (
+		delta = 1.0
+		s     = Point{0, 1}
+		f     = Point{0, 0}
+	)
+	for i := 1; i < 30; i++ {
+		value := Orientation(s, Point{delta, 0}, f)
+		fmt.Fprintf(os.Stdout, "%.1e\t%+d\n", delta, value)
 		delta /= 10.0
 	}
 
 	// Output:
-	// 1.0e+00	0
-	// 1.0e-01	0
-	// 1.0e-02	0
-	// 1.0e-03	0
-	// 1.0e-04	0
-	// 1.0e-05	0
-	// 1.0e-06	0
-	// 1.0e-07	0
-	// 1.0e-08	0
-	// 1.0e-09	0
-	// 1.0e-10	0
-	// 1.0e-11	0
-	// 1.0e-12	0
+	// 1.0e+00	+0
+	// 1.0e-01	+0
+	// 1.0e-02	+0
+	// 1.0e-03	+0
+	// 1.0e-04	+0
+	// 1.0e-05	+0
+	// 1.0e-06	+0
+	// 1.0e-07	+0
+	// 1.0e-08	+0
+	// 1.0e-09	+0
+	// 1.0e-10	+0
+	// 1.0e-11	-1
+	// 1.0e-12	-1
 	// 1.0e-13	-1
 	// 1.0e-14	-1
 	// 1.0e-15	-1
 	// 1.0e-16	-1
 	// 1.0e-17	-1
 	// 1.0e-18	-1
+	// 1.0e-19	-1
+	// 1.0e-20	-1
+	// 1.0e-21	-1
+	// 1.0e-22	-1
+	// 1.0e-23	-1
+	// 1.0e-24	-1
+	// 1.0e-25	-1
+	// 1.0e-26	-1
+	// 1.0e-27	-1
+	// 1.0e-28	-1
 }
 
 func TestTriangleSplitByPoint(t *testing.T) {
@@ -1441,6 +1452,28 @@ func TestConvexHull(t *testing.T) {
 			for i := range res {
 				if Eps < Distance(res[i], tc.res[i]) {
 					t.Errorf("Not same points: %v != %v", res[i], tc.res[i])
+				}
+			}
+		})
+	}
+}
+
+func TestMiddlePoint(t *testing.T) {
+	for i := range tcs {
+		t.Run(fmt.Sprintf("md%03d", i), func(t *testing.T) {
+			for p := range tcs[i].ps {
+				if p == 0 {
+					continue
+				}
+				s := tcs[i].ps[p-1]
+				f := tcs[i].ps[p]
+				mid := MiddlePoint(s, f)
+				if Orientation(s, mid, f) != CollinearPoints {
+					et := eTree.New("detail")
+					et.Add(fmt.Errorf("s   = %.9e", s))
+					et.Add(fmt.Errorf("mid = %.9e", mid))
+					et.Add(fmt.Errorf("f   = %.9e", f))
+					t.Error(et)
 				}
 			}
 		})

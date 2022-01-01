@@ -51,9 +51,6 @@ const (
 
 	OnSegment // intersection point on segment
 
-	OnRay00Segment // intersection point on ray 00 segment
-	OnRay11Segment // intersection point on ray 11 segment
-
 	OnPoint0Segment // intersection point on point 0 segment
 	OnPoint1Segment // intersection point on point 1 segment
 
@@ -63,6 +60,21 @@ const (
 	// last unused type
 	endType
 )
+
+var stateList = [...]string{
+	"empty",
+	"VerticalSegment",
+	"HorizontalSegment",
+	"ZeroLengthSegment",
+	"Parallel",
+	"Collinear",
+	"OnSegment",
+	"OnPoint0Segment",
+	"OnPoint1Segment",
+	"ArcIsLine",
+	"ArcIsPoint",
+	"endtype",
+}
 
 // Has is mean s-State has si-State
 func (s State) Has(si State) bool {
@@ -86,7 +98,7 @@ func (s State) String() string {
 	}
 	for i := 1; i < size; i++ {
 		si := State(1 << i)
-		out += fmt.Sprintf("%2d\t%30b\t", i, int(si))
+		out += fmt.Sprintf("%2d\t%30s\t", i, stateList[i])
 		if s.Has(si) {
 			out += "found"
 		} else {
@@ -113,12 +125,8 @@ func Check(pps ...Point) error {
 }
 
 var (
-	// FindRayIntersection is global variable for switch off finding
-	// intersection point on segments ray
-	FindRayIntersection bool = true
-
 	// Eps is epsilon - precision of intersection
-	Eps float64 = 1e-12
+	Eps float64 = 1e-10
 )
 
 func PointPoint(
@@ -128,7 +136,7 @@ func PointPoint(
 	stA, stB State,
 ) {
 	stA |= ZeroLengthSegment | VerticalSegment | HorizontalSegment
-	if Distance(pt0, pt1) < Eps {
+	if SamePoints(pt0, pt1) {
 		stA |= OnPoint0Segment | OnPoint1Segment
 	}
 	stB = stA
@@ -143,7 +151,7 @@ func PointLine(
 	stA, stB State,
 ) {
 	// Point - Point
-	if Distance(pb0, pb1) < Eps {
+	if SamePoints(pb0, pb1) {
 		return PointPoint(pt, pb0)
 	}
 	// Point - Line
@@ -154,8 +162,8 @@ func PointLine(
 		isTrue   bool
 		tiA, tiB State
 	}{
-		{isTrue: Distance(pt, pb0) < Eps, tiA: OnPoint0Segment | OnPoint1Segment, tiB: OnPoint0Segment},
-		{isTrue: Distance(pt, pb1) < Eps, tiA: OnPoint0Segment | OnPoint1Segment, tiB: OnPoint1Segment},
+		{isTrue: SamePoints(pt, pb0), tiA: OnPoint0Segment | OnPoint1Segment, tiB: OnPoint0Segment},
+		{isTrue: SamePoints(pt, pb1), tiA: OnPoint0Segment | OnPoint1Segment, tiB: OnPoint1Segment},
 		{isTrue: math.Abs(pb0.X-pb1.X) < Eps, tiB: VerticalSegment},
 		{isTrue: math.Abs(pb0.Y-pb1.Y) < Eps, tiB: HorizontalSegment},
 	} {
@@ -165,26 +173,26 @@ func PointLine(
 		}
 	}
 
-	if math.Abs(Distance(pt, pb0)+Distance(pt, pb1)-Distance(pb0, pb1)) < Eps &&
-		stB.Not(OnPoint0Segment) && stB.Not(OnPoint1Segment) {
+	if stB.Has(OnPoint0Segment) || stB.Has(OnPoint1Segment) {
+		return
+	}
+
+	if stA.Has(OnPoint0Segment) || stA.Has(OnPoint1Segment) {
+		return
+	}
+
+	if orient := Orientation(pt, pb0, pb1); orient != CollinearPoints {
+		// points is not on line
+		return
+	}
+
+	// is point on line
+	if math.Min(pb0.X, pb1.X) <= pt.X && pt.X <= math.Max(pb0.X, pb1.X) &&
+		math.Min(pb0.Y, pb1.Y) <= pt.Y && pt.Y <= math.Max(pb0.Y, pb1.Y) {
 		stA |= OnPoint0Segment | OnPoint1Segment
 		stB |= OnSegment
-	}
-
-	if stB.Has(OnSegment) && stB.Not(OnPoint0Segment) && stB.Not(OnPoint1Segment) {
 		pi = []Point{pt}
-	}
-
-	// is point on ray
-	if FindRayIntersection &&
-		stB.Not(OnPoint0Segment) &&
-		stB.Not(OnPoint1Segment) &&
-		stB.Not(OnSegment) {
-		if Distance(pb0, pt) < Distance(pb1, pt) {
-			stB |= OnRay00Segment
-		} else {
-			stB |= OnRay11Segment
-		}
+		return
 	}
 
 	return
@@ -219,14 +227,14 @@ func LineLine(
 	stA, stB State,
 ) {
 	// Point - Point
-	if Distance(pa0, pa1) < Eps && Distance(pb0, pb1) < Eps {
+	if SamePoints(pa0, pa1) && SamePoints(pb0, pb1) {
 		return PointPoint(pa0, pb0)
 	}
 	// Point - Line
-	if Distance(pa0, pa1) < Eps {
+	if SamePoints(pa0, pa1) {
 		return PointLine(pa0, pb0, pb1)
 	}
-	if Distance(pb0, pb1) < Eps {
+	if SamePoints(pb0, pb1) {
 		pi, stA, stB = PointLine(pb0, pa0, pa1)
 		stA, stB = stB, stA
 		return
@@ -237,10 +245,10 @@ func LineLine(
 		isTrue   bool
 		tiA, tiB State
 	}{
-		{isTrue: Distance(pa0, pb0) < Eps, tiA: OnPoint0Segment, tiB: OnPoint0Segment},
-		{isTrue: Distance(pa0, pb1) < Eps, tiA: OnPoint0Segment, tiB: OnPoint1Segment},
-		{isTrue: Distance(pa1, pb0) < Eps, tiA: OnPoint1Segment, tiB: OnPoint0Segment},
-		{isTrue: Distance(pa1, pb1) < Eps, tiA: OnPoint1Segment, tiB: OnPoint1Segment},
+		{isTrue: SamePoints(pa0, pb0), tiA: OnPoint0Segment, tiB: OnPoint0Segment},
+		{isTrue: SamePoints(pa0, pb1), tiA: OnPoint0Segment, tiB: OnPoint1Segment},
+		{isTrue: SamePoints(pa1, pb0), tiA: OnPoint1Segment, tiB: OnPoint0Segment},
+		{isTrue: SamePoints(pa1, pb1), tiA: OnPoint1Segment, tiB: OnPoint1Segment},
 		{isTrue: math.Abs(pa0.X-pa1.X) < Eps, tiA: VerticalSegment},
 		{isTrue: math.Abs(pa0.Y-pa1.Y) < Eps, tiA: HorizontalSegment},
 		{isTrue: math.Abs(pb0.X-pb1.X) < Eps, tiB: VerticalSegment},
@@ -296,20 +304,6 @@ func LineLine(
 			(stBa.Has(OnSegment) || stBa.Has(OnPoint0Segment) || stBa.Has(OnPoint1Segment)) {
 			stB |= OnSegment
 		}
-
-		if stBa.Has(OnRay00Segment) {
-			stA |= OnRay00Segment
-		}
-		if stBa.Has(OnRay11Segment) {
-			stA |= OnRay11Segment
-		}
-
-		if stBb.Has(OnRay00Segment) {
-			stB |= OnRay00Segment
-		}
-		if stBb.Has(OnRay11Segment) {
-			stB |= OnRay11Segment
-		}
 	}
 	if stA.Has(OnSegment) || stB.Has(OnSegment) {
 		pi = []Point{root}
@@ -319,10 +313,10 @@ func LineLine(
 		isTrue   bool
 		tiA, tiB State
 	}{
-		{isTrue: Distance(pa0, root) < Eps, tiA: OnPoint0Segment},
-		{isTrue: Distance(pa1, root) < Eps, tiA: OnPoint1Segment},
-		{isTrue: Distance(pb0, root) < Eps, tiB: OnPoint0Segment},
-		{isTrue: Distance(pb1, root) < Eps, tiB: OnPoint1Segment},
+		{isTrue: SamePoints(pa0, root), tiA: OnPoint0Segment},
+		{isTrue: SamePoints(pa1, root), tiA: OnPoint1Segment},
+		{isTrue: SamePoints(pb0, root), tiB: OnPoint0Segment},
+		{isTrue: SamePoints(pb1, root), tiB: OnPoint1Segment},
 	} {
 		if c.isTrue {
 			stA |= c.tiA
@@ -408,6 +402,9 @@ func Line(p0, p1 Point) (A, B, C float64) {
 }
 
 func Distance128(p0, p1 Point) float64 {
+	if p0.X == p1.X && p0.Y == p1.Y {
+		return 0
+	}
 	const prec = 128
 
 	var (
@@ -430,10 +427,10 @@ func Distance128(p0, p1 Point) float64 {
 // Distance between two points
 func Distance(p0, p1 Point) float64 {
 	v := math.Hypot(p0.X-p1.X, p0.Y-p1.Y)
-	if 100*Eps < v {
-		return v
+	if v < 100*Eps {
+		return Distance128(p0, p1)
 	}
-	return Distance128(p0, p1)
+	return v
 }
 
 // Rotate point about (xc,yc) on angle
@@ -452,7 +449,7 @@ func MirrorLine(
 	ml0, ml1 Point,
 	err error,
 ) {
-	if Distance(mp0, mp1) < Eps {
+	if SamePoints(mp0, mp1) {
 		panic("mirror line is point")
 	}
 
@@ -478,16 +475,16 @@ const (
 
 func Orientation(p1, p2, p3 Point) OrientationPoints {
 	v := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
-	if 100*Eps < math.Abs(v) {
-		switch {
-		case math.Abs(v) < Eps:
-			return CollinearPoints
-		case 0 < v:
-			return ClockwisePoints
-		}
-		return CounterClockwisePoints
+	if math.Abs(v) < 100*Eps {
+		return Orientation128(p1, p2, p3)
 	}
-	return Orientation128(p1, p2, p3)
+	switch {
+	case math.Abs(v) < Eps:
+		return CollinearPoints
+	case 0 < v:
+		return ClockwisePoints
+	}
+	return CounterClockwisePoints
 }
 
 func Orientation128(p1, p2, p3 Point) OrientationPoints {
@@ -530,7 +527,7 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	stA, stB State,
 ) {
 	// Point - Point
-	if Distance(Arc0, Arc1) < Eps && Distance(Arc1, Arc2) < Eps {
+	if SamePoints(Arc0, Arc1) && SamePoints(Arc1, Arc2) {
 		pi, stA, stB = PointPoint(pt, Arc0)
 		stB |= ArcIsPoint
 		return
@@ -546,12 +543,12 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 			stB |= ArcIsLine
 			return
 		}
-		if Distance(Arc0, Arc1) < Eps {
+		if SamePoints(Arc0, Arc1) {
 			pi, stA, stB = PointLine(pt, Arc0, Arc2)
 			stB |= ArcIsLine
 			return
 		}
-		if Distance(Arc1, Arc2) < Eps {
+		if SamePoints(Arc1, Arc2) {
 			pi, stA, stB = PointLine(pt, Arc0, Arc2)
 			stB |= ArcIsLine
 			return
@@ -568,10 +565,10 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 		return
 	}
 	// point is on arc corner ?
-	if Distance(pt, Arc0) < Eps {
+	if SamePoints(pt, Arc0) {
 		stB |= OnPoint0Segment
 	}
-	if Distance(pt, Arc2) < Eps {
+	if SamePoints(pt, Arc2) {
 		stB |= OnPoint1Segment
 	}
 
@@ -594,23 +591,23 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	stA, stB State,
 ) {
 	// Point - Arc
-	if Distance(Line0, Line1) < Eps {
+	if SamePoints(Line0, Line1) {
 		return PointArc(Line0, Arc0, Arc1, Arc2)
 	}
 	// Line - Point
-	if Distance(Arc0, Arc1) < Eps && Distance(Arc1, Arc2) < Eps {
+	if SamePoints(Arc0, Arc1) && SamePoints(Arc1, Arc2) {
 		pi, stA, stB = PointLine(Arc0, Line0, Line1)
 		stA, stB = stB, stA
 		stB |= ArcIsPoint
 		return
 	}
 	// Line - Line
-	if Distance(Arc0, Arc1) < Eps {
+	if SamePoints(Arc0, Arc1) {
 		pi, stA, stB = LineLine(Line0, Line1, Arc0, Arc2)
 		stB |= ArcIsLine
 		return
 	}
-	if Distance(Arc1, Arc2) < Eps {
+	if SamePoints(Arc1, Arc2) {
 		pi, stA, stB = LineLine(Line0, Line1, Arc0, Arc2)
 		stB |= ArcIsLine
 		return
@@ -634,10 +631,10 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	}{
 		{isTrue: math.Abs(Line0.X-Line1.X) < Eps, tiA: VerticalSegment},
 		{isTrue: math.Abs(Line0.Y-Line1.Y) < Eps, tiA: HorizontalSegment},
-		{isTrue: Distance(Line0, Arc0) < Eps, tiA: OnPoint0Segment, tiB: OnPoint0Segment},
-		{isTrue: Distance(Line0, Arc2) < Eps, tiA: OnPoint0Segment, tiB: OnPoint1Segment},
-		{isTrue: Distance(Line1, Arc0) < Eps, tiA: OnPoint1Segment, tiB: OnPoint0Segment},
-		{isTrue: Distance(Line1, Arc2) < Eps, tiA: OnPoint1Segment, tiB: OnPoint1Segment},
+		{isTrue: SamePoints(Line0, Arc0), tiA: OnPoint0Segment, tiB: OnPoint0Segment},
+		{isTrue: SamePoints(Line0, Arc2), tiA: OnPoint0Segment, tiB: OnPoint1Segment},
+		{isTrue: SamePoints(Line1, Arc0), tiA: OnPoint1Segment, tiB: OnPoint0Segment},
+		{isTrue: SamePoints(Line1, Arc2), tiA: OnPoint1Segment, tiB: OnPoint1Segment},
 	} {
 		if c.isTrue {
 			stA |= c.tiA
@@ -807,22 +804,22 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 			tiA, tiB State
 		}{
 			{
-				isTrue: Distance(Line0, root) < Eps &&
+				isTrue: SamePoints(Line0, root) &&
 					(stBa.Has(OnSegment) || stBa.Has(OnPoint0Segment) || stBa.Has(OnPoint1Segment)),
 				tiA: OnPoint0Segment,
 			},
 			{
-				isTrue: Distance(Line1, root) < Eps &&
+				isTrue: SamePoints(Line1, root) &&
 					(stBa.Has(OnSegment) || stBa.Has(OnPoint0Segment) || stBa.Has(OnPoint1Segment)),
 				tiA: OnPoint1Segment,
 			},
 			{
-				isTrue: Distance(Arc0, root) < Eps &&
+				isTrue: SamePoints(Arc0, root) &&
 					(stBb.Has(OnSegment) || stBb.Has(OnPoint0Segment) || stBb.Has(OnPoint1Segment)),
 				tiB: OnPoint0Segment,
 			},
 			{
-				isTrue: Distance(Arc2, root) < Eps &&
+				isTrue: SamePoints(Arc2, root) &&
 					(stBb.Has(OnSegment) || stBb.Has(OnPoint0Segment) || stBb.Has(OnPoint1Segment)),
 				tiB: OnPoint1Segment,
 			},
@@ -856,9 +853,9 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 	for _, c := range [...]struct {
 		isTrue bool
 	}{
-		{isTrue: Distance(Arc0, Arc1) < Eps},
-		{isTrue: Distance(Arc1, Arc2) < Eps},
-		{isTrue: Distance(Arc0, Arc2) < Eps},
+		{isTrue: SamePoints(Arc0, Arc1)},
+		{isTrue: SamePoints(Arc1, Arc2)},
+		{isTrue: SamePoints(Arc0, Arc2)},
 	} {
 		if c.isTrue {
 			err = fmt.Errorf("invalid points of arc")
@@ -872,8 +869,8 @@ againRemove:
 		for _, c := range [...]struct {
 			isTrue bool
 		}{
-			{isTrue: Distance(Arc0, p) < Eps},
-			{isTrue: Distance(Arc2, p) < Eps},
+			{isTrue: SamePoints(Arc0, p)},
+			{isTrue: SamePoints(Arc2, p)},
 		} {
 			if c.isTrue {
 				pi = append(pi[:i], pi[i+1:]...)
@@ -881,7 +878,7 @@ againRemove:
 			}
 		}
 		for j := range pi {
-			if i < j && Distance(pi[i], pi[j]) < Eps {
+			if i < j && SamePoints(pi[i], pi[j]) {
 				pi = append(pi[:i], pi[i+1:]...)
 				goto againRemove
 			}
@@ -994,9 +991,9 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	xc, yc = Linear(a11, a12, b1, a21, a22, b2)
 
 	//	(xi-xc)^2+(yi-yc)^2 = R^2
-	r1 := math.Hypot (x1-xc, y1-yc)
-	r2 := math.Hypot (x2-xc, y2-yc)
-	r3 := math.Hypot (x3-xc, y3-yc)
+	r1 := math.Hypot(x1-xc, y1-yc)
+	r2 := math.Hypot(x2-xc, y2-yc)
+	r3 := math.Hypot(x3-xc, y3-yc)
 	r = (r1 + r2 + r3) / 3.0
 	// find angles
 	return
@@ -1054,9 +1051,9 @@ func TriangleSplitByPoint(
 	for _, c := range [...]struct {
 		isTrue bool
 	}{
-		{isTrue: Distance(tr0, tr1) < Eps},
-		{isTrue: Distance(tr1, tr2) < Eps},
-		{isTrue: Distance(tr0, tr2) < Eps},
+		{isTrue: SamePoints(tr0, tr1)},
+		{isTrue: SamePoints(tr1, tr2)},
+		{isTrue: SamePoints(tr0, tr2)},
 	} {
 		if c.isTrue {
 			err = fmt.Errorf("invalid points of triangle")
@@ -1086,9 +1083,9 @@ func TriangleSplitByPoint(
 	for _, c := range [...]struct {
 		isTrue bool
 	}{
-		{isTrue: Distance(tr0, pt) < Eps},
-		{isTrue: Distance(tr1, pt) < Eps},
-		{isTrue: Distance(tr2, pt) < Eps},
+		{isTrue: SamePoints(tr0, pt)},
+		{isTrue: SamePoints(tr1, pt)},
+		{isTrue: SamePoints(tr2, pt)},
 	} {
 		if c.isTrue {
 			// point on corner
@@ -1236,4 +1233,8 @@ func ConvexHull(points []Point) (chain []Point) {
 	chain = append(chain, hull...)
 
 	return
+}
+
+func SamePoints(p0, p1 Point) bool {
+	return Distance(p0, p1) < Eps
 }
