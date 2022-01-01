@@ -328,33 +328,33 @@ func LineLine(
 }
 
 func MiddlePoint(p0, p1 Point) Point {
-	const prec = 128
-
-	var (
-		half = new(big.Float).SetPrec(prec).SetFloat64(0.5)
-		x0   = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
-		x1   = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
-		y0   = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
-		y1   = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
-	)
-	x0.Mul(x0, half)
-	x1.Mul(x1, half)
-	y0.Mul(y0, half)
-	y1.Mul(y1, half)
-
-	x0.Add(x0, x1)
-	y0.Add(y0, y1)
-
-	x, _ := x0.Float64()
-	y, _ := y0.Float64()
-
-	mid := Point{X: x, Y: y}
+	// const prec = 128
+	//
+	// var (
+	// 	half = new(big.Float).SetPrec(prec).SetFloat64(0.5)
+	// 	x0   = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
+	// 	x1   = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
+	// 	y0   = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
+	// 	y1   = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
+	// )
+	// x0.Mul(x0, half)
+	// x1.Mul(x1, half)
+	// y0.Mul(y0, half)
+	// y1.Mul(y1, half)
+	//
+	// x0.Add(x0, x1)
+	// y0.Add(y0, y1)
+	//
+	// x, _ := x0.Float64()
+	// y, _ := y0.Float64()
+	//
+	// mid := Point{X: x, Y: y}
 
 	// Simple float64 algoritm:
-	// mid := Point{
-	// 	X: p0.X*0.5 + p1.X*0.5,
-	// 	Y: p0.Y*0.5 + p1.Y*0.5,
-	// }
+	mid := Point{
+		X: p0.X*0.5 + p1.X*0.5,
+		Y: p0.Y*0.5 + p1.Y*0.5,
+	}
 	return mid
 }
 
@@ -474,6 +474,18 @@ const (
 )
 
 func Orientation(p1, p2, p3 Point) OrientationPoints {
+	// check on middle point with collinear points
+	if mid := MiddlePoint(p1, p2); p3.X == mid.X && p3.Y == mid.Y {
+		return CollinearPoints
+	}
+	if mid := MiddlePoint(p2, p3); p1.X == mid.X && p1.Y == mid.Y {
+		return CollinearPoints
+	}
+	if mid := MiddlePoint(p1, p3); p2.X == mid.X && p2.Y == mid.Y {
+		return CollinearPoints
+	}
+
+	// check other orientations
 	v := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
 	if math.Abs(v) < 100*Eps {
 		return Orientation128(p1, p2, p3)

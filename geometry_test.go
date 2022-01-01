@@ -3,6 +3,7 @@ package gog
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"os"
 	"os/exec"
 	"strings"
@@ -1474,8 +1475,101 @@ func TestMiddlePoint(t *testing.T) {
 					et.Add(fmt.Errorf("mid = %.9e", mid))
 					et.Add(fmt.Errorf("f   = %.9e", f))
 					t.Error(et)
+					return
 				}
 			}
 		})
 	}
+}
+
+func ExampleMiddlePoint() {
+	// that example show function Orientation
+	// cannot recongize middle point
+	factor := 1.0
+	for p := 0; p < 20; p++ {
+		success := 0
+		amount := 0
+		for i := range tcs {
+			for p := range tcs[i].ps {
+				if p == 0 {
+					continue
+				}
+				s := tcs[i].ps[p-1]
+				x := tcs[i].ps[p].X * factor
+				y := tcs[i].ps[p].Y * factor
+				f := Point{X: x, Y: y}
+				mid := MiddlePoint(s, f)
+				amount++
+				if Orientation(s, mid, f) == CollinearPoints {
+					success++
+				}
+				amount++
+				if Orientation(mid, s, f) == CollinearPoints {
+					success++
+				}
+				amount++
+				if Orientation(s, f, mid) == CollinearPoints {
+					success++
+				}
+			}
+		}
+		fmt.Fprintf(os.Stdout, "factor: %5.1e success %5d of %5d - %.3f%%\n",
+			factor, success, amount, float64(success)/float64(amount))
+		factor *= 10.0
+	}
+
+	fmt.Fprintf(os.Stdout, "calculate average of 2 float values\n")
+	a := math.Pow(float64(math.Pi), math.Pi*10.0) * 1e45
+	b := float64(math.E)
+	var mid float64
+	{
+		const prec = 256
+		var (
+			half = new(big.Float).SetPrec(prec).SetFloat64(0.5)
+			x0   = new(big.Float).SetPrec(prec).SetFloat64(a)
+			x1   = new(big.Float).SetPrec(prec).SetFloat64(b)
+		)
+		x0.Mul(x0, half)
+		x1.Mul(x1, half)
+		x0.Add(x0, x1)
+		mid, _ = x0.Float64()
+	}
+	for _, v := range []struct {
+		name  string
+		value float64
+	}{
+		{name: "simple", value: (a + b) / 2.0},
+		{name: "long simple", value: a*0.5 + b*0.5},
+	} {
+		fmt.Fprintf(os.Stdout, "Name: %20s\tValue: %.25e\tDelta: %.5e\n",
+			v.name, v.value, v.value-mid,
+		)
+	}
+	fmt.Fprintf(os.Stdout, "no need big math\n")
+
+	// Output:
+	// factor: 1.0e+00 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+01 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+02 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+03 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+04 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+05 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+06 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+07 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+08 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+09 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+10 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+11 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+12 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+13 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+14 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+15 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+16 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+17 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+18 success  9300 of  9300 - 1.000%
+	// factor: 1.0e+19 success  9300 of  9300 - 1.000%
+	// calculate average of 2 float values
+	// Name:               simple	Value: 2.0767962083758179575724271e+60	Delta: 0.00000e+00
+	// Name:          long simple	Value: 2.0767962083758179575724271e+60	Delta: 0.00000e+00
+	// no need big math
 }
