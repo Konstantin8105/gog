@@ -1840,11 +1840,14 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		// triangle edges on line
 		return []int{idp1, idp2}, nil
 	}(); err != nil {
+		et := eTree.New("generate list")
+		et.Add(err)
+		err = et
 		return
 	}
 
 	// triangle edges on line
-	again:
+again:
 	for i := 1; i < len(list); i++ {
 		// find triangle with that points
 		idp1 := list[i-1]
@@ -1863,6 +1866,7 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 			found = true
 			break
 		}
+		fmt.Println(	">>>>", idp1, idp2, found)
 		if found {
 			continue
 		}
@@ -1876,12 +1880,8 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 			err = et
 			return
 		}
-		var newList []int
-		newList = append(newList, list[:i-1]...)
-		newList = append(newList, idp)
-		newList = append(newList, list[i:]...)
-		list = newList
-		if 1000 < len(newList) {
+		list = append(list[:i-1], append([]int{idp}, list[i:]...)...)
+		if 1000 < len(list) {
 			err = fmt.Errorf("too big list")
 			return
 		}
