@@ -1827,6 +1827,7 @@ again:
 		if pairs[index].removed {
 			continue
 		}
+		fmt.Println(	pairs)
 		if Debug {
 			if err = mesh.Check(); err != nil {
 				err = fmt.Errorf("check 0: %v", err)
