@@ -1822,68 +1822,79 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		removed bool
 	}
 	pairs := []pair{{p1: inp1, p2: inp2, removed: false}}
-again:
-	for index := range pairs {
-		if pairs[index].removed {
-			continue
-		}
-		if Debug {
-			if err = mesh.Check(); err != nil {
-				err = fmt.Errorf("check 0: %v", err)
+	for {
+		for index := range pairs {
+			if pairs[index].removed {
+				continue
+			}
+			if Debug {
+				if err = mesh.Check(); err != nil {
+					err = fmt.Errorf("check 0: %v", err)
+					return
+				}
+			}
+			if err = mesh.Delanay(); err != nil {
+				err = fmt.Errorf("Delanay: %v", err)
 				return
 			}
-		}
-		if err = mesh.Delanay(); err != nil {
-			err = fmt.Errorf("Delanay: %v", err)
-			return
-		}
-		// add points of points
-		var idp1, idp2 int
-		idp1, err = mesh.AddPoint(pairs[index].p1, Fixed)
-		if err != nil {
-			et := eTree.New("add p1")
-			et.Add(err)
-			err = et
-			return
-		}
-		idp2, err = mesh.AddPoint(pairs[index].p2, Fixed)
-		if err != nil {
-			et := eTree.New("add p2")
-			et.Add(err)
-			err = et
-			return
-		}
-		// find triangle with that points
-		found := false
-		for _, tri := range mesh.model.Triangles {
-			if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
+			// add points of points
+			var idp1, idp2 int
+			idp1, err = mesh.AddPoint(pairs[index].p1, Fixed)
+			if err != nil {
+				et := eTree.New("add p1")
+				et.Add(err)
+				err = et
+				return
+			}
+			idp2, err = mesh.AddPoint(pairs[index].p2, Fixed)
+			if err != nil {
+				et := eTree.New("add p2")
+				et.Add(err)
+				err = et
+				return
+			}
+			// find triangle with that points
+			found := false
+			for _, tri := range mesh.model.Triangles {
+				if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
+					continue
+				}
+				if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
+					continue
+				}
+				mesh.model.AddLine(pairs[index].p1, pairs[index].p2, Fixed)
+				pairs[index].removed = true
+				found = true
+				break
+			}
+			if found {
 				continue
 			}
-			if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
-				continue
-			}
-			mesh.model.AddLine(pairs[index].p1, pairs[index].p2, Fixed)
-			pairs[index].removed = true
-			found = true
-		}
-		if found {
-			continue
-		}
-		// possible a few triangles on line
+			// possible a few triangles on line
 
-		// add middle point
-		mid := MiddlePoint(pairs[index].p1, pairs[index].p2)
-		if Debug {
-			if err = mesh.Check(); err != nil {
-				err = fmt.Errorf("check 4: %v", err)
-				return
+			// add middle point
+			mid := MiddlePoint(pairs[index].p1, pairs[index].p2)
+			fmt.Println(	len(pairs), mid)
+			pairs[index].removed = true
+			pairs = append(pairs,
+				pair{p1: pairs[index].p1, p2: mid, removed: false},
+				pair{p1: mid, p2: pairs[index].p2, removed: false})
+		}
+		counter := 0
+		for _, p := range pairs {
+			if !p.removed {
+				counter++
 			}
 		}
-		pairs[index].removed = true
-		pairs = append(pairs,
-			pair{p1: pairs[index].p1, p2: mid},
-			pair{p1: mid, p2: pairs[index].p2})
-		goto again
+		if 0 < counter {
+			break
+		}
+	}
+	if Debug {
+		if err = mesh.Check(); err != nil {
+			err = fmt.Errorf("check 4: %v", err)
+			return
+		}
 	}
 	return
 }
