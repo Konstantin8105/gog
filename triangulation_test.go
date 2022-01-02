@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"math/rand"
+	"path/filepath"
 	"runtime/debug"
 	"testing"
 )
@@ -220,6 +221,24 @@ func TestTriangulation(t *testing.T) {
 		tcs = append(tcs, convert(
 			fmt.Sprintf("t%02d", index),
 			pnt)...)
+	}
+
+	// read JSON models
+	{
+		files, err := filepath.Glob("*.json")
+		if err != nil {
+			panic(err)
+		}
+		for _, file := range files {
+			var model Model
+			if err = model.Read(file); err != nil {
+				panic(err)
+			}
+			tcs = append(tcs, testcase{
+				name:  fmt.Sprintf("file%s", file),
+				model: model,
+			})
+		}
 	}
 
 	for _, ts := range tcs {

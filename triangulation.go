@@ -344,6 +344,71 @@ func (mesh Mesh) Check() (err error) {
 		}
 	}
 
+	// lines inside line
+	{
+		em := eTree.New("line inside line")
+		for i := range mesh.model.Lines {
+			for j := range mesh.model.Lines {
+				if i <= j {
+					continue
+				}
+				if mesh.model.Lines[i][2] == Removed{
+					continue
+				}
+				if mesh.model.Lines[j][2] == Removed{
+					continue
+				}
+				i0 := mesh.model.Lines[i][0]
+				i1 := mesh.model.Lines[i][1]
+				j0 := mesh.model.Lines[j][0]
+				j1 := mesh.model.Lines[j][1]
+				if i0 == j0 && i1 == j1 {
+					em.Add(fmt.Errorf("line same points index"))
+				}
+				if i1 == j0 && i0 == j1 {
+					em.Add(fmt.Errorf("line same points index"))
+				}
+				if i0 != j0 && i1 != j0 {
+					_, _, stB := PointLine(
+						mesh.model.Points[j0],
+						mesh.model.Points[i0],
+						mesh.model.Points[i1],
+					)
+					if stB.Has(OnSegment) {
+						em.Add(fmt.Errorf("i        %v", mesh.model.Lines[i]))
+						em.Add(fmt.Errorf("i0 = %d. %v", i0, mesh.model.Points[i0]))
+						em.Add(fmt.Errorf("i1 = %d. %v", i1, mesh.model.Points[i1]))
+						em.Add(fmt.Errorf("j        %v", mesh.model.Lines[j]))
+						em.Add(fmt.Errorf("j0 = %d. %v", j0, mesh.model.Points[j0]))
+						em.Add(fmt.Errorf("j1 = %d. %v", j1, mesh.model.Points[j1]))
+						em.Add(fmt.Errorf("line 1: %d inside %d", i, j))
+						em.Add(fmt.Errorf("propably intersection"))
+					}
+				}
+				if i0 != j1 && i1 != j1 {
+					_, _, stB := PointLine(
+						mesh.model.Points[j1],
+						mesh.model.Points[i0],
+						mesh.model.Points[i1],
+					)
+					if stB.Has(OnSegment) {
+						em.Add(fmt.Errorf("i        %v", mesh.model.Lines[i]))
+						em.Add(fmt.Errorf("i0 = %d. %v", i0, mesh.model.Points[i0]))
+						em.Add(fmt.Errorf("i1 = %d. %v", i1, mesh.model.Points[i1]))
+						em.Add(fmt.Errorf("j        %v", mesh.model.Lines[j]))
+						em.Add(fmt.Errorf("j0 = %d. %v", j0, mesh.model.Points[j0]))
+						em.Add(fmt.Errorf("j1 = %d. %v", j1, mesh.model.Points[j1]))
+						em.Add(fmt.Errorf("line 2: %d inside %d", i, j))
+						em.Add(fmt.Errorf("propably intersection"))
+					}
+				}
+			}
+		}
+		if em.IsError() {
+			et.Add(em)
+		}
+	}
+
 	// no error
 	return
 }
@@ -1845,7 +1910,6 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		err = et
 		return
 	}
-
 	// triangle edges on line
 again:
 	for i := 1; i < len(list); i++ {
@@ -1876,8 +1940,12 @@ again:
 		if found {
 			continue
 		}
-		mid := MiddlePoint(mesh.model.Points[idp1], mesh.model.Points[idp2])
-		var idp int
+		var (
+			p1  = mesh.model.Points[idp1]
+			p2  = mesh.model.Points[idp2]
+			mid = MiddlePoint(p1, p2)
+			idp int
+		)
 		idp, err = mesh.AddPoint(mid, Fixed)
 		if err != nil {
 			et := eTree.New("add mid")

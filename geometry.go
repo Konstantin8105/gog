@@ -261,38 +261,37 @@ func LineLine(
 		}
 	}
 
-	// collinear or parallel
-	Aa, Ba, Ca := Line(pa0, pa1)
-	Ab, Bb, Cb := Line(pb0, pb1)
+	// collinear lines
+	if Orientation(pa0, pa1, pb0) == CollinearPoints &&
+		Orientation(pa0, pa1, pb1) == CollinearPoints {
+		stA |= Collinear
+		stB |= Collinear
+		return
+	}
+	// parallel lines
 	if math.Abs((pa1.Y-pa0.Y)*(pb1.X-pb0.X)-(pb1.Y-pb0.Y)*(pa1.X-pa0.X)) < Eps {
-		collinear := false
-		switch {
-		case stA.Has(VerticalSegment) && stB.Has(VerticalSegment):
-			if math.Abs(pa0.X-pb0.X) < Eps {
-				collinear = true
-			}
-		case stA.Has(HorizontalSegment) && stB.Has(HorizontalSegment):
-			if math.Abs(pa0.Y-pb0.Y) < Eps {
-				collinear = true
-			}
-		default:
-			if Eps < math.Abs(Aa) && Eps < math.Abs(Ab) && math.Abs(Ca/Aa-Cb/Ab) < Eps {
-				collinear = true
-			}
-		}
-
-		if collinear {
-			stA |= Collinear
-			stB |= Collinear
-		} else {
-			stA |= Parallel
-			stB |= Parallel
-		}
+		stA |= Parallel
+		stB |= Parallel
 		return
 	}
 
 	// intersection point
+	Aa, Ba, Ca := Line(pa0, pa1)
+	Ab, Bb, Cb := Line(pb0, pb1)
 	x, y := Linear(Aa, Ba, -Ca, Ab, Bb, -Cb)
+	// only for orthogonal cases
+	if pa0.X == pa1.X {
+		x = pa0.X
+	}
+	if pa0.Y == pa1.Y {
+		y = pa0.Y
+	}
+	if pb0.X == pb1.X {
+		x = pb0.X
+	}
+	if pb0.Y == pb1.Y {
+		y = pb0.Y
+	}
 	root := Point{X: x, Y: y}
 	{
 		_, _, stBa := PointLine(root, pa0, pa1)
@@ -476,7 +475,7 @@ const (
 )
 
 func Orientation(p1, p2, p3 Point) OrientationPoints {
-	// check on middle point with collinear points
+	// middle point with collinear points
 	if mid := MiddlePoint(p1, p2); p3.X == mid.X && p3.Y == mid.Y {
 		return CollinearPoints
 	}
@@ -484,6 +483,13 @@ func Orientation(p1, p2, p3 Point) OrientationPoints {
 		return CollinearPoints
 	}
 	if mid := MiddlePoint(p1, p3); p2.X == mid.X && p2.Y == mid.Y {
+		return CollinearPoints
+	}
+	// vertical or horizontal collinear points
+	if p1.X == p2.X && p2.X == p3.X {
+		return CollinearPoints
+	}
+	if p1.Y == p2.Y && p2.Y == p3.Y {
 		return CollinearPoints
 	}
 

@@ -865,6 +865,7 @@ func (m *Model) Read(filename string) (err error) {
 		return
 	}
 	if len(dat) == 0 {
+		err = fmt.Errorf("file `%s` is empty", filename)
 		return
 	}
 	// we unmarshal our data which contains our slice
