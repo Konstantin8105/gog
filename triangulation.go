@@ -1852,6 +1852,13 @@ again:
 		// find triangle with that points
 		idp1 := list[i-1]
 		idp2 := list[i]
+		if idp1 == idp2 {
+			et := eTree.New("equal point index")
+			et.Add(fmt.Errorf("idp = %d", idp1))
+			et.Add(fmt.Errorf("list = %v", list))
+			err = et
+			return
+		}
 		found := false
 		for _, tri := range mesh.model.Triangles {
 			if tri[0] == Removed {
@@ -1866,7 +1873,6 @@ again:
 			found = true
 			break
 		}
-		fmt.Println(	">>>>", idp1, idp2, found)
 		if found {
 			continue
 		}
@@ -1880,7 +1886,7 @@ again:
 			err = et
 			return
 		}
-		list = append(list[:i-1], append([]int{idp}, list[i:]...)...)
+		list = append(list[:i], append([]int{idp}, list[i:]...)...)
 		if 1000 < len(list) {
 			err = fmt.Errorf("too big list")
 			return
