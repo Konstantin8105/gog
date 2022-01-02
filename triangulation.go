@@ -363,10 +363,10 @@ func (mesh Mesh) Check() (err error) {
 				j0 := mesh.model.Lines[j][0]
 				j1 := mesh.model.Lines[j][1]
 				if i0 == j0 && i1 == j1 {
-					em.Add(fmt.Errorf("line same points index"))
+					em.Add(fmt.Errorf("line same points index: %d %d", i0, i1))
 				}
 				if i1 == j0 && i0 == j1 {
-					em.Add(fmt.Errorf("line same points index"))
+					em.Add(fmt.Errorf("line same points index: %d %d", i0, i1))
 				}
 				if i0 != j0 && i1 != j0 {
 					_, _, stB := PointLine(
