@@ -138,7 +138,6 @@ func New(model Model) (mesh *Mesh, err error) {
 		if err = mesh.AddLine(
 			model.Points[model.Lines[i][0]],
 			model.Points[model.Lines[i][1]],
-			Fixed,
 		); err != nil {
 			return
 		}
@@ -1809,7 +1808,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 }
 
 // AddLine is add line in triangulation with tag
-func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
+func (mesh *Mesh) AddLine(p1, p2 Point) (err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("AddLine")
@@ -1824,10 +1823,13 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 		}
 	}
 	// add points of points
-	idp1, err1 := mesh.AddPoint(p1, tag)
-	idp2, err2 := mesh.AddPoint(p2, tag)
+	idp1, err1 := mesh.AddPoint(p1, Fixed)
+	idp2, err2 := mesh.AddPoint(p2, Fixed)
 	if err1 != nil || err2 != nil {
-		err = fmt.Errorf("%v. %v", err1, err2)
+		et := eTree.New("find points")
+		et.Add(err1)
+		et.Add(err2)
+		err = et
 		return
 	}
 	// find triangle with that points
@@ -1838,7 +1840,7 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 		if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
 			continue
 		}
-		mesh.model.AddLine(p1, p2, tag)
+		mesh.model.AddLine(p1, p2, Fixed)
 		if Debug {
 			if err = mesh.Check(); err != nil {
 				err = fmt.Errorf("check 3: %v", err)
@@ -1857,11 +1859,11 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 			return
 		}
 	}
-	if err = mesh.AddLine(p1, mid, tag); err != nil {
+	if err = mesh.AddLine(p1, mid); err != nil {
 		err = fmt.Errorf("check 5: %v", err)
 		return
 	}
-	if err = mesh.AddLine(mid, p2, tag); err != nil {
+	if err = mesh.AddLine(mid, p2); err != nil {
 		err = fmt.Errorf("check 6: %v", err)
 		return
 	}
