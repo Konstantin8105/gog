@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 )
@@ -850,7 +849,7 @@ func (m Model) Write(filename string) (err error) {
 		return
 	}
 	// write into file
-	err := os.WriteFile(filename, buf.Bytes(), 0666)
+	err = os.WriteFile(filename, buf.Bytes(), 0666)
 	if err != nil {
 		return
 	}
@@ -861,7 +860,7 @@ func (m Model) Write(filename string) (err error) {
 func (m *Model) Read(filename string) (err error) {
 	// read our opened file as a byte array.
 	var dat []byte
-	dat, err = ioutil.ReadAll(filename)
+	dat, err = os.ReadFile(filename)
 	if err != nil {
 		return
 	}
