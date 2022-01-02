@@ -1827,12 +1827,15 @@ again:
 		if pairs[index].removed {
 			continue
 		}
-		fmt.Println(	pairs)
 		if Debug {
 			if err = mesh.Check(); err != nil {
 				err = fmt.Errorf("check 0: %v", err)
 				return
 			}
+		}
+		if err = mesh.Delanay(); err != nil {
+			err = fmt.Errorf("Delanay: %v", err)
+			return
 		}
 		// add points of points
 		var idp1, idp2 int
@@ -1848,10 +1851,6 @@ again:
 			et := eTree.New("add p2")
 			et.Add(err)
 			err = et
-			return
-		}
-		if err = mesh.Delanay(); err != nil {
-			err = fmt.Errorf("Delanay: %v", err)
 			return
 		}
 		// find triangle with that points
@@ -1880,10 +1879,10 @@ again:
 				return
 			}
 		}
+		pairs[index].removed = true
 		pairs = append(pairs,
 			pair{p1: pairs[index].p1, p2: mid},
 			pair{p1: mid, p2: pairs[index].p2})
-		pairs[index].removed = true
 		goto again
 	}
 	return

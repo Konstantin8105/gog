@@ -348,15 +348,16 @@ func MiddlePoint(p0, p1 Point) Point {
 	//
 	// x, _ := x0.Float64()
 	// y, _ := y0.Float64()
-	//
-	// mid := Point{X: x, Y: y}
 
 	// Simple float64 algoritm:
-	mid := Point{
-		X: p0.X*0.5 + p1.X*0.5,
-		Y: p0.Y*0.5 + p1.Y*0.5,
+	x, y := p0.X, p0.Y
+	if p0.X != p1.X {
+		x = p0.X*0.5 + p1.X*0.5
 	}
-	return mid
+	if p0.Y != p1.Y {
+		y = p0.Y*0.5 + p1.Y*0.5
+	}
+	return Point{X: x, Y: y}
 }
 
 // LinePointDistance return distance between line and point
