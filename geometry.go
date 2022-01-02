@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/Konstantin8105/errors"
+	eTree "github.com/Konstantin8105/errors"
 	"github.com/Konstantin8105/pow"
 )
 
@@ -974,7 +975,14 @@ func Linear(
 ) (x, y float64) {
 	if math.Abs(a11) < Eps {
 		if math.Abs(a12) < Eps {
-			panic("cannot solve linear equations")
+			et := eTree.New("Linear")
+			et.Add(fmt.Errorf("a11 = %.5e", a11))
+			et.Add(fmt.Errorf("a12 = %.5e", a12))
+			et.Add(fmt.Errorf("b1  = %.5e", b1))
+			et.Add(fmt.Errorf("a21 = %.5e", a21))
+			et.Add(fmt.Errorf("a22 = %.5e", a22))
+			et.Add(fmt.Errorf("b2 = %.5e", b2))
+			panic(et)
 		}
 		// swap parameters
 		a11, a12 = a12, a11
