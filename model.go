@@ -2,8 +2,11 @@ package gog
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"os"
 )
 
 // Model of points, lines, arcs for prepare of triangulation
@@ -832,4 +835,43 @@ func (m *Model) ConvexHullTriangles() {
 	for i := 2; i < len(cps); i++ {
 		m.AddTriangle(cps[0], cps[i-2], cps[i-1], -1)
 	}
+}
+
+// Write model into file with filename in JSON format
+func (m Model) Write(filename string) (err error) {
+	// convert into json
+	b, err := json.Marshal(m)
+	if err != nil {
+		return
+	}
+	var buf bytes.Buffer
+	err = json.Indent(&buf, b, " ", "\t")
+	if err != nil {
+		return
+	}
+	// write into file
+	err := os.WriteFile(filename, buf.Bytes(), 0666)
+	if err != nil {
+		return
+	}
+	return nil
+}
+
+// Read model from file with filename in JSON format
+func (m *Model) Read(filename string) (err error) {
+	// read our opened file as a byte array.
+	var dat []byte
+	dat, err = ioutil.ReadAll(filename)
+	if err != nil {
+		return
+	}
+	if len(dat) == 0 {
+		return
+	}
+	// we unmarshal our data which contains our slice
+	err = json.Unmarshal(dat, m)
+	if err != nil {
+		return
+	}
+	return
 }
