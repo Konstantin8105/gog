@@ -1817,84 +1817,75 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		}
 	}()
 
-	type pair struct {
-		p1, p2  Point
-		removed bool
-	}
-	pairs := []pair{{p1: inp1, p2: inp2, removed: false}}
-	for {
-		for index := range pairs {
-			if pairs[index].removed {
-				continue
-			}
-			if Debug {
-				if err = mesh.Check(); err != nil {
-					err = fmt.Errorf("check 0: %v", err)
-					return
-				}
-			}
-			if err = mesh.Delanay(); err != nil {
-				err = fmt.Errorf("Delanay: %v", err)
-				return
-			}
-			// add points of points
-			var idp1, idp2 int
-			idp1, err = mesh.AddPoint(pairs[index].p1, Fixed)
-			if err != nil {
-				et := eTree.New("add p1")
-				et.Add(err)
-				err = et
-				return
-			}
-			idp2, err = mesh.AddPoint(pairs[index].p2, Fixed)
-			if err != nil {
-				et := eTree.New("add p2")
-				et.Add(err)
-				err = et
-				return
-			}
-			// find triangle with that points
-			found := false
-			for _, tri := range mesh.model.Triangles {
-				if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
-					continue
-				}
-				if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
-					continue
-				}
-				mesh.model.AddLine(pairs[index].p1, pairs[index].p2, Fixed)
-				pairs[index].removed = true
-				found = true
-				break
-			}
-			if found {
-				continue
-			}
-			// possible a few triangles on line
-
-			// add middle point
-			mid := MiddlePoint(pairs[index].p1, pairs[index].p2)
-			fmt.Println(	len(pairs), mid)
-			pairs[index].removed = true
-			pairs = append(pairs,
-				pair{p1: pairs[index].p1, p2: mid, removed: false},
-				pair{p1: mid, p2: pairs[index].p2, removed: false})
-		}
-		counter := 0
-		for _, p := range pairs {
-			if !p.removed {
-				counter++
-			}
-		}
-		if 0 < counter {
-			break
-		}
-	}
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 4: %v", err)
+	var list []int
+	if list, err = func() (_ []int, err error) {
+		// add points of points
+		var idp1, idp2 int
+		idp1, err = mesh.AddPoint(inp1, Fixed)
+		if err != nil {
+			et := eTree.New("add p1")
+			et.Add(err)
+			err = et
 			return
 		}
+		idp2, err = mesh.AddPoint(inp2, Fixed)
+		if err != nil {
+			et := eTree.New("add p2")
+			et.Add(err)
+			err = et
+			return
+		}
+		// put fixed lines
+		mesh.model.AddLine(inp1, inp2, Fixed)
+		// triangle edges on line
+		return []int{idp1, idp2}, nil
+	}(); err != nil {
+		return
+	}
+
+	// triangle edges on line
+	again:
+	for i := 1; i < len(list); i++ {
+		// find triangle with that points
+		idp1 := list[i-1]
+		idp2 := list[i]
+		found := false
+		for _, tri := range mesh.model.Triangles {
+			if tri[0] == Removed {
+				continue
+			}
+			if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
+				continue
+			}
+			if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
+				continue
+			}
+			found = true
+			break
+		}
+		if found {
+			continue
+		}
+		mid := MiddlePoint(mesh.model.Points[idp1], mesh.model.Points[idp2])
+		var idp int
+		idp, err = mesh.AddPoint(mid, Fixed)
+		if err != nil {
+			et := eTree.New("add mid")
+			et.Add(fmt.Errorf("mid = %e", mid))
+			et.Add(err)
+			err = et
+			return
+		}
+		var newList []int
+		newList = append(newList, list[:i-1]...)
+		newList = append(newList, idp)
+		newList = append(newList, list[i:]...)
+		list = newList
+		if 1000 < len(newList) {
+			err = fmt.Errorf("too big list")
+			return
+		}
+		goto again
 	}
 	return
 }
