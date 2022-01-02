@@ -1808,7 +1808,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 }
 
 // AddLine is add line in triangulation with tag
-func (mesh *Mesh) AddLine(p1, p2 Point) (err error) {
+func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("AddLine")
@@ -1817,9 +1817,16 @@ func (mesh *Mesh) AddLine(p1, p2 Point) (err error) {
 		}
 	}()
 
-	pairs := [][2]Point{{p1, p2}}
+	type pair struct {
+		p1, p2  Point
+		removed bool
+	}
+	pairs := []pair{{p1: inp1, p2: inp2, removed: false}}
 again:
 	for index := range pairs {
+		if pairs[index].removed {
+			continue
+		}
 		if Debug {
 			if err = mesh.Check(); err != nil {
 				err = fmt.Errorf("check 0: %v", err)
@@ -1828,14 +1835,14 @@ again:
 		}
 		// add points of points
 		var idp1, idp2 int
-		idp1, err = mesh.AddPoint(p1, Fixed)
+		idp1, err = mesh.AddPoint(pairs[index].p1, Fixed)
 		if err != nil {
 			et := eTree.New("add p1")
 			et.Add(err)
 			err = et
 			return
 		}
-		idp2, err = mesh.AddPoint(p2, Fixed)
+		idp2, err = mesh.AddPoint(pairs[index].p2, Fixed)
 		if err != nil {
 			et := eTree.New("add p2")
 			et.Add(err)
@@ -1843,6 +1850,7 @@ again:
 			return
 		}
 		// find triangle with that points
+		found := false
 		for _, tri := range mesh.model.Triangles {
 			if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
 				continue
@@ -1850,27 +1858,27 @@ again:
 			if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
 				continue
 			}
-			mesh.model.AddLine(p1, p2, Fixed)
-			if Debug {
-				if err = mesh.Check(); err != nil {
-					err = fmt.Errorf("check 3: %v", err)
-					return
-				}
-			}
-			return
+			mesh.model.AddLine(pairs[index].p1, pairs[index].p2, Fixed)
+			pairs[index].removed = true
+			found = true
+		}
+		if found {
+			continue
 		}
 		// possible a few triangles on line
 
 		// add middle point
-		mid := MiddlePoint(p1, p2)
+		mid := MiddlePoint(pairs[index].p1, pairs[index].p2)
 		if Debug {
 			if err = mesh.Check(); err != nil {
 				err = fmt.Errorf("check 4: %v", err)
 				return
 			}
 		}
-		pairs = append(pairs, [2]Point{p1, mid}, [2]Point{mid, p2})
-		pairs = append(pairs[:index], pairs[index+1:]...)
+		pairs = append(pairs,
+			pair{p1: pairs[index].p1, p2: mid},
+			pair{p1: mid, p2: pairs[index].p2})
+		pairs[index].removed = true
 		if err = mesh.Delanay(); err != nil {
 			err = fmt.Errorf("Delanay: %v", err)
 			return
