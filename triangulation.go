@@ -496,9 +496,9 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 			if mesh.Triangles[i].tr[state] != Boundary {
 				removedTriangles = append(removedTriangles, mesh.Triangles[i].tr[state])
 				update, err = mesh.repairTriangles(idp, removedTriangles, 100+state)
-				break
+			} else {
+				update, err = mesh.repairTriangles(idp, removedTriangles, 200+state)
 			}
-			update, err = mesh.repairTriangles(idp, removedTriangles, 200+state)
 		case 3:
 			update, err = mesh.repairTriangles(idp, removedTriangles, 300)
 		}
@@ -1823,12 +1823,18 @@ func (mesh *Mesh) AddLine(p1, p2 Point) (err error) {
 		}
 	}
 	// add points of points
-	idp1, err1 := mesh.AddPoint(p1, Fixed)
-	idp2, err2 := mesh.AddPoint(p2, Fixed)
-	if err1 != nil || err2 != nil {
-		et := eTree.New("find points")
-		et.Add(err1)
-		et.Add(err2)
+	var idp1, idp2 int
+	idp1, err = mesh.AddPoint(p1, Fixed)
+	if err != nil {
+		et := eTree.New("add p1")
+		et.Add(err)
+		err = et
+		return
+	}
+	idp2, err = mesh.AddPoint(p2, Fixed)
+	if err != nil {
+		et := eTree.New("add p1")
+		et.Add(err)
 		err = et
 		return
 	}
@@ -1860,11 +1866,15 @@ func (mesh *Mesh) AddLine(p1, p2 Point) (err error) {
 		}
 	}
 	if err = mesh.AddLine(p1, mid); err != nil {
-		err = fmt.Errorf("check 5: %v", err)
+		et := eTree.New("check 5")
+		et.Add(err)
+		err = et
 		return
 	}
 	if err = mesh.AddLine(mid, p2); err != nil {
-		err = fmt.Errorf("check 6: %v", err)
+		et := eTree.New("check 6")
+		et.Add(err)
+		err = et
 		return
 	}
 	if Debug {
