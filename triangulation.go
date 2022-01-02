@@ -1849,6 +1849,10 @@ again:
 			err = et
 			return
 		}
+		if err = mesh.Delanay(); err != nil {
+			err = fmt.Errorf("Delanay: %v", err)
+			return
+		}
 		// find triangle with that points
 		found := false
 		for _, tri := range mesh.model.Triangles {
@@ -1879,10 +1883,6 @@ again:
 			pair{p1: pairs[index].p1, p2: mid},
 			pair{p1: mid, p2: pairs[index].p2})
 		pairs[index].removed = true
-		if err = mesh.Delanay(); err != nil {
-			err = fmt.Errorf("Delanay: %v", err)
-			return
-		}
 		goto again
 	}
 	return
