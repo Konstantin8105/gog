@@ -40,7 +40,7 @@ func New(model Model) (mesh *Mesh, err error) {
 		if r := recover(); r != nil {
 			et := eTree.New("panic error")
 			et.Add(fmt.Errorf("stacktrace from panic: %s", string(debug.Stack())))
-			et.Add(fmt.Errorf("%v",r))
+			et.Add(fmt.Errorf("%v", r))
 			err = et
 		}
 	}()
@@ -1857,29 +1857,12 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 			return
 		}
 	}
-	if _, err = mesh.AddPoint(mid, tag); err != nil {
-		return
-	}
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 5: %v", err)
-			return
-		}
-	}
-
-	// delanay
-	if err = mesh.Delanay(); err != nil {
-		return
-	}
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 6: %v", err)
-			return
-		}
-	}
-
-	// add both lines
 	if err = mesh.AddLine(p1, mid, tag); err != nil {
+		err = fmt.Errorf("check 5: %v", err)
+		return
+	}
+	if err = mesh.AddLine(mid, p2, tag); err != nil {
+		err = fmt.Errorf("check 6: %v", err)
 		return
 	}
 	if Debug {
@@ -1888,16 +1871,6 @@ func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error) {
 			return
 		}
 	}
-	if err = mesh.AddLine(mid, p2, tag); err != nil {
-		return
-	}
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 8: %v", err)
-			return
-		}
-	}
-
 	return
 }
 
