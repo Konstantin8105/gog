@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"runtime/debug"
 	"sort"
 
 	eTree "github.com/Konstantin8105/errors"
@@ -32,6 +33,14 @@ func New(model Model) (mesh *Mesh, err error) {
 		if err != nil {
 			et := eTree.New("New")
 			et.Add(err)
+			err = et
+		}
+	}()
+	defer func() {
+		if r := recover(); r != nil {
+			et := eTree.New("panic error")
+			et.Add(fmt.Errorf("stacktrace from panic: %s", string(debug.Stack())))
+			et.Add(r)
 			err = et
 		}
 	}()
