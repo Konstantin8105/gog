@@ -392,13 +392,25 @@ func Line(p0, p1 Point) (A, B, C float64) {
 	var (
 		dy = p1.Y - p0.Y
 		dx = p1.X - p0.X
-		x1 = p0.X
-		y1 = p0.Y
 	)
 	// parameters of line
 	A = dy
 	B = -dx
-	C = -dy*x1 + dx*y1
+	// algoritm for float64
+	// C = -dy*p0.X + dx*p0.Y
+
+	// algoritm for float 128
+	const prec = 128
+	var (
+		pdy   = new(big.Float).SetPrec(prec).SetFloat64(-dy)
+		pdx   = new(big.Float).SetPrec(prec).SetFloat64(dx)
+		px    = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
+		py    = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
+		left  = new(big.Float).SetPrec(prec).Mul(pdy, px)
+		right = new(big.Float).SetPrec(prec).Mul(pdx, py)
+		summ  = new(big.Float).SetPrec(prec).Add(left, right)
+	)
+	C, _ = summ.Float64()
 	return
 }
 
@@ -998,9 +1010,36 @@ func Linear(
 			x, y = y, x
 		}()
 	}
-	// float64 algoritm
-	y = (b2 - a21/a11*b1) / (a22 - a21/a11*a12)
-	x = (b1 - a12*y) * 1 / a11
+	// algoritm for float64
+	// y = (b2*a11 - b1*a21) / (a22*a11 - a21*a12)
+	// x = (b1 - a12*y) / a11
+
+	// algoritm for float 128
+	const prec = 128
+	var (
+		pa11 = new(big.Float).SetPrec(prec).SetFloat64(a11)
+		pa12 = new(big.Float).SetPrec(prec).SetFloat64(a12)
+		pb1  = new(big.Float).SetPrec(prec).SetFloat64(b1)
+		pa21 = new(big.Float).SetPrec(prec).SetFloat64(a21)
+		pa22 = new(big.Float).SetPrec(prec).SetFloat64(a22)
+		pb2  = new(big.Float).SetPrec(prec).SetFloat64(b2)
+
+		b2a11   = new(big.Float).SetPrec(prec).Mul(pb2, pa11)
+		b1a21   = new(big.Float).SetPrec(prec).Mul(pb1, pa21)
+		subUp   = new(big.Float).SetPrec(prec).Sub(b2a11, b1a21)
+		a22a11  = new(big.Float).SetPrec(prec).Mul(pa22, pa11)
+		a21a12  = new(big.Float).SetPrec(prec).Mul(pa21, pa12)
+		subDown = new(big.Float).SetPrec(prec).Sub(a22a11, a21a12)
+		yQuo    = new(big.Float).SetPrec(prec).Quo(subUp, subDown)
+	)
+	y, _ = yQuo.Float64()
+	var (
+		a12y   = new(big.Float).SetPrec(prec).Mul(pa12, yQuo)
+		b1a12y = new(big.Float).SetPrec(prec).Sub(pb1, a12y)
+		xQuo   = new(big.Float).SetPrec(prec).Quo(b1a12y, pa11)
+	)
+	x, _ = xQuo.Float64()
+
 	return
 }
 
