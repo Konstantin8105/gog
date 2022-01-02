@@ -1816,72 +1816,66 @@ func (mesh *Mesh) AddLine(p1, p2 Point) (err error) {
 			err = et
 		}
 	}()
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 0: %v", err)
-			return
-		}
-	}
-	// add points of points
-	var idp1, idp2 int
-	idp1, err = mesh.AddPoint(p1, Fixed)
-	if err != nil {
-		et := eTree.New("add p1")
-		et.Add(err)
-		err = et
-		return
-	}
-	idp2, err = mesh.AddPoint(p2, Fixed)
-	if err != nil {
-		et := eTree.New("add p1")
-		et.Add(err)
-		err = et
-		return
-	}
-	// find triangle with that points
-	for _, tri := range mesh.model.Triangles {
-		if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
-			continue
-		}
-		if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
-			continue
-		}
-		mesh.model.AddLine(p1, p2, Fixed)
+
+	pairs := [][2]Point{{p1, p2}}
+again:
+	for index := range pairs {
 		if Debug {
 			if err = mesh.Check(); err != nil {
-				err = fmt.Errorf("check 3: %v", err)
+				err = fmt.Errorf("check 0: %v", err)
 				return
 			}
 		}
-		return
-	}
-	// possible a few triangles on line
+		// add points of points
+		var idp1, idp2 int
+		idp1, err = mesh.AddPoint(p1, Fixed)
+		if err != nil {
+			et := eTree.New("add p1")
+			et.Add(err)
+			err = et
+			return
+		}
+		idp2, err = mesh.AddPoint(p2, Fixed)
+		if err != nil {
+			et := eTree.New("add p2")
+			et.Add(err)
+			err = et
+			return
+		}
+		// find triangle with that points
+		for _, tri := range mesh.model.Triangles {
+			if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
+				continue
+			}
+			if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
+				continue
+			}
+			mesh.model.AddLine(p1, p2, Fixed)
+			if Debug {
+				if err = mesh.Check(); err != nil {
+					err = fmt.Errorf("check 3: %v", err)
+					return
+				}
+			}
+			return
+		}
+		// possible a few triangles on line
 
-	// add middle point
-	mid := MiddlePoint(p1, p2)
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 4: %v", err)
+		// add middle point
+		mid := MiddlePoint(p1, p2)
+		if Debug {
+			if err = mesh.Check(); err != nil {
+				err = fmt.Errorf("check 4: %v", err)
+				return
+			}
+		}
+		pairs = append(pairs, [2]Point{p1, mid}, [2]Point{mid, p2})
+		pairs = append(pairs[:index], pairs[index+1:]...)
+		if err = mesh.Delanay(); err != nil {
+			err = fmt.Errorf("Delanay: %v", err)
 			return
 		}
-	}
-	if err = mesh.AddLine(p1, mid); err != nil {
-		et := eTree.New("check 5")
-		et.Add(err)
-		err = et
-		return
-	}
-	if err = mesh.AddLine(mid, p2); err != nil {
-		et := eTree.New("check 6")
-		et.Add(err)
-		err = et
-		return
-	}
-	if Debug {
-		if err = mesh.Check(); err != nil {
-			err = fmt.Errorf("check 7: %v", err)
-			return
-		}
+		goto again
 	}
 	return
 }
