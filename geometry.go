@@ -1069,7 +1069,11 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 func AngleBetween(center, from, mid, to, a Point) (res bool) {
 	switch Orientation(from, mid, to) {
 	case CollinearPoints:
-		panic("collinear")
+		et := eTree.New("AngleBetween: collinear")
+		et.Add(fmt.Errorf("from = %.12e", from))
+		et.Add(fmt.Errorf("mid  = %.12e", mid))
+		et.Add(fmt.Errorf("to   = %.12e", to))
+		panic(et)
 	case ClockwisePoints:
 		return AngleBetween(center, to, mid, from, a)
 	}

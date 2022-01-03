@@ -352,21 +352,22 @@ func (mesh Mesh) Check() (err error) {
 				if i <= j {
 					continue
 				}
-				if mesh.model.Lines[i][2] == Removed{
+				if mesh.model.Lines[i][2] == Removed {
 					continue
 				}
-				if mesh.model.Lines[j][2] == Removed{
+				if mesh.model.Lines[j][2] == Removed {
 					continue
 				}
 				i0 := mesh.model.Lines[i][0]
 				i1 := mesh.model.Lines[i][1]
 				j0 := mesh.model.Lines[j][0]
 				j1 := mesh.model.Lines[j][1]
-				if i0 == j0 && i1 == j1 {
+				if (i0 == j0 && i1 == j1) || (i1 == j0 && i0 == j1) {
 					em.Add(fmt.Errorf("line same points index: %d %d", i0, i1))
-				}
-				if i1 == j0 && i0 == j1 {
-					em.Add(fmt.Errorf("line same points index: %d %d", i0, i1))
+					em.Add(fmt.Errorf("Coord: %2d %.12e", i0,	mesh.model.Points[i0] ))
+					em.Add(fmt.Errorf("Coord: %2d %.12e", i1,	mesh.model.Points[i1] ))
+					em.Add(fmt.Errorf("Case %v", (i0 == j0 && i1 == j1)))
+					em.Add(fmt.Errorf("Case %v", (i1 == j0 && i0 == j1)))
 				}
 				if i0 != j0 && i1 != j0 {
 					_, _, stB := PointLine(
@@ -465,13 +466,6 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 			return
 		}
 	}
-	defer func() {
-		if Debug {
-			if err2 := mesh.Check(); err2 != nil {
-				err = eTree.New("Check err2").Add(err).Add(err2)
-			}
-		}
-	}()
 
 	add := func() (idp int) {
 		// index of new point
@@ -552,6 +546,11 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 
 		// repair near triangles
 		var update []int
+		if Debug {
+			if err := mesh.Check(); err != nil {
+				err = eTree.New("Before repair").Add(err)
+			}
+		}
 
 		// find intersect side and near triangle if exist
 		switch len(res) {
@@ -580,8 +579,14 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 			et.Add(fmt.Errorf("len of res: %d", len(res)))
 			err = et
 		}
+		break
 	}
 	// outside of triangles or on corners
+	if Debug {
+		if err := mesh.Check(); err != nil {
+			err = eTree.New("Check at the end").Add(err)
+		}
+	}
 	return
 }
 
@@ -975,9 +980,12 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (updateTr []int, 
 						mesh.model.Points[ap],
 					) == CollinearPoints,
 				))
-				et.Add(fmt.Errorf("Point %d: %v", chains[i].from, mesh.model.Points[chains[i].from]))
-				et.Add(fmt.Errorf("Point %d: %v", chains[i].to, mesh.model.Points[chains[i].to]))
-				et.Add(fmt.Errorf("Point %d: %v", ap, mesh.model.Points[ap]))
+				et.Add(fmt.Errorf("Point %d: %e",
+					chains[i].from, mesh.model.Points[chains[i].from]))
+				et.Add(fmt.Errorf("Point %d: %e",
+					chains[i].to, mesh.model.Points[chains[i].to]))
+				et.Add(fmt.Errorf("Point %d: %e",
+					ap, mesh.model.Points[ap]))
 			}
 			for _, r := range rt {
 				et.Add(fmt.Errorf("remove triangle %d", r))
@@ -1950,6 +1958,8 @@ again:
 		if err != nil {
 			et := eTree.New("add mid")
 			et.Add(fmt.Errorf("mid = %e", mid))
+			et.Add(fmt.Errorf("len(list) = %d", len(list)))
+			et.Add(fmt.Errorf("list = %v", list))
 			et.Add(err)
 			err = et
 			return

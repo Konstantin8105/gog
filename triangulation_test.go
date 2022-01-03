@@ -250,6 +250,13 @@ func TestTriangulation(t *testing.T) {
 					t.Fatal(r)
 				}
 			}()
+			if err := ioutil.WriteFile(
+				ts.name+".model.dxf",
+				[]byte(ts.model.Dxf()),
+				0644,
+			); err != nil {
+				t.Error(err)
+			}
 			mesh, err := New(ts.model)
 			if err != nil {
 				t.Fatal(err)
