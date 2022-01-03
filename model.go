@@ -589,6 +589,15 @@ func (m *Model) Intersection() {
 					if intersectLines[ja] {
 						continue
 					}
+					if !boxIntersect(
+						[]Point{m.Points[ip]},
+						[]Point{
+							m.Points[m.Lines[ja][0]],
+							m.Points[m.Lines[ja][1]],
+						},
+					) {
+						continue
+					}
 					// analyse
 					pi, _, stB := PointLine(
 						// Point
@@ -640,6 +649,16 @@ func (m *Model) Intersection() {
 				for jt := 0; jt < sizeTrs; jt++ {
 					// ignore intersection lines
 					if intersectTr[jt] {
+						continue
+					}
+					if !boxIntersect(
+						[]Point{m.Points[ip]},
+						[]Point{
+							m.Points[m.Triangles[jt][0]],
+							m.Points[m.Triangles[jt][1]],
+							m.Points[m.Triangles[jt][2]],
+						},
+					) {
 						continue
 					}
 					tag := m.Triangles[jt][3]
