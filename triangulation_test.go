@@ -184,7 +184,6 @@ func TestTriangulation(t *testing.T) {
 					model.AddLine(pnts[i-1], pnts[i], 8)
 				}
 			}
-			model.Intersection()
 			t = append(t, testcase{
 				name:  fmt.Sprintf("%s.%v", name, lines),
 				model: model,
@@ -250,6 +249,21 @@ func TestTriangulation(t *testing.T) {
 					t.Fatal(r)
 				}
 			}()
+			// distance
+			var dist float64
+			dist = ts.model.MinPointDistance()
+			{
+				xmax := -math.MaxFloat64
+				xmin := +math.MaxFloat64
+				for i := range ts.model.Points {
+					xmax = math.Max(xmax, ts.model.Points[i].X)
+					xmin = math.Min(xmin, ts.model.Points[i].X)
+				}
+				dist = math.Max(dist, math.Abs(xmax-xmin)/10.0)
+			}
+			ts.model.Intersection()
+			ts.model.Split(dist)
+			ts.model.ArcsToLines()
 			if err := ioutil.WriteFile(
 				ts.name+".model.dxf",
 				[]byte(ts.model.Dxf()),
@@ -280,18 +294,6 @@ func TestTriangulation(t *testing.T) {
 					t.Error(err)
 				}
 			}()
-			// distance
-			var dist float64
-			dist = ts.model.MinPointDistance()
-			{
-				xmax := -math.MaxFloat64
-				xmin := +math.MaxFloat64
-				for i := range ts.model.Points {
-					xmax = math.Max(xmax, ts.model.Points[i].X)
-					xmin = math.Min(xmin, ts.model.Points[i].X)
-				}
-				dist = math.Max(dist, math.Abs(xmax-xmin)/10.0)
-			}
 			err = mesh.Split(dist)
 			if err != nil {
 				t.Fatalf("check 1a: %v", err)
@@ -315,6 +317,9 @@ func TestTriangulation(t *testing.T) {
 			err = mesh.Check()
 			if err != nil {
 				t.Fatalf("check 5: %v", err)
+			}
+			for i := range mesh.model.Triangles {
+				mesh.model.Triangles[i][3] = 42
 			}
 			err = mesh.Check()
 			if err != nil {

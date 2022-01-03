@@ -566,11 +566,7 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	}
 	// Point - Line
 	{
-		A01, B01, C01 := Line(Arc0, Arc1)
-		A12, B12, C12 := Line(Arc1, Arc2)
-		if math.Abs(A01-A12) < Eps &&
-			math.Abs(B01-B12) < Eps &&
-			math.Abs(C01-C12) < Eps {
+		if Orientation(Arc0, Arc1, Arc2) == CollinearPoints {
 			pi, stA, stB = PointLine(pt, Arc0, Arc2)
 			stB |= ArcIsLine
 			return
@@ -605,13 +601,10 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	}
 
 	// point is on arc ?
-	if stB.Not(OnPoint0Segment) && stB.Not(OnPoint1Segment) && AngleBetween(
-		Point{X: xc, Y: yc},
-		Arc0,
-		Arc1,
-		Arc2,
-		pt,
-	) {
+	if stB.Has(OnPoint0Segment) || stB.Has(OnPoint1Segment) {
+		return
+	}
+	if AngleBetween(Point{X: xc, Y: yc}, Arc0, Arc1, Arc2, pt) {
 		stB |= OnSegment
 	}
 
@@ -872,7 +865,11 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err error) {
 	switch Orientation(Arc0, Arc1, Arc2) {
 	case CollinearPoints:
-		panic("collinear")
+		et := eTree.New("ArcSplitByPoint: collinear")
+		et.Add(fmt.Errorf("Arc0 = %.12e",Arc0 ))
+		et.Add(fmt.Errorf("Arc1 = %.12e",Arc1 ))
+		et.Add(fmt.Errorf("Arc2 = %.12e",Arc2 ))
+		panic(et)
 	case ClockwisePoints:
 		res, err = ArcSplitByPoint(Arc2, Arc1, Arc0, pi...)
 		for i := range res {

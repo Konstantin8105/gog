@@ -547,7 +547,7 @@ func (m *Model) Intersection() {
 					// for cases - no need update the line:
 					// OnPoint0SegmentB, OnPoint1SegmentB
 					//
-					if stB.Has(OnSegment) {
+					if stB.Has(OnSegment) && 0 < len(pi) {
 						tag := m.Arcs[ja][3]
 						res, err := ArcSplitByPoint(
 							m.Points[m.Arcs[ja][0]],
@@ -692,13 +692,17 @@ func (m *Model) Intersection() {
 			return
 		},
 	}
-	ai := 0
-	for _, f := range fs {
-		ai += f()
-	}
-	if 0 < ai {
-		m.Intersection()
-		return
+	for iter := 0; ; iter++ {
+		ai := 0
+		for _, f := range fs {
+			ai += f()
+		}
+		if ai == 0 {
+			break
+		}
+		if iter == 1000 {
+			panic("too many intersections")
+		}
 	}
 }
 
@@ -827,12 +831,11 @@ func (m *Model) Split(d float64) {
 		size := len(m.Arcs)
 		split := make([]bool, size)
 		for ia := 0; ia < size; ia++ {
-			var arcs [][3]Point
-			arcs = append(arcs, [3]Point{
+			arcs := [][3]Point{{
 				m.Points[m.Arcs[ia][0]],
 				m.Points[m.Arcs[ia][1]],
 				m.Points[m.Arcs[ia][2]],
-			})
+			}}
 
 			for iter := 0; iter < 100; iter++ {
 				// preliminary calculation arc length
