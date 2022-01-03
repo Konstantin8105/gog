@@ -1302,5 +1302,8 @@ func ConvexHull(points []Point) (chain []Point) {
 }
 
 func SamePoints(p0, p1 Point) bool {
+	if p0.X == p1.X && p0.Y == p1.Y {
+		return true
+	}
 	return Distance(p0, p1) < Eps
 }
