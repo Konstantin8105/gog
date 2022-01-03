@@ -695,10 +695,10 @@ func (m *Model) Intersection() {
 	ai := 0
 	for _, f := range fs {
 		ai += f()
-		if 0 < ai {
-			m.Intersection()
-			return
-		}
+	}
+	if 0 < ai {
+		m.Intersection()
+		return
 	}
 }
 
