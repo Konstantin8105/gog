@@ -44,6 +44,11 @@ func New(model Model) (mesh *Mesh, err error) {
 			err = et
 		}
 	}()
+	// prepare model before triangulation
+	model.Intersection()
+	if 0 < len(model.Arcs) {
+		model.ArcsToLines()
+	}
 	// create a new Mesh
 	mesh = new(Mesh)
 	// convex
@@ -364,8 +369,8 @@ func (mesh Mesh) Check() (err error) {
 				j1 := mesh.model.Lines[j][1]
 				if (i0 == j0 && i1 == j1) || (i1 == j0 && i0 == j1) {
 					em.Add(fmt.Errorf("line same points index: %d %d", i0, i1))
-					em.Add(fmt.Errorf("Coord: %2d %.12e", i0,	mesh.model.Points[i0] ))
-					em.Add(fmt.Errorf("Coord: %2d %.12e", i1,	mesh.model.Points[i1] ))
+					em.Add(fmt.Errorf("Coord: %2d %.12e", i0, mesh.model.Points[i0]))
+					em.Add(fmt.Errorf("Coord: %2d %.12e", i1, mesh.model.Points[i1]))
 					em.Add(fmt.Errorf("Case %v", (i0 == j0 && i1 == j1)))
 					em.Add(fmt.Errorf("Case %v", (i1 == j0 && i0 == j1)))
 				}
