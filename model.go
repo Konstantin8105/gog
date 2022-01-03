@@ -213,6 +213,37 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int) {
 // Intersection change model with finding all model intersections
 func (m *Model) Intersection() {
 	// value `ai` is amount of intersections
+	box := func(ps []Point) (xmin, xmax, ymin, ymax float64) {
+		xmin = +math.MaxFloat64
+		xmax = -math.MaxFloat64
+		ymin = +math.MaxFloat64
+		ymax = -math.MaxFloat64
+		for i := range ps {
+			xmin = math.Min(xmin, ps[i].X)
+			xmax = math.Max(xmax, ps[i].X)
+			ymin = math.Min(ymin, ps[i].Y)
+			ymax = math.Max(ymax, ps[i].Y)
+		}
+		return
+	}
+	boxIntersect := func(A, B []Point) bool {
+		Axin, Axax, Ayin, Ayax := box(A)
+		Bxin, Bxax, Byin, Byax := box(B)
+		if Axax < Bxin {
+			return false
+		}
+		if Bxax < Axin {
+			return false
+		}
+		if Ayax < Byin {
+			return false
+		}
+		if Byax < Ayin {
+			return false
+		}
+		// try or may-be
+		return true
+	}
 
 	// find intersections
 	fs := []func() int{
@@ -224,6 +255,12 @@ func (m *Model) Intersection() {
 				for jl := 0; jl < size; jl++ {
 					// ignore intersection lines
 					if il <= jl || intersect[il] || intersect[jl] {
+						continue
+					}
+					if !boxIntersect(
+						[]Point{m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]]},
+						[]Point{m.Points[m.Lines[jl][0]], m.Points[m.Lines[jl][1]]},
+					) {
 						continue
 					}
 					// analyse
@@ -298,6 +335,16 @@ func (m *Model) Intersection() {
 				for ja := 0; ja < sizeArcs; ja++ {
 					// ignore intersection lines
 					if intersectLines[il] || intersectArcs[ja] {
+						continue
+					}
+					if !boxIntersect(
+						[]Point{m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]]},
+						[]Point{
+							m.Points[m.Arcs[ja][0]],
+							m.Points[m.Arcs[ja][1]],
+							m.Points[m.Arcs[ja][2]],
+						},
+					) {
 						continue
 					}
 					// analyse
@@ -470,6 +517,16 @@ func (m *Model) Intersection() {
 						if ignore {
 							continue
 						}
+					}
+					if !boxIntersect(
+						[]Point{m.Points[ip]},
+						[]Point{
+							m.Points[m.Arcs[ja][0]],
+							m.Points[m.Arcs[ja][1]],
+							m.Points[m.Arcs[ja][2]],
+						},
+					) {
+						continue
 					}
 
 					// analyse
