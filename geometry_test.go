@@ -889,6 +889,39 @@ func TestCodeStyle(t *testing.T) {
 	cs.All(t)
 }
 
+func ExampleLinear() {
+	var (
+		a11, a12, b1 float64 = +8.1, 2 * math.Pi, +38.5e3
+		a21, a22, b2 float64 = math.Pi, -5.8, -1.75
+	)
+	x, y := Linear(
+		a11, a12, b1,
+		a21, a22, b2,
+	)
+
+	fmt.Fprintf(os.Stdout, "Result:\nx=%.20e\ny=%.20e\n", x, y)
+	tols := []float64{
+		math.FMA(a11, x, math.FMA(a12, y, -b1)),
+		math.FMA(a21, x, math.FMA(a22, y, -b2)),
+		a11*x + a12*y - b1,
+		a21*x + a22*y - b2,
+	}
+	fmt.Fprintf(os.Stdout, "Tolerance:\n")
+	for _, tol := range tols {
+		fmt.Fprintf(os.Stdout, "%.20e\n", tol)
+	}
+
+	// Output:
+	// Result:
+	// x=3.34669742693982516357e+03
+	// y=1.81305345694172729054e+03
+	// Tolerance:
+	// -1.37088471310414134179e-12
+	// 2.80328409648389926091e-13
+	// 0.00000000000000000000e+00
+	// 0.00000000000000000000e+00
+}
+
 func Benchmark(b *testing.B) {
 	pps := []Point{
 		Point{X: 1, Y: 1}, // 0
