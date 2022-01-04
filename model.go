@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sort"
 )
 
 // Model of points, lines, arcs for prepare of triangulation
@@ -716,6 +717,7 @@ func (m *Model) Rotate(xc, yc, angle float64) {
 	}
 }
 
+// Move all points of model
 func (m *Model) Move(dx, dy float64) {
 	for i := range m.Points {
 		m.Points[i] = Point{
@@ -725,10 +727,23 @@ func (m *Model) Move(dx, dy float64) {
 	}
 }
 
-func (m *Model) RemovePoint() {
-	// TODO
+// RemovePoint removed point in accoding to function `filter`
+func (m *Model) RemovePoint(remove func(p Point) bool) {
+	pt := make([]bool, len(m.Points))
+	for i := range m.Points {
+		pt[i] = !remove(m.Points[i])
+	}
+	var rs []int
+	for i := range pt {
+		if pt[i] {
+			continue
+		}
+		rs = append(rs, i)
+	}
+	m.removePointByIndex(rs...)
 }
 
+// RemoveEmptyPoints removed point not connected to line, arcs, triangles
 func (m *Model) RemoveEmptyPoints() {
 	// find all used points
 	pt := make([]bool, len(m.Points))
@@ -747,13 +762,52 @@ func (m *Model) RemoveEmptyPoints() {
 			pt[m.Triangles[i][j]] = true
 		}
 	}
-
-	for r := len(m.Points) - 1; 0 <= r; r-- {
-		if pt[r] {
-			// ignore used point
+	var remove []int
+	for i := range pt {
+		if pt[i] {
 			continue
 		}
+		remove = append(remove, i)
+	}
+	m.removePointByIndex(remove...)
+}
+
+func (m *Model) removePointByIndex(remove ...int) {
+	if len(remove) == 0 {
+		return
+	}
+	// sort
+	sort.Ints(remove)
+	// check
+	for i := range remove {
+		if i == 0 {
+			continue
+		}
+		if remove[i-1] == remove[i] {
+			panic("same indexes")
+		}
+	}
+	// reverse
+	for i := len(remove)/2 - 1; i >= 0; i-- {
+		opp := len(remove) - 1 - i
+		remove[i], remove[opp] = remove[opp], remove[i]
+	}
+	// removing
+	for _, r := range remove {
 		// remove points in lines
+		for i, size := len(m.Lines)-1, 2; 0 <= i; i-- {
+			found := false
+			for j := 0; j < size; j++ {
+				if r == m.Lines[i][j] {
+					found = true
+				}
+			}
+			if !found {
+				continue
+			}
+			m.Lines = append(m.Lines[:i], m.Lines[i+1:]...)
+		}
+		// correction of point index
 		for i := range m.Lines {
 			for j := 0; j < 2; j++ {
 				if r < m.Lines[i][j] {
@@ -762,6 +816,19 @@ func (m *Model) RemoveEmptyPoints() {
 			}
 		}
 		// remove points in arcs
+		for i, size := len(m.Arcs)-1, 3; 0 <= i; i-- {
+			found := false
+			for j := 0; j < size; j++ {
+				if r == m.Arcs[i][j] {
+					found = true
+				}
+			}
+			if !found {
+				continue
+			}
+			m.Arcs = append(m.Arcs[:i], m.Arcs[i+1:]...)
+		}
+		// correction of point index
 		for i := range m.Arcs {
 			for j := 0; j < 3; j++ {
 				if r < m.Arcs[i][j] {
@@ -770,6 +837,19 @@ func (m *Model) RemoveEmptyPoints() {
 			}
 		}
 		// remove points in triangles
+		for i, size := len(m.Triangles)-1, 3; 0 <= i; i-- {
+			found := false
+			for j := 0; j < size; j++ {
+				if r == m.Triangles[i][j] {
+					found = true
+				}
+			}
+			if !found {
+				continue
+			}
+			m.Triangles = append(m.Triangles[:i], m.Triangles[i+1:]...)
+		}
+		// correction of point index
 		for i := range m.Triangles {
 			for j := 0; j < 3; j++ {
 				if r < m.Triangles[i][j] {

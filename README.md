@@ -157,7 +157,7 @@ type Mesh struct {
 func New(model Model) (mesh *Mesh, err error)
     New triangulation created by model
 
-func (mesh *Mesh) AddLine(p1, p2 Point, tag int) (err error)
+func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error)
     AddLine is add line in triangulation with tag
 
 func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error)
@@ -233,10 +233,16 @@ func (m Model) MinPointDistance() (distance float64)
     MinPointDistance return minimal between 2 points
 
 func (m *Model) Move(dx, dy float64)
+    Move all points of model
+
+func (m *Model) Read(filename string) (err error)
+    Read model from file with filename in JSON format
 
 func (m *Model) RemoveEmptyPoints()
+    RemoveEmptyPoints removed point not connected to line, arcs, triangles
 
-func (m *Model) RemovePoint()
+func (m *Model) RemovePoint(remove func(p Point) bool)
+    RemovePoint removed point in accoding to function `filter`
 
 func (m *Model) Rotate(xc, yc, angle float64)
 
@@ -244,6 +250,9 @@ func (m *Model) Split(d float64)
 
 func (m Model) String() string
     String return a stantard model view
+
+func (m Model) Write(filename string) (err error)
+    Write model into file with filename in JSON format
 
 type OrientationPoints int8
 
