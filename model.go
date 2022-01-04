@@ -963,11 +963,13 @@ func (m Model) MinPointDistance() (distance float64) {
 				continue
 			}
 			// calculation
-			distance = math.Min(distance,
-				math.Hypot(
-					m.Points[i].X-m.Points[j].X,
-					m.Points[i].Y-m.Points[j].Y,
-				))
+			d := math.Hypot(
+				m.Points[i].X-m.Points[j].X,
+				m.Points[i].Y-m.Points[j].Y,
+			)
+			if d < distance {
+				distance = d
+			}
 		}
 	}
 	return

@@ -3,6 +3,7 @@ package gog
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"math"
 	"runtime/debug"
 	"sort"
@@ -17,7 +18,10 @@ type Mesh struct {
 	// TODO
 }
 
-var Debug = false
+var (
+	Debug = false
+	Log   = false
+)
 
 const (
 	Boundary  = -1
@@ -29,6 +33,9 @@ const (
 
 // New triangulation created by model
 func New(model Model) (mesh *Mesh, err error) {
+	if Log {
+		log.Printf("New")
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("New")
@@ -95,6 +102,10 @@ func New(model Model) (mesh *Mesh, err error) {
 		}
 		_, err = mesh.AddPoint(model.Points[i], Fixed)
 		if err != nil {
+			et := eTree.New("In add point")
+			et.Add(fmt.Errorf("point %d of %d", i, len(model.Points)))
+			et.Add(err)
+			err = et
 			return
 		}
 		if Debug {
@@ -160,6 +171,9 @@ func New(model Model) (mesh *Mesh, err error) {
 
 // Check triangulation on point, line, triangle rules
 func (mesh Mesh) Check() (err error) {
+	// if Log {
+	// 	log.Printf("Check")
+	// }
 	et := eTree.New("check")
 	defer func() {
 		if et.IsError() {
@@ -420,6 +434,9 @@ func (mesh Mesh) Check() (err error) {
 }
 
 func (model *Model) Get(mesh *Mesh) {
+	if Log {
+		log.Printf("Get")
+	}
 	for _, tr := range mesh.model.Triangles {
 		if tr[0] == Removed {
 			continue
@@ -436,6 +453,9 @@ func (model *Model) Get(mesh *Mesh) {
 
 // Clockwise change all triangles to clockwise orientation
 func (mesh *Mesh) Clockwise() {
+	if Log {
+		log.Printf("Clockwise")
+	}
 	for i := range mesh.model.Triangles {
 		switch Orientation(
 			mesh.model.Points[mesh.model.Triangles[i][0]],
@@ -455,6 +475,9 @@ func (mesh *Mesh) Clockwise() {
 
 // AddPoint is add points with tag
 func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
+	if Log {
+		log.Printf("AddPoint: %.20e. tag = %d", p, tag)
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("AddPoint")
@@ -495,6 +518,7 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 		if mesh.model.Lines[i][2] == Removed {
 			continue
 		}
+		// TODO fast box checking
 		_, _, stB := PointLine(
 			p,
 			mesh.model.Points[mesh.model.Lines[i][0]],
@@ -549,13 +573,8 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 		// removed triangles
 		removedTriangles := []int{i}
 
-		// repair near triangles
-		var update []int
-		if Debug {
-			if err := mesh.Check(); err != nil {
-				err = eTree.New("Before repair").Add(err)
-			}
-		}
+		// status
+		var status int
 
 		// find intersect side and near triangle if exist
 		switch len(res) {
@@ -564,14 +583,22 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 			// point on some line
 			if mesh.Triangles[i].tr[state] != Boundary {
 				removedTriangles = append(removedTriangles, mesh.Triangles[i].tr[state])
-				update, err = mesh.repairTriangles(idp, removedTriangles, 100+state)
+				status = 100 + state
 			} else {
-				update, err = mesh.repairTriangles(idp, removedTriangles, 200+state)
+				status = 200 + state
 			}
 		case 3:
-			update, err = mesh.repairTriangles(idp, removedTriangles, 300)
+			status = 300
 		}
+
+
+		// repair near triangles
+		var update []int
+		update, err = mesh.repairTriangles(idp, removedTriangles, status)
 		if err != nil {
+			et := eTree.New("After repairTriangles")
+			et.Add(err)
+			err = et
 			return
 		}
 
@@ -614,6 +641,9 @@ func (mesh *Mesh) shiftTriangle(i int) {
 //	200 - point on line with 1 boundary triangle
 //	300 - point in triangle
 func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (updateTr []int, err error) {
+	if Log {
+		log.Printf("repairTriangles: ap=%d state = %d",ap, state)
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("repairTriangles")
@@ -1021,6 +1051,9 @@ func (mesh *Mesh) swap(elem, from, to int) {
 
 // TODO delanay only for some triangles, if list empty then for  all triangles
 func (mesh *Mesh) Delanay(tri ...int) (err error) {
+	if Log {
+		log.Printf("Delanay: amount %d", len(tri))
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("Delanay")
@@ -1267,6 +1300,9 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 
 // GetMaterials return materials for each point
 func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
+	if Log {
+		log.Printf("GetMaterials")
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("GetMaterials")
@@ -1371,6 +1407,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 // If points slice is not empty, then return material mark number for
 // each point
 func (mesh *Mesh) Materials() (err error) {
+	if Log {
+		log.Printf("Materials")
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("Materials")
@@ -1462,6 +1501,9 @@ func (mesh *Mesh) Materials() (err error) {
 
 // Smooth move all movable point by average distance
 func (mesh *Mesh) Smooth(pts ...int) (err error) {
+	if Log {
+		log.Printf("Smooth")
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("Smooth")
@@ -1635,6 +1677,9 @@ func (mesh *Mesh) Smooth(pts ...int) (err error) {
 
 // Split all triangles edge on distance `d`
 func (mesh *Mesh) Split(d float64) (err error) {
+	if Log {
+		log.Printf("Split")
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("Split")
@@ -1887,6 +1932,9 @@ func (mesh *Mesh) Split(d float64) (err error) {
 
 // AddLine is add line in triangulation with tag
 func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
+	if Log {
+		log.Printf("AddLine")
+	}
 	defer func() {
 		if err != nil {
 			et := eTree.New("AddLine")

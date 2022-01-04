@@ -167,6 +167,13 @@ func TestTriangulation(t *testing.T) {
 		}()
 	}
 
+	if Log == false {
+		Log = true
+		defer func() {
+			Log = false
+		}()
+	}
+
 	type testcase struct {
 		name  string
 		model Model
@@ -238,6 +245,27 @@ func TestTriangulation(t *testing.T) {
 				model: model,
 			})
 		}
+	}
+
+	// small square
+	for i := 1; i < 5; i++ { // TODO : need more 5
+		var model Model
+		var (
+			v = math.Pow10(-i)
+			a = Point{X: 0, Y: 0}
+			b = Point{X: v, Y: 0}
+			c = Point{X: v, Y: v}
+			d = Point{X: 0, Y: v}
+		)
+		model.AddLine(a, b, 10)
+		model.AddLine(b, c, 10)
+		model.AddLine(c, d, 10)
+		model.AddLine(d, a, 10)
+		model.AddLine(a, c, 10)
+		tcs = append(tcs, testcase{
+			name:  fmt.Sprintf("small%d", i),
+			model: model,
+		})
 	}
 
 	for _, ts := range tcs {
