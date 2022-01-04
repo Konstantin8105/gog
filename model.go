@@ -997,6 +997,20 @@ func (m *Model) ConvexHullTriangles() {
 
 // Write model into file with filename in JSON format
 func (m Model) Write(filename string) (err error) {
+	out, err := m.Json()
+	if err != nil {
+		return
+	}
+	// write into file
+	err = os.WriteFile(filename, []byte(out), 0666)
+	if err != nil {
+		return
+	}
+	return nil
+}
+
+// Write model into file with filename in JSON format
+func (m Model) Json() (_ string, err error) {
 	// convert into json
 	b, err := json.Marshal(m)
 	if err != nil {
@@ -1007,12 +1021,7 @@ func (m Model) Write(filename string) (err error) {
 	if err != nil {
 		return
 	}
-	// write into file
-	err = os.WriteFile(filename, buf.Bytes(), 0666)
-	if err != nil {
-		return
-	}
-	return nil
+	return buf.String(), nil
 }
 
 // Read model from file with filename in JSON format
