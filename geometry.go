@@ -1114,7 +1114,7 @@ func Area(
 		x2, y2 = tr1.X, tr1.Y
 		x3, y3 = tr2.X, tr2.Y
 	)
-	return 0.5 * (x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2))
+	return math.Abs(0.5 * (x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2)))
 }
 
 func TriangleSplitByPoint(
