@@ -866,9 +866,9 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 	switch Orientation(Arc0, Arc1, Arc2) {
 	case CollinearPoints:
 		et := eTree.New("ArcSplitByPoint: collinear")
-		et.Add(fmt.Errorf("Arc0 = %.12e",Arc0 ))
-		et.Add(fmt.Errorf("Arc1 = %.12e",Arc1 ))
-		et.Add(fmt.Errorf("Arc2 = %.12e",Arc2 ))
+		et.Add(fmt.Errorf("Arc0 = %.12e", Arc0))
+		et.Add(fmt.Errorf("Arc1 = %.12e", Arc1))
+		et.Add(fmt.Errorf("Arc2 = %.12e", Arc2))
 		panic(et)
 	case ClockwisePoints:
 		res, err = ArcSplitByPoint(Arc2, Arc1, Arc0, pi...)
@@ -1104,6 +1104,17 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 	}
 
 	return false
+}
+
+func Area(
+	tr0, tr1, tr2 Point,
+) float64 {
+	var (
+		x1, y1 = tr0.X, tr0.Y
+		x2, y2 = tr1.X, tr1.Y
+		x3, y3 = tr2.X, tr2.Y
+	)
+	return 0.5 * (x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2))
 }
 
 func TriangleSplitByPoint(

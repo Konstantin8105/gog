@@ -17,6 +17,39 @@ type Model struct {
 	Triangles [][4]int // Triangles store 3 index of Points and last for tag/material
 }
 
+// TagProperty return length of lines, area of triangles for each tag.
+// Arcs are ignored
+func (m Model) TagProperty() (length []float64, area []area) {
+	// prepare slices
+	max := 0
+	for i := range m.Lines {
+		if max < m.Lines[i][2] {
+			max = m.Lines[i][2]
+		}
+	}
+	for i := range m.Triangles {
+		if max < m.Triangles[i][3] {
+			max = m.Triangles[i][3]
+		}
+	}
+	length = make([]float64, max+1)
+	area = make([]float64, max+1)
+	// calculate data
+	for i := range m.Lines {
+		length[m.Lines[i][2]] += math.Hypot(
+			m.Points[m.Lines[1]].X-m.Points[m.Lines[0]].X,
+			m.Points[m.Lines[1]].Y-m.Points[m.Lines[0]].Y,
+		)
+	}
+	for i := range m.Triangles {
+		area[m.Triangles[i][3]] += Area(
+			m.Points[m.Triangles[i][0]],
+			m.Points[m.Triangles[i][1]],
+			m.Points[m.Triangles[i][2]],
+		)
+	}
+}
+
 // Copy return copy of Model
 func (src Model) Copy() (dst Model) {
 	// Points
