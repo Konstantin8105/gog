@@ -19,7 +19,7 @@ type Model struct {
 
 // TagProperty return length of lines, area of triangles for each tag.
 // Arcs are ignored
-func (m Model) TagProperty() (length []float64, area []area) {
+func (m Model) TagProperty() (length []float64, area []float64) {
 	// prepare slices
 	max := 0
 	for i := range m.Lines {
@@ -37,8 +37,8 @@ func (m Model) TagProperty() (length []float64, area []area) {
 	// calculate data
 	for i := range m.Lines {
 		length[m.Lines[i][2]] += math.Hypot(
-			m.Points[m.Lines[1]].X-m.Points[m.Lines[0]].X,
-			m.Points[m.Lines[1]].Y-m.Points[m.Lines[0]].Y,
+			m.Points[m.Lines[i][1]].X-m.Points[m.Lines[i][0]].X,
+			m.Points[m.Lines[i][1]].Y-m.Points[m.Lines[i][0]].Y,
 		)
 	}
 	for i := range m.Triangles {
@@ -48,6 +48,7 @@ func (m Model) TagProperty() (length []float64, area []area) {
 			m.Points[m.Triangles[i][2]],
 		)
 	}
+	return
 }
 
 // Copy return copy of Model
