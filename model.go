@@ -12,7 +12,6 @@ import (
 // Model of points, lines, arcs for prepare of triangulation
 type Model struct {
 	Points    []Point  // Points is slice of points
-	Nodes     [][2]int // Point store 1 index of Points and last for tag
 	Lines     [][3]int // Lines store 2 index of Points and last for tag
 	Arcs      [][4]int // Arcs store 3 index of Points and last for tag
 	Triangles [][4]int // Triangles store 3 index of Points and last for tag/material
@@ -76,14 +75,7 @@ func (m Model) String() string {
 		str += fmt.Sprintf("Points:\n")
 	}
 	for i := range m.Points {
-		str += fmt.Sprintf("%03d\t%+.4f", i, m.Points[i])
-		for k := range m.Nodes {
-			if m.Nodes[k][0] == i {
-				str += fmt.Sprintf("\t%3d", m.Nodes[k][1])
-				break
-			}
-		}
-		str += "\n"
+		str += fmt.Sprintf("%03d\t%+.4f\n", i, m.Points[i])
 	}
 	if 0 < len(m.Lines) {
 		str += fmt.Sprintf("Lines:\n")
@@ -181,20 +173,6 @@ func (m *Model) AddPoint(p Point) (index int) {
 	// new point
 	m.Points = append(m.Points, p)
 	return len(m.Points) - 1
-}
-
-// AddPointTag return index in model slice point
-func (m *Model) AddPointTag(p Point, tag int) {
-	id := m.AddPoint(p)
-	// search in exist points
-	for k := range m.Nodes {
-		if m.Nodes[k][0] == id {
-			m.Nodes[k][1] = tag
-			return
-		}
-	}
-	// new point
-	m.Nodes = append(m.Nodes, [2]int{id, tag})
 }
 
 // AddLine add line into model with specific tag
