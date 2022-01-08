@@ -15,10 +15,7 @@ func TestCopy(t *testing.T) {
 		Triangles: [][4]int{{21, 22, 23, 34}},
 	}
 	equal := func(m0, m1 *Model) bool {
-		if m0.String() == m1.String() {
-			return true
-		}
-		return false
+		return m0.String() == m1.String()
 	}
 	var c Model
 	if equal(&m, &c) {

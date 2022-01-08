@@ -72,19 +72,19 @@ func (src Model) Copy() (dst Model) {
 func (m Model) String() string {
 	var str string
 	if 0 < len(m.Points) {
-		str += fmt.Sprintf("Points:\n")
+		str += "Points:\n"
 	}
 	for i := range m.Points {
 		str += fmt.Sprintf("%03d\t%+.4f\n", i, m.Points[i])
 	}
 	if 0 < len(m.Lines) {
-		str += fmt.Sprintf("Lines:\n")
+		str += "Lines:\n"
 	}
 	for i := range m.Lines {
 		str += fmt.Sprintf("%03d\t%3d\n", i, m.Lines[i])
 	}
 	if 0 < len(m.Arcs) {
-		str += fmt.Sprintf("Arcs:\n")
+		str += "Arcs:\n"
 	}
 	for i := range m.Arcs {
 		str += fmt.Sprintf("%03d\t%3d\n", i, m.Arcs[i])
@@ -232,7 +232,6 @@ func (m *Model) AddTriangle(start, middle, end Point, tag int) {
 	}
 	// add arc
 	m.Triangles = append(m.Triangles, [4]int{st, mi, en, tag})
-	return
 }
 
 // AddCircle add arcs based on circle geometry into model with specific tag
@@ -750,6 +749,7 @@ func (m *Model) Merge() {
 	// TODO
 }
 
+// Rotate all points of model around point {xc,yc}
 func (m *Model) Rotate(xc, yc, angle float64) {
 	for i := range m.Points {
 		m.Points[i] = Rotate(xc, yc, angle, m.Points[i])
@@ -901,6 +901,7 @@ func (m *Model) removePointByIndex(remove ...int) {
 	}
 }
 
+// Split all model lines, arcs by distance `d`
 func (m *Model) Split(d float64) {
 	if d <= 0 {
 		panic("negative or zero split distance")
@@ -1050,7 +1051,7 @@ func (m Model) Write(filename string) (err error) {
 	return nil
 }
 
-// Write model into file with filename in JSON format
+// Json convert in JSON format
 func (m Model) Json() (_ string, err error) {
 	// convert into json
 	b, err := json.Marshal(m)

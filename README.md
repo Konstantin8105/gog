@@ -28,7 +28,7 @@ var (
 )
 var (
 	// Eps is epsilon - precision of intersection
-	Eps float64 = 1e-10
+	Eps = 1e-10
 )
 
 FUNCTIONS
@@ -62,6 +62,8 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	stA, stB State,
 )
+    LineArc return state and intersections points between line and arc
+
 func LineLine(
 	pa0, pa1 Point,
 	pb0, pb1 Point,
@@ -99,7 +101,7 @@ func Linear(
 	a11, a12, b1 float64,
 	a21, a22, b2 float64,
 ) (x, y float64)
-    linear equations solving:
+    Linear equations solving:
 
         a11*x + a12*y = b1
         a21*x + a22*y = b2
@@ -108,6 +110,8 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	stA, stB State,
 )
+    PointArc return state and intersections points between point and arc
+
 func PointInCircle(point Point, circle [3]Point) bool
 func PointLine(
 	pt Point,
@@ -216,7 +220,6 @@ func (mesh *Mesh) Split(d float64) (err error)
 
 type Model struct {
 	Points    []Point  // Points is slice of points
-	Nodes     [][2]int // Point store 1 index of Points and last for tag
 	Lines     [][3]int // Lines store 2 index of Points and last for tag
 	Arcs      [][4]int // Arcs store 3 index of Points and last for tag
 	Triangles [][4]int // Triangles store 3 index of Points and last for tag/material
@@ -234,9 +237,6 @@ func (m *Model) AddLine(start, end Point, tag int)
 
 func (m *Model) AddPoint(p Point) (index int)
     AddPoint return index in model slice point
-
-func (m *Model) AddPointTag(p Point, tag int)
-    AddPointTag return index in model slice point
 
 func (m *Model) AddTriangle(start, middle, end Point, tag int)
     AddTriangle add triangle into model with specific tag/material
@@ -260,7 +260,7 @@ func (m *Model) Intersection()
     Intersection change model with finding all model intersections
 
 func (m Model) Json() (_ string, err error)
-    Write model into file with filename in JSON format
+    Json convert in JSON format
 
 func (m *Model) Merge()
 
@@ -280,8 +280,10 @@ func (m *Model) RemovePoint(remove func(p Point) bool)
     RemovePoint removed point in accoding to function `filter`
 
 func (m *Model) Rotate(xc, yc, angle float64)
+    Rotate all points of model around point {xc,yc}
 
 func (m *Model) Split(d float64)
+    Split all model lines, arcs by distance `d`
 
 func (m Model) String() string
     String return a stantard model view

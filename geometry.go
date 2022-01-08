@@ -127,7 +127,7 @@ func Check(pps ...Point) error {
 
 var (
 	// Eps is epsilon - precision of intersection
-	Eps float64 = 1e-10
+	Eps = 1e-10
 )
 
 func PointPoint(
@@ -554,6 +554,7 @@ func Orientation128(p1, p2, p3 Point) OrientationPoints {
 	return CounterClockwisePoints
 }
 
+// PointArc return state and intersections points between point and arc
 func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	stA, stB State,
@@ -611,6 +612,7 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	return
 }
 
+// LineArc return state and intersections points between line and arc
 func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	stA, stB State,
@@ -982,7 +984,7 @@ again:
 	return
 }
 
-// linear equations solving:
+// Linear equations solving:
 //	a11*x + a12*y = b1
 //	a21*x + a22*y = b2
 func Linear(

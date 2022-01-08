@@ -1301,7 +1301,7 @@ func TestAngleBetween(t *testing.T) {
 	}
 
 	for i := range tcs {
-		t.Run(fmt.Sprintf("%s", tcs[i].name), func(t *testing.T) {
+		t.Run(tcs[i].name, func(t *testing.T) {
 			res := AngleBetween(Point{tcs[i].xc, tcs[i].yc}, tcs[i].from, tcs[i].mid, tcs[i].to, tcs[i].a)
 			if res != tcs[i].expect {
 				t.Errorf("not valid: %v", tcs[i])
@@ -1443,7 +1443,7 @@ func TestPointLineDistance(t *testing.T) {
 	}
 
 	for k := range tcs {
-		t.Run(fmt.Sprintf("%s", tcs[k].name), func(t *testing.T) {
+		t.Run(tcs[k].name, func(t *testing.T) {
 			res := PointLineDistance(tcs[k].pt,
 				tcs[k].line[0], tcs[k].line[1],
 			)
