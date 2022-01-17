@@ -288,10 +288,12 @@ func (m *Model) Intersection() {
 	fs := []func() int{
 		// line-line intersection
 		func() (ai int) {
-			intersect := make([]bool, len(m.Lines))
-			size := len(m.Lines)
-			s1 := make([]Point, 2)
-			s2 := make([]Point, 2)
+			var (
+				intersect = make([]bool, len(m.Lines))
+				size      = len(m.Lines)
+				s1        = make([]Point, 2)
+				s2        = make([]Point, 2)
+			)
 			for il := 0; il < size; il++ {
 				for jl := 0; jl < size; jl++ {
 					// ignore intersection lines
