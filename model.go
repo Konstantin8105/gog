@@ -290,16 +290,19 @@ func (m *Model) Intersection() {
 		func() (ai int) {
 			intersect := make([]bool, len(m.Lines))
 			size := len(m.Lines)
+			s1 := make([]Point, 2)
+			s2 := make([]Point, 2)
 			for il := 0; il < size; il++ {
 				for jl := 0; jl < size; jl++ {
 					// ignore intersection lines
 					if il <= jl || intersect[il] || intersect[jl] {
 						continue
 					}
-					if !boxIntersect(
-						[]Point{m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]]},
-						[]Point{m.Points[m.Lines[jl][0]], m.Points[m.Lines[jl][1]]},
-					) {
+					s1[0] = m.Points[m.Lines[il][0]]
+					s1[1] = m.Points[m.Lines[il][1]]
+					s2[0] = m.Points[m.Lines[jl][0]]
+					s2[1] = m.Points[m.Lines[jl][1]]
+					if !boxIntersect(s1, s2) {
 						continue
 					}
 					// analyse
@@ -369,6 +372,8 @@ func (m *Model) Intersection() {
 				intersectArcs  = make([]bool, len(m.Arcs))
 				sizeLines      = len(m.Lines)
 				sizeArcs       = len(m.Arcs)
+				s1             = make([]Point, 2)
+				s2             = make([]Point, 3)
 			)
 			for il := 0; il < sizeLines; il++ {
 				for ja := 0; ja < sizeArcs; ja++ {
@@ -376,14 +381,12 @@ func (m *Model) Intersection() {
 					if intersectLines[il] || intersectArcs[ja] {
 						continue
 					}
-					if !boxIntersect(
-						[]Point{m.Points[m.Lines[il][0]], m.Points[m.Lines[il][1]]},
-						[]Point{
-							m.Points[m.Arcs[ja][0]],
-							m.Points[m.Arcs[ja][1]],
-							m.Points[m.Arcs[ja][2]],
-						},
-					) {
+					s1[0] = m.Points[m.Lines[il][0]]
+					s1[1] = m.Points[m.Lines[il][1]]
+					s2[0] = m.Points[m.Arcs[ja][0]]
+					s2[1] = m.Points[m.Arcs[ja][1]]
+					s2[2] = m.Points[m.Arcs[ja][2]]
+					if !boxIntersect(s1, s2) {
 						continue
 					}
 					// analyse
@@ -529,6 +532,8 @@ func (m *Model) Intersection() {
 			var (
 				intersectArcs = make([]bool, len(m.Arcs))
 				sizeArcs      = len(m.Arcs)
+				s1            = make([]Point, 1)
+				s2            = make([]Point, 3)
 			)
 			for ip := 0; ip < len(m.Points); ip++ {
 				for ja := 0; ja < sizeArcs; ja++ {
@@ -557,14 +562,11 @@ func (m *Model) Intersection() {
 							continue
 						}
 					}
-					if !boxIntersect(
-						[]Point{m.Points[ip]},
-						[]Point{
-							m.Points[m.Arcs[ja][0]],
-							m.Points[m.Arcs[ja][1]],
-							m.Points[m.Arcs[ja][2]],
-						},
-					) {
+					s1[0] = m.Points[ip]
+					s2[0] = m.Points[m.Arcs[ja][0]]
+					s2[1] = m.Points[m.Arcs[ja][1]]
+					s2[2] = m.Points[m.Arcs[ja][2]]
+					if !boxIntersect(s1, s2) {
 						continue
 					}
 
@@ -621,6 +623,8 @@ func (m *Model) Intersection() {
 			var (
 				intersectLines = make([]bool, len(m.Lines))
 				sizeLines      = len(m.Lines)
+				s1             = make([]Point, 1)
+				s2             = make([]Point, 2)
 			)
 			for ip := 0; ip < len(m.Points); ip++ {
 				for ja := 0; ja < sizeLines; ja++ {
@@ -628,13 +632,10 @@ func (m *Model) Intersection() {
 					if intersectLines[ja] {
 						continue
 					}
-					if !boxIntersect(
-						[]Point{m.Points[ip]},
-						[]Point{
-							m.Points[m.Lines[ja][0]],
-							m.Points[m.Lines[ja][1]],
-						},
-					) {
+					s1[0] = m.Points[ip]
+					s2[0] = m.Points[m.Lines[ja][0]]
+					s2[1] = m.Points[m.Lines[ja][1]]
+					if !boxIntersect(s1, s2) {
 						continue
 					}
 					// analyse
@@ -683,6 +684,8 @@ func (m *Model) Intersection() {
 			var (
 				intersectTr = make([]bool, len(m.Triangles))
 				sizeTrs     = len(m.Triangles)
+				s1          = make([]Point, 1)
+				s2          = make([]Point, 3)
 			)
 			for ip := 0; ip < len(m.Points); ip++ {
 				for jt := 0; jt < sizeTrs; jt++ {
@@ -690,14 +693,11 @@ func (m *Model) Intersection() {
 					if intersectTr[jt] {
 						continue
 					}
-					if !boxIntersect(
-						[]Point{m.Points[ip]},
-						[]Point{
-							m.Points[m.Triangles[jt][0]],
-							m.Points[m.Triangles[jt][1]],
-							m.Points[m.Triangles[jt][2]],
-						},
-					) {
+					s1[0] = m.Points[ip]
+					s2[0] = m.Points[m.Triangles[jt][0]]
+					s2[1] = m.Points[m.Triangles[jt][1]]
+					s2[2] = m.Points[m.Triangles[jt][2]]
+					if !boxIntersect(s1, s2) {
 						continue
 					}
 					tag := m.Triangles[jt][3]
@@ -733,8 +733,8 @@ func (m *Model) Intersection() {
 	}
 	for iter := 0; ; iter++ {
 		ai := 0
-		for _, f := range fs {
-			ai += f()
+		for i := range fs {
+			ai += fs[i]()
 		}
 		if ai == 0 {
 			break
