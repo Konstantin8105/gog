@@ -650,7 +650,7 @@ func (m *Model) Intersection() {
 					)
 					// not acceptable zero length lines
 					if stB.Has(ZeroLengthSegment) {
-						panic(fmt.Errorf("zero lenght error"))
+						panic(fmt.Errorf("zero lenght error for line: %v", m.Lines[ja]))
 					}
 					// intersection on line B
 					//
