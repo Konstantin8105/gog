@@ -752,14 +752,14 @@ func (to *Model) Merge(from Model) {
 		to.AddPoint(from.Points[i])
 	}
 	for i := range from.Lines {
-		t.AddLine(
+		to.AddLine(
 			from.Points[from.Lines[i][0]],
 			from.Points[from.Lines[i][1]],
 			from.Lines[i][2],
 		)
 	}
 	for i := range from.Arcs {
-		t.AddArcs(
+		to.AddArc(
 			from.Points[from.Arcs[i][0]],
 			from.Points[from.Arcs[i][1]],
 			from.Points[from.Arcs[i][2]],
@@ -767,11 +767,11 @@ func (to *Model) Merge(from Model) {
 		)
 	}
 	for i := range from.Triangles {
-		t.Addtriangle(
-			from.Points[from.Triangle[i][0]],
-			from.Points[from.Triangle[i][1]],
-			from.Points[from.Triangle[i][2]],
-			from.Triangle[i][3],
+		to.AddTriangle(
+			from.Points[from.Triangles[i][0]],
+			from.Points[from.Triangles[i][1]],
+			from.Points[from.Triangles[i][2]],
+			from.Triangles[i][3],
 		)
 	}
 }
