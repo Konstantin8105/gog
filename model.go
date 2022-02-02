@@ -747,8 +747,33 @@ func (m *Model) Intersection() {
 	}
 }
 
-func (m *Model) Merge() {
-	// TODO
+func (to *Model) Merge(from Model) {
+	for i := range from.Points {
+		to.AddPoint(from.Points[i])
+	}
+	for i := range from.Lines {
+		t.AddLine(
+			from.Points[from.Lines[i][0]],
+			from.Points[from.Lines[i][1]],
+			from.Lines[i][2],
+		)
+	}
+	for i := range from.Arcs {
+		t.AddArcs(
+			from.Points[from.Arcs[i][0]],
+			from.Points[from.Arcs[i][1]],
+			from.Points[from.Arcs[i][2]],
+			from.Arcs[i][3],
+		)
+	}
+	for i := range from.Triangles {
+		t.Addtriangle(
+			from.Points[from.Triangle[i][0]],
+			from.Points[from.Triangle[i][1]],
+			from.Points[from.Triangle[i][2]],
+			from.Triangle[i][3],
+		)
+	}
 }
 
 // Rotate all points of model around point {xc,yc}
