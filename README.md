@@ -262,7 +262,7 @@ func (m *Model) Intersection()
 func (m Model) Json() (_ string, err error)
     Json convert in JSON format
 
-func (m *Model) Merge()
+func (to *Model) Merge(from Model)
 
 func (m Model) MinPointDistance() (distance float64)
     MinPointDistance return minimal between 2 points
