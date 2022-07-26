@@ -278,7 +278,10 @@ func LineLine(
 	// intersection point
 	Aa, Ba, Ca := Line(pa0, pa1)
 	Ab, Bb, Cb := Line(pb0, pb1)
-	x, y := Linear(Aa, Ba, -Ca, Ab, Bb, -Cb)
+	x, y, err := Linear(Aa, Ba, -Ca, Ab, Bb, -Cb)
+	if err != nil {
+		panic(err)
+	}
 	// only for orthogonal cases
 	if pa0.X == pa1.X {
 		x = pa0.X
@@ -351,10 +354,12 @@ func MiddlePoint(p0, p1 Point) Point {
 	// Simple float64 algoritm:
 	x, y := p0.X, p0.Y
 	if p0.X != p1.X {
-		x = p0.X*0.5 + p1.X*0.5
+		// x = p0.X*0.5 + p1.X*0.5
+		x = math.FMA(p0.X, 0.5, p1.X*0.5)
 	}
 	if p0.Y != p1.Y {
-		y = p0.Y*0.5 + p1.Y*0.5
+		// y = p0.Y*0.5 + p1.Y*0.5
+		y = math.FMA(p0.Y, 0.5, p1.Y*0.5)
 	}
 	return Point{X: x, Y: y}
 }
@@ -398,6 +403,11 @@ func Line(p0, p1 Point) (A, B, C float64) {
 	B = -dx
 	// algoritm for float64
 	// C = -dy*p0.X + dx*p0.Y
+	// return
+
+	// algoritm for FMA
+	C = math.FMA(-dy,p0.X, dx*p0.Y)
+	return
 
 	// algoritm for float 128
 	const prec = 128
@@ -506,7 +516,12 @@ func Orientation(p1, p2, p3 Point) OrientationPoints {
 	}
 
 	// check other orientations
-	v := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
+	// algoritm float64
+	// v := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
+
+	// algoritm FMA
+	v := math.FMA(p2.Y-p1.Y, p3.X-p2.X, -(p2.X-p1.X)*(p3.Y-p2.Y))
+
 	if math.Abs(v) < 100*Eps {
 		return Orientation128(p1, p2, p3)
 	}
@@ -984,13 +999,15 @@ again:
 	return
 }
 
+// TODO: panic free
+
 // Linear equations solving:
 //	a11*x + a12*y = b1
 //	a21*x + a22*y = b2
 func Linear(
 	a11, a12, b1 float64,
 	a21, a22, b2 float64,
-) (x, y float64) {
+) (x, y float64, err error) {
 	if math.Abs(a11) < Eps {
 		if math.Abs(a12) < Eps {
 			et := eTree.New("Linear")
@@ -1000,7 +1017,8 @@ func Linear(
 			et.Add(fmt.Errorf("a21 = %.5e", a21))
 			et.Add(fmt.Errorf("a22 = %.5e", a22))
 			et.Add(fmt.Errorf("b2 = %.5e", b2))
-			panic(et)
+			err = et
+			return
 		}
 		// swap parameters
 		a11, a12 = a12, a11
@@ -1012,6 +1030,17 @@ func Linear(
 	// algoritm for float64
 	// y = (b2*a11 - b1*a21) / (a22*a11 - a21*a12)
 	// x = (b1 - a12*y) / a11
+	// return
+
+	// algoritm for FMA
+	div := math.FMA(a22, a11, -a21*a12)
+	if math.Abs(div) < Eps {
+		err = fmt.Errorf("error div = %e", div)
+		return
+	}
+	y = math.FMA(b2, a11, -b1*a21) / div
+	x = math.FMA(-a12, y, b1) / a11
+	return
 
 	// algoritm for float 128
 	const prec = 128
@@ -1053,7 +1082,11 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 		b1         = (pow.E2(x1) - pow.E2(x2)) + (pow.E2(y1) - pow.E2(y2))
 		b2         = (pow.E2(x1) - pow.E2(x3)) + (pow.E2(y1) - pow.E2(y3))
 	)
-	xc, yc = Linear(a11, a12, b1, a21, a22, b2)
+	var err error
+	xc, yc, err = Linear(a11, a12, b1, a21, a22, b2)
+	if err != nil {
+		panic(err)
+	}
 
 	//	(xi-xc)^2+(yi-yc)^2 = R^2
 	r1 := math.Hypot(x1-xc, y1-yc)

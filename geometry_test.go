@@ -894,10 +894,14 @@ func ExampleLinear() {
 		a11, a12, b1 float64 = +8.1, 2 * math.Pi, +38.5e3
 		a21, a22, b2 float64 = math.Pi, -5.8, -1.75
 	)
-	x, y := Linear(
+	x, y, err := Linear(
 		a11, a12, b1,
 		a21, a22, b2,
 	)
+	if err!= nil {
+		fmt.Fprintf(os.Stdout, "%v", err)
+		return
+	}
 
 	fmt.Fprintf(os.Stdout, "Result:\nx=%.20e\ny=%.20e\n", x, y)
 	tols := []float64{
