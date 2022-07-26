@@ -1013,8 +1013,8 @@ func Linear(
 	a11, a12, b1 float64,
 	a21, a22, b2 float64,
 ) (x, y float64, err error) {
-	if math.Abs(a11) < Eps {
-		if math.Abs(a12) < Eps {
+	defer func() {
+		if err != nil {
 			et := eTree.New("Linear")
 			et.Add(fmt.Errorf("a11 = %.5e", a11))
 			et.Add(fmt.Errorf("a12 = %.5e", a12))
@@ -1022,7 +1022,12 @@ func Linear(
 			et.Add(fmt.Errorf("a21 = %.5e", a21))
 			et.Add(fmt.Errorf("a22 = %.5e", a22))
 			et.Add(fmt.Errorf("b2 = %.5e", b2))
-			err = et
+			err = fmt.Errorf("%v\n%v", err, et)
+		}
+	}()
+	if math.Abs(a11) < Eps {
+		if math.Abs(a12) < Eps {
+			err = fmt.Errorf("not valid data")
 			return
 		}
 		// swap parameters
