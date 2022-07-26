@@ -269,7 +269,8 @@ func LineLine(
 		return
 	}
 	// parallel lines
-	if math.Abs((pa1.Y-pa0.Y)*(pb1.X-pb0.X)-(pb1.Y-pb0.Y)*(pa1.X-pa0.X)) < Eps {
+	// if math.Abs((pa1.Y-pa0.Y)*(pb1.X-pb0.X)-(pb1.Y-pb0.Y)*(pa1.X-pa0.X)) < Eps {
+	if math.Abs(math.FMA(pa1.Y-pa0.Y, pb1.X-pb0.X, -(pb1.Y-pb0.Y)*(pa1.X-pa0.X))) < Eps {
 		stA |= Parallel
 		stB |= Parallel
 		return
@@ -387,7 +388,9 @@ func PointLineDistance(
 		xm = pc.X
 		ym = pc.Y
 	)
-	distance = math.Abs((A*xm + B*ym + C) / math.Sqrt(pow.E2(A)+pow.E2(B)))
+	// distance = math.Abs((A*xm + B*ym + C) / math.Sqrt(pow.E2(A)+pow.E2(B)))
+	distance = math.Abs(math.FMA(A, xm, math.FMA(B, ym, C)) /
+		math.Sqrt(pow.E2(A)+pow.E2(B)))
 	return
 }
 
@@ -406,7 +409,7 @@ func Line(p0, p1 Point) (A, B, C float64) {
 	// return
 
 	// algoritm for FMA
-	C = math.FMA(-dy,p0.X, dx*p0.Y)
+	C = math.FMA(-dy, p0.X, dx*p0.Y)
 	return
 
 	// algoritm for float 128
@@ -981,8 +984,10 @@ again:
 	ps = []Point{}
 	for _, angle := range b {
 		p := Point{
-			X: xc + r*math.Cos(angle-angle0),
-			Y: yc + r*math.Sin(angle-angle0),
+			// X: r*math.Cos(angle-angle0) + xc,
+			// Y: r*math.Sin(angle-angle0) + yc,
+			X: math.FMA(r, math.Cos(angle-angle0), xc),
+			Y: math.FMA(r, math.Sin(angle-angle0), yc),
 		}
 		ps = append(ps, p)
 	}
@@ -1149,7 +1154,8 @@ func Area(
 		x2, y2 = tr1.X, tr1.Y
 		x3, y3 = tr2.X, tr2.Y
 	)
-	return math.Abs(0.5 * (x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2)))
+	// return math.Abs(0.5 * (x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2)))
+	return math.Abs(0.5 * math.FMA(x1, y2-y3, math.FMA(x2, y3-y1, x3*(y1-y2))))
 }
 
 func TriangleSplitByPoint(
