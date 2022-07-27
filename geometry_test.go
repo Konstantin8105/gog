@@ -1186,7 +1186,7 @@ func init() {
 func TestTriangleSplitByPoint(t *testing.T) {
 	tcs := triaTests
 	for k := range tcs {
-		t.Run(fmt.Sprintf("%s", tcs[k].name), func(t *testing.T) {
+		t.Run(tcs[k].name, func(t *testing.T) {
 			res, _, err := TriangleSplitByPoint(tcs[k].pt,
 				tcs[k].tri[0],
 				tcs[k].tri[1],

@@ -90,7 +90,7 @@ func (m Model) String() string {
 		str += fmt.Sprintf("%03d\t%3d\n", i, m.Arcs[i])
 	}
 	if 0 < len(m.Triangles) {
-		str += fmt.Sprintf("Triangles:\n")
+		str += "Triangles:\n"
 	}
 	for i := range m.Triangles {
 		str += fmt.Sprintf("%03d\t%3d\n", i, m.Triangles[i])
@@ -226,7 +226,6 @@ func (m *Model) AddTriangle(start, middle, end Point, tag int) {
 		if (m.Triangles[i][0] == st && m.Triangles[i][1] == mi && m.Triangles[i][2] == en) ||
 			(m.Triangles[i][2] == st && m.Triangles[i][1] == mi && m.Triangles[i][0] == en) {
 			m.Triangles[i][3] = tag
-			panic("add tri")
 			return
 		}
 	}
@@ -1066,7 +1065,7 @@ func (m *Model) ConvexHullTriangles() {
 
 // Write model into file with filename in JSON format
 func (m Model) Write(filename string) (err error) {
-	out, err := m.Json()
+	out, err := m.JSON()
 	if err != nil {
 		return
 	}
@@ -1079,7 +1078,7 @@ func (m Model) Write(filename string) (err error) {
 }
 
 // Json convert in JSON format
-func (m Model) Json() (_ string, err error) {
+func (m Model) JSON() (_ string, err error) {
 	// convert into json
 	b, err := json.Marshal(m)
 	if err != nil {

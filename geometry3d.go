@@ -6,6 +6,7 @@ import (
 	"github.com/Konstantin8105/pow"
 )
 
+// Eps3D is default epsilon for 3D operations
 const Eps3D = 1e-5
 
 // Space 3D
@@ -20,8 +21,10 @@ const Eps3D = 1e-5
 //	| Triangle3 |   -   |   -   |    V      |
 //	+-----------+-------+-------+-----------+
 
+// Point3d is point coordinate in 3D decart system
 type Point3d [3]float64
 
+// Distance3d is distance between 2 points in 3D
 func Distance3d(p0, p1 Point3d) float64 {
 	return math.Sqrt(pow.E2(p0[0]-p1[0]) +
 		pow.E2(p0[1]-p1[1]) +
@@ -29,6 +32,7 @@ func Distance3d(p0, p1 Point3d) float64 {
 	// https://arxiv.org/pdf/1904.09481.pdf
 }
 
+// PointPoint3d return true only if points have same coordinate
 func PointPoint3d(
 	p0 Point3d,
 	p1 Point3d,
@@ -43,6 +47,7 @@ func PointPoint3d(
 	return Distance3d(p0, p1) < Eps3D
 }
 
+// PointLine3d return true only if point located on line segment
 func PointLine3d(
 	p Point3d,
 	l0, l1 Point3d,
@@ -72,6 +77,7 @@ func PointLine3d(
 	return true
 }
 
+// ZeroLine3d return true only if lenght of line segment is zero
 func ZeroLine3d(
 	l0, l1 Point3d,
 ) (
@@ -92,8 +98,6 @@ func PointLineRatio3d(
 	}
 	return
 }
-
-const oneThree = 1.0 / 3.0
 
 // Point on line corner ignored
 func LineLine3d(

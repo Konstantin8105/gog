@@ -11,6 +11,7 @@ import (
 	eTree "github.com/Konstantin8105/errors"
 )
 
+// Mesh is based structure of triangulation.
 // Triangle is data structure "Nodes, ribs и triangles" created by
 // book "Algoritm building and analyse triangulation", A.B.Skvorcov
 //
@@ -42,8 +43,8 @@ type Mesh struct {
 }
 
 var (
-	Debug = false
-	Log   = false
+	Debug = false // Debug only for debugging
+	Log   = false // Log only for minimal logging
 )
 
 const (

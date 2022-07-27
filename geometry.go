@@ -413,18 +413,18 @@ func Line(p0, p1 Point) (A, B, C float64) {
 	return
 
 	// algoritm for float 128
-	const prec = 128
-	var (
-		pdy   = new(big.Float).SetPrec(prec).SetFloat64(-dy)
-		pdx   = new(big.Float).SetPrec(prec).SetFloat64(dx)
-		px    = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
-		py    = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
-		left  = new(big.Float).SetPrec(prec).Mul(pdy, px)
-		right = new(big.Float).SetPrec(prec).Mul(pdx, py)
-		summ  = new(big.Float).SetPrec(prec).Add(left, right)
-	)
-	C, _ = summ.Float64()
-	return
+	// const prec = 128
+	// var (
+	// 	pdy   = new(big.Float).SetPrec(prec).SetFloat64(-dy)
+	// 	pdx   = new(big.Float).SetPrec(prec).SetFloat64(dx)
+	// 	px    = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
+	// 	py    = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
+	// 	left  = new(big.Float).SetPrec(prec).Mul(pdy, px)
+	// 	right = new(big.Float).SetPrec(prec).Mul(pdx, py)
+	// 	summ  = new(big.Float).SetPrec(prec).Add(left, right)
+	// )
+	// C, _ = summ.Float64()
+	// return
 }
 
 func Distance128(p0, p1 Point) float64 {
@@ -1061,32 +1061,32 @@ func Linear(
 	return
 
 	// algoritm for float 128
-	const prec = 128
-	var (
-		pa11 = new(big.Float).SetPrec(prec).SetFloat64(a11)
-		pa12 = new(big.Float).SetPrec(prec).SetFloat64(a12)
-		pb1  = new(big.Float).SetPrec(prec).SetFloat64(b1)
-		pa21 = new(big.Float).SetPrec(prec).SetFloat64(a21)
-		pa22 = new(big.Float).SetPrec(prec).SetFloat64(a22)
-		pb2  = new(big.Float).SetPrec(prec).SetFloat64(b2)
-
-		b2a11   = new(big.Float).SetPrec(prec).Mul(pb2, pa11)
-		b1a21   = new(big.Float).SetPrec(prec).Mul(pb1, pa21)
-		subUp   = new(big.Float).SetPrec(prec).Sub(b2a11, b1a21)
-		a22a11  = new(big.Float).SetPrec(prec).Mul(pa22, pa11)
-		a21a12  = new(big.Float).SetPrec(prec).Mul(pa21, pa12)
-		subDown = new(big.Float).SetPrec(prec).Sub(a22a11, a21a12)
-		yQuo    = new(big.Float).SetPrec(prec).Quo(subUp, subDown)
-	)
-	y, _ = yQuo.Float64()
-	var (
-		a12y   = new(big.Float).SetPrec(prec).Mul(pa12, yQuo)
-		b1a12y = new(big.Float).SetPrec(prec).Sub(pb1, a12y)
-		xQuo   = new(big.Float).SetPrec(prec).Quo(b1a12y, pa11)
-	)
-	x, _ = xQuo.Float64()
-
-	return
+	// const prec = 128
+	// var (
+	// 	pa11 = new(big.Float).SetPrec(prec).SetFloat64(a11)
+	// 	pa12 = new(big.Float).SetPrec(prec).SetFloat64(a12)
+	// 	pb1  = new(big.Float).SetPrec(prec).SetFloat64(b1)
+	// 	pa21 = new(big.Float).SetPrec(prec).SetFloat64(a21)
+	// 	pa22 = new(big.Float).SetPrec(prec).SetFloat64(a22)
+	// 	pb2  = new(big.Float).SetPrec(prec).SetFloat64(b2)
+	//
+	// 	b2a11   = new(big.Float).SetPrec(prec).Mul(pb2, pa11)
+	// 	b1a21   = new(big.Float).SetPrec(prec).Mul(pb1, pa21)
+	// 	subUp   = new(big.Float).SetPrec(prec).Sub(b2a11, b1a21)
+	// 	a22a11  = new(big.Float).SetPrec(prec).Mul(pa22, pa11)
+	// 	a21a12  = new(big.Float).SetPrec(prec).Mul(pa21, pa12)
+	// 	subDown = new(big.Float).SetPrec(prec).Sub(a22a11, a21a12)
+	// 	yQuo    = new(big.Float).SetPrec(prec).Quo(subUp, subDown)
+	// )
+	// y, _ = yQuo.Float64()
+	// var (
+	// 	a12y   = new(big.Float).SetPrec(prec).Mul(pa12, yQuo)
+	// 	b1a12y = new(big.Float).SetPrec(prec).Sub(pb1, a12y)
+	// 	xQuo   = new(big.Float).SetPrec(prec).Quo(b1a12y, pa11)
+	// )
+	// x, _ = xQuo.Float64()
+	//
+	// return
 }
 
 func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
