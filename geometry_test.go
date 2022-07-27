@@ -1516,9 +1516,9 @@ func TestMiddlePoint(t *testing.T) {
 				mid := MiddlePoint(s, f)
 				if Orientation(s, mid, f) != CollinearPoints {
 					et := eTree.New("detail")
-					et.Add(fmt.Errorf("s   = %.9e", s))
-					et.Add(fmt.Errorf("mid = %.9e", mid))
-					et.Add(fmt.Errorf("f   = %.9e", f))
+					_ = et.Add(fmt.Errorf("s   = %.9e", s))
+					_ = et.Add(fmt.Errorf("mid = %.9e", mid))
+					_ = et.Add(fmt.Errorf("f   = %.9e", f))
 					t.Error(et)
 					return
 				}

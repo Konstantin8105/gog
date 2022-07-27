@@ -190,6 +190,7 @@ func PointOnPlane3d(
 	return math.Abs(math.FMA(A, p[0], math.FMA(B, p[1], math.FMA(C, p[2], D)))) < Eps3D
 }
 
+// ZeroTriangle3d return true only if triangle have zero area
 func ZeroTriangle3d(
 	t0, t1, t2 Point3d,
 ) (

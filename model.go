@@ -1077,7 +1077,7 @@ func (m Model) Write(filename string) (err error) {
 	return nil
 }
 
-// Json convert in JSON format
+// JSON convert model in JSON format
 func (m Model) JSON() (_ string, err error) {
 	// convert into json
 	b, err := json.Marshal(m)

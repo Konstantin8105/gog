@@ -36,27 +36,38 @@ type State int64
 const (
 	empty State = 1 << iota
 
-	VerticalSegment // vertical segment
+	// VerticalSegment return if segment is vertical
+	VerticalSegment
 
-	HorizontalSegment // horizontal segment
+	// HorizontalSegment return if segment is horizontal
+	HorizontalSegment
 
-	ZeroLengthSegment // zero length segment
+	// ZeroLengthSegment return for zero length segment
+	ZeroLengthSegment
 
 	// Segment A and segment B are parallel.
 	// Intersection point data is not valid.
 	Parallel
 
+	// Collinear return if:
 	// Segment A and segment B are collinear.
 	// Intersection point data is not valid.
 	Collinear
 
-	OnSegment // intersection point on segment
+	// OnSegment is intersection point on segment
+	OnSegment
 
-	OnPoint0Segment // intersection point on point 0 segment
-	OnPoint1Segment // intersection point on point 1 segment
+	// OnPoint0Segment intersection point on point 0 segment
+	OnPoint0Segment
 
-	ArcIsLine  // wrong arc is line
-	ArcIsPoint // wrong arc is point
+	// OnPoint1Segment intersection point on point 1 segment
+	OnPoint1Segment
+
+	// ArcIsLine return only if wrong arc is line
+	ArcIsLine
+
+	// ArcIsPoint return only if wrong arc is point
+	ArcIsPoint
 
 	// last unused type
 	endType
@@ -116,7 +127,7 @@ func Check(pps ...Point) error {
 	for i := range pps {
 		if x, y := pps[i].X, pps[i].Y; math.IsNaN(x) || math.IsInf(x, 0) ||
 			math.IsNaN(y) || math.IsInf(y, 0) {
-			et.Add(fmt.Errorf("Not valid point #%d: (%.5e,%.5e)", i, x, y))
+			_ = et.Add(fmt.Errorf("Not valid point #%d: (%.5e,%.5e)", i, x, y))
 		}
 	}
 	if et.IsError() {
@@ -394,8 +405,7 @@ func PointLineDistance(
 	return
 }
 
-// line parameters
-//	Ax+By+C = 0
+// Line parameters by formula:	Ax+By+C = 0
 func Line(p0, p1 Point) (A, B, C float64) {
 	var (
 		dy = p1.Y - p0.Y
@@ -427,6 +437,7 @@ func Line(p0, p1 Point) (A, B, C float64) {
 	// return
 }
 
+// Distance128 is distance between 2 points with 128-bit precisions
 func Distance128(p0, p1 Point) float64 {
 	if p0.X == p1.X && p0.Y == p1.Y {
 		return 0
@@ -491,6 +502,7 @@ func MirrorLine(
 	return
 }
 
+// OrientationPoints is orientation points state
 type OrientationPoints int8
 
 const (
@@ -879,16 +891,16 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	return
 }
 
-// ArcSplit return points of arcs with middle point if pi is empty or
+// ArcSplitByPoint return points of arcs with middle point if pi is empty or
 // slice of arcs.
 //	DO NOT CHECKED POINT ON ARC
 func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err error) {
 	switch Orientation(Arc0, Arc1, Arc2) {
 	case CollinearPoints:
 		et := eTree.New("ArcSplitByPoint: collinear")
-		et.Add(fmt.Errorf("Arc0 = %.12e", Arc0))
-		et.Add(fmt.Errorf("Arc1 = %.12e", Arc1))
-		et.Add(fmt.Errorf("Arc2 = %.12e", Arc2))
+		_ = et.Add(fmt.Errorf("Arc0 = %.12e", Arc0))
+		_ = et.Add(fmt.Errorf("Arc1 = %.12e", Arc1))
+		_ = et.Add(fmt.Errorf("Arc2 = %.12e", Arc2))
 		panic(et)
 	case ClockwisePoints:
 		res, err = ArcSplitByPoint(Arc2, Arc1, Arc0, pi...)
@@ -1007,7 +1019,11 @@ again:
 // TODO: panic free
 
 var (
-	ErrorDivZero        = fmt.Errorf("div value is too small")
+	// ErrorDivZero is typical result with not acceptable solving
+	ErrorDivZero = fmt.Errorf("div value is too small")
+
+	// ErrorNotValidSystem is typical return only if system of
+	// linear equation have not valid data
 	ErrorNotValidSystem = fmt.Errorf("not valid system")
 )
 
@@ -1089,6 +1105,7 @@ func Linear(
 	// return
 }
 
+// Arc return parameters of circle
 func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	var (
 		x1, x2, x3 = Arc0.X, Arc1.X, Arc2.X
@@ -1120,9 +1137,9 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 	switch Orientation(from, mid, to) {
 	case CollinearPoints:
 		et := eTree.New("AngleBetween: collinear")
-		et.Add(fmt.Errorf("from = %.12e", from))
-		et.Add(fmt.Errorf("mid  = %.12e", mid))
-		et.Add(fmt.Errorf("to   = %.12e", to))
+		_ = et.Add(fmt.Errorf("from = %.12e", from))
+		_ = et.Add(fmt.Errorf("mid  = %.12e", mid))
+		_ = et.Add(fmt.Errorf("to   = %.12e", to))
 		panic(et)
 	case ClockwisePoints:
 		return AngleBetween(center, to, mid, from, a)
@@ -1159,6 +1176,7 @@ func AngleBetween(center, from, mid, to, a Point) (res bool) {
 	return false
 }
 
+// Area return area of triangle
 func Area(
 	tr0, tr1, tr2 Point,
 ) float64 {
@@ -1171,6 +1189,8 @@ func Area(
 	return math.Abs(0.5 * math.FMA(x1, y2-y3, math.FMA(x2, y3-y1, x3*(y1-y2))))
 }
 
+// TriangleSplitByPoint split triangle on triangles only if point inside
+// triangle or on triangle edge
 func TriangleSplitByPoint(
 	pt Point,
 	tr0, tr1, tr2 Point,
@@ -1307,6 +1327,8 @@ func TriangleSplitByPoint(
 	return
 }
 
+// PointInCircle return true only if point inside circle based
+// on 3 circles points
 func PointInCircle(point Point, circle [3]Point) bool {
 	xc, yc, r := Arc(circle[0], circle[1], circle[2])
 	return Distance(Point{xc, yc}, point)+Eps < r
@@ -1367,6 +1389,8 @@ func ConvexHull(points []Point) (chain []Point) {
 	return
 }
 
+// SamePoints return true only if point on very distance or
+// with same coordinates
 func SamePoints(p0, p1 Point) bool {
 	if p0.X == p1.X && p0.Y == p1.Y {
 		return true

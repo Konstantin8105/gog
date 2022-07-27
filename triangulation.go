@@ -43,13 +43,20 @@ type Mesh struct {
 }
 
 var (
-	Debug = false // Debug only for debugging
-	Log   = false // Log only for minimal logging
+	// Debug only for debugging
+	Debug = false
+	// Log only for minimal logging
+	Log = false
 )
 
 const (
-	Boundary  = -1
-	Removed   = -2
+	// Boundary edge
+	Boundary = -1
+
+	// Removed element
+	Removed = -2
+
+	// Undefined state only for not valid algorithm
 	Undefined = -3
 	Fixed     = 100
 	Movable   = 200
@@ -63,15 +70,16 @@ func New(model Model) (mesh *Mesh, err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("New")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 		}
 	}()
 	defer func() {
 		if r := recover(); r != nil {
 			et := eTree.New("panic error")
-			et.Add(fmt.Errorf("stacktrace from panic: %s", string(debug.Stack())))
-			et.Add(fmt.Errorf("%v", r))
+			_ = et.Add(fmt.Errorf("stacktrace from panic: %s",
+				string(debug.Stack())))
+			_ = et.Add(fmt.Errorf("%v", r))
 			err = et
 		}
 	}()
@@ -127,8 +135,8 @@ func New(model Model) (mesh *Mesh, err error) {
 		_, err = mesh.AddPoint(model.Points[i], Fixed)
 		if err != nil {
 			et := eTree.New("In add point")
-			et.Add(fmt.Errorf("point %d of %d", i, len(model.Points)))
-			et.Add(err)
+			_ = et.Add(fmt.Errorf("point %d of %d", i, len(model.Points)))
+			_ = et.Add(err)
 			err = et
 			return
 		}
@@ -201,13 +209,13 @@ func (mesh Mesh) Check() (err error) {
 	et := eTree.New("check")
 	defer func() {
 		if et.IsError() {
-			et.Add(fmt.Errorf("Amount of points: %5d", len(mesh.model.Points)))
+			_ = et.Add(fmt.Errorf("Amount of points: %5d", len(mesh.model.Points)))
 			err = et
 		}
 	}()
 	// amount of triangles
 	if len(mesh.model.Triangles) != len(mesh.Triangles) {
-		et.Add(fmt.Errorf("sizes is not same"))
+		_ = et.Add(fmt.Errorf("sizes is not same"))
 	}
 	// same points
 	for i := range mesh.model.Points {
@@ -216,7 +224,7 @@ func (mesh Mesh) Check() (err error) {
 				continue
 			}
 			if Distance(mesh.model.Points[i], mesh.model.Points[j]) < Eps {
-				et.Add(fmt.Errorf("same points %v and %v", i, j))
+				_ = et.Add(fmt.Errorf("same points %v and %v", i, j))
 			}
 		}
 	}
@@ -228,9 +236,9 @@ func (mesh Mesh) Check() (err error) {
 			id0 := mesh.model.Triangles[i][d[0]]
 			id1 := mesh.model.Triangles[i][d[1]]
 			if Distance(mesh.model.Points[id0], mesh.model.Points[id1]) < Eps {
-				et.Add(fmt.Errorf("triangle %d same points", i))
-				et.Add(fmt.Errorf("point %d: %.13f", id0, mesh.model.Points[id0]))
-				et.Add(fmt.Errorf("point %d: %.13f", id1, mesh.model.Points[id1]))
+				_ = et.Add(fmt.Errorf("triangle %d same points", i))
+				_ = et.Add(fmt.Errorf("point %d: %.13f", id0, mesh.model.Points[id0]))
+				_ = et.Add(fmt.Errorf("point %d: %.13f", id1, mesh.model.Points[id1]))
 			}
 		}
 	}
@@ -239,14 +247,14 @@ func (mesh Mesh) Check() (err error) {
 	for i := range mesh.model.Triangles {
 		for j := 0; j < 3; j++ {
 			if mesh.model.Triangles[i][j] == Undefined {
-				et.Add(fmt.Errorf("undefined point of triangle"))
+				_ = et.Add(fmt.Errorf("undefined point of triangle"))
 			}
 			if mesh.Triangles[i][j] == Undefined {
-				et.Add(fmt.Errorf("undefined triangle of triangle"))
+				_ = et.Add(fmt.Errorf("undefined triangle of triangle"))
 			}
 		}
 		if mesh.model.Triangles[i][3] == Undefined {
-			et.Add(fmt.Errorf("undefined tag of triangle"))
+			_ = et.Add(fmt.Errorf("undefined tag of triangle"))
 		}
 	}
 	// clockwise triangles
@@ -261,10 +269,10 @@ func (mesh Mesh) Check() (err error) {
 		)
 		if or != ClockwisePoints {
 			ew := eTree.New("Clockwise")
-			ew.Add(fmt.Errorf("triangle %d", i))
-			ew.Add(fmt.Errorf("Is CounterClock : %v", or == CounterClockwisePoints))
-			ew.Add(fmt.Errorf("Is CollinearPoints: %v", or == CollinearPoints))
-			et.Add(ew)
+			_ = ew.Add(fmt.Errorf("triangle %d", i))
+			_ = ew.Add(fmt.Errorf("Is CounterClock : %v", or == CounterClockwisePoints))
+			_ = ew.Add(fmt.Errorf("Is CollinearPoints: %v", or == CollinearPoints))
+			_ = et.Add(ew)
 		}
 	}
 	// same triangles - self linked
@@ -274,14 +282,14 @@ func (mesh Mesh) Check() (err error) {
 		}
 		for j := 0; j < 3; j++ {
 			if mesh.Triangles[i][j] == i {
-				et.Add(fmt.Errorf("self linked triangle: %v %d", mesh.Triangles[i], i))
+				_ = et.Add(fmt.Errorf("self linked triangle: %v %d", mesh.Triangles[i], i))
 			}
 		}
 	}
 	// correct remove
 	for i := range mesh.Triangles {
 		if mesh.Triangles[i][0] == Removed && mesh.model.Triangles[i][0] != Removed {
-			et.Add(fmt.Errorf("uncorrect removing"))
+			_ = et.Add(fmt.Errorf("uncorrect removing"))
 		}
 	}
 	// double triangles
@@ -291,13 +299,13 @@ func (mesh Mesh) Check() (err error) {
 		}
 		tri := mesh.Triangles[i]
 		if tri[0] == tri[1] && tri[0] != Boundary {
-			et.Add(fmt.Errorf("double triangles 0: %d %v %v", i, tri, mesh.Triangles[tri[0]]))
+			_ = et.Add(fmt.Errorf("double triangles 0: %d %v %v", i, tri, mesh.Triangles[tri[0]]))
 		}
 		if tri[1] == tri[2] && tri[1] != Boundary {
-			et.Add(fmt.Errorf("double triangles 1: %d %v %v", i, tri, mesh.Triangles[tri[1]]))
+			_ = et.Add(fmt.Errorf("double triangles 1: %d %v %v", i, tri, mesh.Triangles[tri[1]]))
 		}
 		if tri[2] == tri[0] && tri[2] != Boundary {
-			et.Add(fmt.Errorf("double triangles 2: %d %v %v", i, tri, mesh.Triangles[tri[2]]))
+			_ = et.Add(fmt.Errorf("double triangles 2: %d %v %v", i, tri, mesh.Triangles[tri[2]]))
 		}
 	}
 	// near triangle
@@ -312,7 +320,7 @@ func (mesh Mesh) Check() (err error) {
 			if i != mesh.Triangles[mesh.Triangles[i][j]][0] &&
 				i != mesh.Triangles[mesh.Triangles[i][j]][1] &&
 				i != mesh.Triangles[mesh.Triangles[i][j]][2] {
-				et.Add(fmt.Errorf("near-near triangle: %d, %v, %v",
+				_ = et.Add(fmt.Errorf("near-near triangle: %d, %v, %v",
 					i,
 					mesh.Triangles[i],
 					mesh.Triangles[mesh.Triangles[i][j]],
@@ -349,14 +357,14 @@ func (mesh Mesh) Check() (err error) {
 					mesh.model.Triangles[mesh.Triangles[i][j]])
 				fmt.Fprintf(&buf, "1: %v\n", mesh.model.Triangles)
 				fmt.Fprintf(&buf, "2: %v\n", mesh.Triangles)
-				et.Add(fmt.Errorf(buf.String()))
+				_ = et.Add(fmt.Errorf(buf.String()))
 			}
 		}
 	}
 	// undefined points
 	// TODO : for i := range mesh.Points {
 	// TODO : 	if mesh.Points[i] == Undefined {
-	// TODO : 		et.Add(fmt.Errorf("undefined point: %d",i))
+	// TODO : 		_=et.Add(fmt.Errorf("undefined point: %d",i))
 	// TODO : 	}
 	// TODO : }
 
@@ -372,18 +380,18 @@ func (mesh Mesh) Check() (err error) {
 				mesh.model.Points[mesh.model.Triangles[i][ind[2]]],
 			)
 			if stB.Has(OnSegment) {
-				em.Add(fmt.Errorf("for %v", ind))
-				em.Add(fmt.Errorf("point %v",
+				_ = em.Add(fmt.Errorf("for %v", ind))
+				_ = em.Add(fmt.Errorf("point %v",
 					mesh.model.Points[mesh.model.Triangles[i][ind[0]]]))
-				em.Add(fmt.Errorf("point as line %v",
+				_ = em.Add(fmt.Errorf("point as line %v",
 					mesh.model.Points[mesh.model.Triangles[i][ind[1]]]))
-				em.Add(fmt.Errorf("point as line %v",
+				_ = em.Add(fmt.Errorf("point as line %v",
 					mesh.model.Points[mesh.model.Triangles[i][ind[2]]]))
-				em.Add(fmt.Errorf("%v", stB))
+				_ = em.Add(fmt.Errorf("%v", stB))
 			}
 		}
 		if em.IsError() {
-			et.Add(em)
+			_ = et.Add(em)
 		}
 	}
 
@@ -406,11 +414,11 @@ func (mesh Mesh) Check() (err error) {
 				j0 := mesh.model.Lines[j][0]
 				j1 := mesh.model.Lines[j][1]
 				if (i0 == j0 && i1 == j1) || (i1 == j0 && i0 == j1) {
-					em.Add(fmt.Errorf("line same points index: %d %d", i0, i1))
-					em.Add(fmt.Errorf("Coord: %2d %.12e", i0, mesh.model.Points[i0]))
-					em.Add(fmt.Errorf("Coord: %2d %.12e", i1, mesh.model.Points[i1]))
-					em.Add(fmt.Errorf("Case %v", (i0 == j0 && i1 == j1)))
-					em.Add(fmt.Errorf("Case %v", (i1 == j0 && i0 == j1)))
+					_ = em.Add(fmt.Errorf("line same points index: %d %d", i0, i1))
+					_ = em.Add(fmt.Errorf("Coord: %2d %.12e", i0, mesh.model.Points[i0]))
+					_ = em.Add(fmt.Errorf("Coord: %2d %.12e", i1, mesh.model.Points[i1]))
+					_ = em.Add(fmt.Errorf("Case %v", (i0 == j0 && i1 == j1)))
+					_ = em.Add(fmt.Errorf("Case %v", (i1 == j0 && i0 == j1)))
 				}
 				if i0 != j0 && i1 != j0 {
 					_, _, stB := PointLine(
@@ -419,14 +427,14 @@ func (mesh Mesh) Check() (err error) {
 						mesh.model.Points[i1],
 					)
 					if stB.Has(OnSegment) {
-						em.Add(fmt.Errorf("i        %v", mesh.model.Lines[i]))
-						em.Add(fmt.Errorf("i0 = %d. %v", i0, mesh.model.Points[i0]))
-						em.Add(fmt.Errorf("i1 = %d. %v", i1, mesh.model.Points[i1]))
-						em.Add(fmt.Errorf("j        %v", mesh.model.Lines[j]))
-						em.Add(fmt.Errorf("j0 = %d. %v", j0, mesh.model.Points[j0]))
-						em.Add(fmt.Errorf("j1 = %d. %v", j1, mesh.model.Points[j1]))
-						em.Add(fmt.Errorf("line 1: %d inside %d", i, j))
-						em.Add(fmt.Errorf("propably intersection"))
+						_ = em.Add(fmt.Errorf("i        %v", mesh.model.Lines[i]))
+						_ = em.Add(fmt.Errorf("i0 = %d. %v", i0, mesh.model.Points[i0]))
+						_ = em.Add(fmt.Errorf("i1 = %d. %v", i1, mesh.model.Points[i1]))
+						_ = em.Add(fmt.Errorf("j        %v", mesh.model.Lines[j]))
+						_ = em.Add(fmt.Errorf("j0 = %d. %v", j0, mesh.model.Points[j0]))
+						_ = em.Add(fmt.Errorf("j1 = %d. %v", j1, mesh.model.Points[j1]))
+						_ = em.Add(fmt.Errorf("line 1: %d inside %d", i, j))
+						_ = em.Add(fmt.Errorf("propably intersection"))
 					}
 				}
 				if i0 != j1 && i1 != j1 {
@@ -436,20 +444,20 @@ func (mesh Mesh) Check() (err error) {
 						mesh.model.Points[i1],
 					)
 					if stB.Has(OnSegment) {
-						em.Add(fmt.Errorf("i        %v", mesh.model.Lines[i]))
-						em.Add(fmt.Errorf("i0 = %d. %v", i0, mesh.model.Points[i0]))
-						em.Add(fmt.Errorf("i1 = %d. %v", i1, mesh.model.Points[i1]))
-						em.Add(fmt.Errorf("j        %v", mesh.model.Lines[j]))
-						em.Add(fmt.Errorf("j0 = %d. %v", j0, mesh.model.Points[j0]))
-						em.Add(fmt.Errorf("j1 = %d. %v", j1, mesh.model.Points[j1]))
-						em.Add(fmt.Errorf("line 2: %d inside %d", i, j))
-						em.Add(fmt.Errorf("propably intersection"))
+						_ = em.Add(fmt.Errorf("i        %v", mesh.model.Lines[i]))
+						_ = em.Add(fmt.Errorf("i0 = %d. %v", i0, mesh.model.Points[i0]))
+						_ = em.Add(fmt.Errorf("i1 = %d. %v", i1, mesh.model.Points[i1]))
+						_ = em.Add(fmt.Errorf("j        %v", mesh.model.Lines[j]))
+						_ = em.Add(fmt.Errorf("j0 = %d. %v", j0, mesh.model.Points[j0]))
+						_ = em.Add(fmt.Errorf("j1 = %d. %v", j1, mesh.model.Points[j1]))
+						_ = em.Add(fmt.Errorf("line 2: %d inside %d", i, j))
+						_ = em.Add(fmt.Errorf("propably intersection"))
 					}
 				}
 			}
 		}
 		if em.IsError() {
-			et.Add(em)
+			_ = et.Add(em)
 		}
 	}
 
@@ -505,15 +513,15 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("AddPoint")
-			et.Add(fmt.Errorf("add point with tag %d, coord: %.9f", tag, p))
-			et.Add(err)
+			_ = et.Add(fmt.Errorf("add point with tag %d, coord: %.9f", tag, p))
+			_ = et.Add(err)
 			err = et
 		}
 	}()
 	if Debug {
 		if err = mesh.Check(); err != nil {
 			et := eTree.New("begin")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 			return
 		}
@@ -620,7 +628,7 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 		update, err = mesh.repairTriangles(idp, removedTriangles, status)
 		if err != nil {
 			et := eTree.New("After repairTriangles")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 			return
 		}
@@ -630,8 +638,8 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 		err = mesh.Delanay(update...)
 		if err != nil {
 			et := eTree.New("Delanay update")
-			et.Add(err)
-			et.Add(fmt.Errorf("len of res: %d", len(res)))
+			_ = et.Add(err)
+			_ = et.Add(fmt.Errorf("len of res: %d", len(res)))
 			err = et
 		}
 		break
@@ -670,10 +678,10 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (updateTr []int, 
 	defer func() {
 		if err != nil {
 			et := eTree.New("repairTriangles")
-			et.Add(fmt.Errorf("ap{%v} = %v", ap, mesh.model.Points[ap]))
-			et.Add(fmt.Errorf("state{%v}", state))
-			et.Add(fmt.Errorf("remove{%v}", rt))
-			et.Add(err)
+			_ = et.Add(fmt.Errorf("ap{%v} = %v", ap, mesh.model.Points[ap]))
+			_ = et.Add(fmt.Errorf("state{%v}", state))
+			_ = et.Add(fmt.Errorf("remove{%v}", rt))
+			_ = et.Add(err)
 			err = et
 		}
 	}()
@@ -776,25 +784,25 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (updateTr []int, 
 			if stB001.Not(OnSegment) || stB012.Has(OnSegment) || stB020.Has(OnSegment) ||
 				stB101.Not(OnSegment) || stB112.Has(OnSegment) || stB120.Has(OnSegment) {
 				et := eTree.New("Orient mistake")
-				et.Add(fmt.Errorf("point AP : %.19f", mesh.model.Points[ap]))
-				et.Add(fmt.Errorf("stB0"))
+				_ = et.Add(fmt.Errorf("point AP : %.19f", mesh.model.Points[ap]))
+				_ = et.Add(fmt.Errorf("stB0"))
 				for i := 0; i < 3; i++ {
-					et.Add(fmt.Errorf("point %d : %.19f", i,
+					_ = et.Add(fmt.Errorf("point %d : %.19f", i,
 						mesh.model.Points[mesh.model.Triangles[rt[0]][i]]))
 				}
-				et.Add(fmt.Errorf("%v\n%v", stB001.Not(OnSegment), stB001))
-				et.Add(fmt.Errorf("%v\n%v", stB012.Has(OnSegment), stB012))
-				et.Add(fmt.Errorf("%v\n%v", stB020.Has(OnSegment), stB020))
-				et.Add(fmt.Errorf("%v", stB0012))
-				et.Add(fmt.Errorf("stB1"))
+				_ = et.Add(fmt.Errorf("%v\n%v", stB001.Not(OnSegment), stB001))
+				_ = et.Add(fmt.Errorf("%v\n%v", stB012.Has(OnSegment), stB012))
+				_ = et.Add(fmt.Errorf("%v\n%v", stB020.Has(OnSegment), stB020))
+				_ = et.Add(fmt.Errorf("%v", stB0012))
+				_ = et.Add(fmt.Errorf("stB1"))
 				for i := 0; i < 3; i++ {
-					et.Add(fmt.Errorf("point %d : %.19f", i,
+					_ = et.Add(fmt.Errorf("point %d : %.19f", i,
 						mesh.model.Points[mesh.model.Triangles[rt[1]][i]]))
 				}
-				et.Add(fmt.Errorf("%v\n%v", stB101.Not(OnSegment), stB101))
-				et.Add(fmt.Errorf("%v\n%v", stB112.Has(OnSegment), stB112))
-				et.Add(fmt.Errorf("%v\n%v", stB120.Has(OnSegment), stB120))
-				et.Add(fmt.Errorf("%v", stB1012))
+				_ = et.Add(fmt.Errorf("%v\n%v", stB101.Not(OnSegment), stB101))
+				_ = et.Add(fmt.Errorf("%v\n%v", stB112.Has(OnSegment), stB112))
+				_ = et.Add(fmt.Errorf("%v\n%v", stB120.Has(OnSegment), stB120))
+				_ = et.Add(fmt.Errorf("%v", stB1012))
 				err = et
 				return
 			}
@@ -809,28 +817,28 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (updateTr []int, 
 				)
 				if stB.Not(OnSegment) {
 					et := eTree.New("State100")
-					et.Add(fmt.Errorf("point is not on line %v", k))
+					_ = et.Add(fmt.Errorf("point is not on line %v", k))
 
 					if _, _, stB := PointLine(
 						mesh.model.Points[ap],
 						mesh.model.Points[mesh.model.Triangles[rt[k]][0]],
 						mesh.model.Points[mesh.model.Triangles[rt[k]][1]],
 					); stB.Has(OnSegment) {
-						et.Add(fmt.Errorf("on segment 0 1"))
+						_ = et.Add(fmt.Errorf("on segment 0 1"))
 					}
 					if _, _, stB := PointLine(
 						mesh.model.Points[ap],
 						mesh.model.Points[mesh.model.Triangles[rt[k]][1]],
 						mesh.model.Points[mesh.model.Triangles[rt[k]][2]],
 					); stB.Has(OnSegment) {
-						et.Add(fmt.Errorf("on segment 1 2"))
+						_ = et.Add(fmt.Errorf("on segment 1 2"))
 					}
 					if _, _, stB := PointLine(
 						mesh.model.Points[ap],
 						mesh.model.Points[mesh.model.Triangles[rt[k]][2]],
 						mesh.model.Points[mesh.model.Triangles[rt[k]][0]],
 					); stB.Has(OnSegment) {
-						et.Add(fmt.Errorf("on segment 2 0"))
+						_ = et.Add(fmt.Errorf("on segment 2 0"))
 					}
 
 					err = et
@@ -1014,10 +1022,10 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (updateTr []int, 
 	if Debug {
 		if err = mesh.Check(); err != nil {
 			et := eTree.New("Check 1")
-			et.Add(err)
+			_ = et.Add(err)
 			for i := range chains {
-				et.Add(fmt.Errorf("chains %d: %#v", i, chains[i]))
-				et.Add(fmt.Errorf("chains dist(%d,%d): Distance %e and {%e||%e}. Orient %v",
+				_ = et.Add(fmt.Errorf("chains %d: %#v", i, chains[i]))
+				_ = et.Add(fmt.Errorf("chains dist(%d,%d): Distance %e and {%e||%e}. Orient %v",
 					chains[i].from,
 					chains[i].to,
 					Distance128(
@@ -1038,17 +1046,17 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (updateTr []int, 
 						mesh.model.Points[ap],
 					) == CollinearPoints,
 				))
-				et.Add(fmt.Errorf("Point %d: %e",
+				_ = et.Add(fmt.Errorf("Point %d: %e",
 					chains[i].from, mesh.model.Points[chains[i].from]))
-				et.Add(fmt.Errorf("Point %d: %e",
+				_ = et.Add(fmt.Errorf("Point %d: %e",
 					chains[i].to, mesh.model.Points[chains[i].to]))
-				et.Add(fmt.Errorf("Point %d: %e",
+				_ = et.Add(fmt.Errorf("Point %d: %e",
 					ap, mesh.model.Points[ap]))
 			}
 			for _, r := range rt {
-				et.Add(fmt.Errorf("remove triangle %d", r))
+				_ = et.Add(fmt.Errorf("remove triangle %d", r))
 			}
-			et.Add(fmt.Errorf("corner triangle %d", tc))
+			_ = et.Add(fmt.Errorf("corner triangle %d", tc))
 			err = et
 			return
 		}
@@ -1080,7 +1088,7 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("Delanay")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 		}
 	}()
@@ -1225,25 +1233,25 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 			err = mesh.Check()
 			if err != nil {
 				et := eTree.New("after delanay")
-				et.Add(fmt.Errorf(
+				_ = et.Add(fmt.Errorf(
 					"side %d in triangle %d", side, tr))
 				for i := 0; i < 3; i++ {
 					p := mesh.model.Triangles[tr][i]
-					et.Add(fmt.Errorf("Point %d %4d: %.8e", i, p, mesh.model.Points[p]))
+					_ = et.Add(fmt.Errorf("Point %d %4d: %.8e", i, p, mesh.model.Points[p]))
 				}
-				et.Add(fmt.Errorf(
+				_ = et.Add(fmt.Errorf(
 					"near triangles of %d is %v", tr, mesh.Triangles[tr]))
 
-				et.Add(fmt.Errorf(
+				_ = et.Add(fmt.Errorf(
 					"near triangle %d", neartr))
 				for i := 0; i < 3; i++ {
 					p := mesh.model.Triangles[neartr][i]
-					et.Add(fmt.Errorf("Point %d %4d: %.8e", i, p, mesh.model.Points[p]))
+					_ = et.Add(fmt.Errorf("Point %d %4d: %.8e", i, p, mesh.model.Points[p]))
 				}
-				et.Add(fmt.Errorf(
+				_ = et.Add(fmt.Errorf(
 					"near triangles of %d is %v", neartr, mesh.Triangles[neartr]))
 
-				et.Add(err)
+				_ = et.Add(err)
 				err = et
 				return
 			}
@@ -1288,7 +1296,7 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 						err = mesh.Check()
 						if err != nil {
 							et := eTree.New("In loop")
-							et.Add(err)
+							_ = et.Add(err)
 							err = et
 							return
 						}
@@ -1329,7 +1337,7 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("GetMaterials")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 		}
 	}()
@@ -1436,7 +1444,7 @@ func (mesh *Mesh) Materials() (err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("Materials")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 		}
 	}()
@@ -1530,8 +1538,8 @@ func (mesh *Mesh) Smooth(pts ...int) (err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("Smooth")
-			et.Add(fmt.Errorf("input point list: %v", pts))
-			et.Add(err)
+			_ = et.Add(fmt.Errorf("input point list: %v", pts))
+			_ = et.Add(err)
 			err = et
 		}
 	}()
@@ -1706,7 +1714,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("Split")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 		}
 	}()
@@ -1735,19 +1743,19 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		defer func() {
 			if err != nil {
 				et := eTree.New("addpoint")
-				et.Add(fmt.Errorf("left  point: %.9f", p1))
-				et.Add(fmt.Errorf("mid   point: %.9f", mid))
-				et.Add(fmt.Errorf("right point: %.9f", p2))
-				et.Add(err)
+				_ = et.Add(fmt.Errorf("left  point: %.9f", p1))
+				_ = et.Add(fmt.Errorf("mid   point: %.9f", mid))
+				_ = et.Add(fmt.Errorf("right point: %.9f", p2))
+				_ = et.Add(err)
 				err = et
 			}
 		}()
 		if Debug {
 			if Orientation(p1, mid, p2) != CollinearPoints {
 				et := eTree.New("MiddlePoint")
-				et.Add(fmt.Errorf("p1   = %.10f", p1))
-				et.Add(fmt.Errorf("mid  = %.10f", mid))
-				et.Add(fmt.Errorf("p2   = %.10f", p2))
+				_ = et.Add(fmt.Errorf("p1   = %.10f", p1))
+				_ = et.Add(fmt.Errorf("mid  = %.10f", mid))
+				_ = et.Add(fmt.Errorf("p2   = %.10f", p2))
 				err = et
 				return
 			}
@@ -1799,7 +1807,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			)
 			if err != nil {
 				et := eTree.New("split fixed lines")
-				et.Add(err)
+				_ = et.Add(err)
 				err = et
 				return
 			}
@@ -1838,12 +1846,12 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			}
 			if err != nil {
 				et := eTree.New("split boundary triangle edge")
-				et.Add(fmt.Errorf("counter: %d", counter))
-				et.Add(fmt.Errorf("triangle: %d", i))
-				et.Add(fmt.Errorf("points :%.8f", p0))
-				et.Add(fmt.Errorf("points :%.8f", p1))
-				et.Add(fmt.Errorf("points :%.8f", p2))
-				et.Add(err)
+				_ = et.Add(fmt.Errorf("counter: %d", counter))
+				_ = et.Add(fmt.Errorf("triangle: %d", i))
+				_ = et.Add(fmt.Errorf("points :%.8f", p0))
+				_ = et.Add(fmt.Errorf("points :%.8f", p1))
+				_ = et.Add(fmt.Errorf("points :%.8f", p2))
+				_ = et.Add(err)
 				err = et
 				return
 			}
@@ -1893,15 +1901,15 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			}
 			if err != nil {
 				et := eTree.New("split big triangle edge")
-				et.Add(fmt.Errorf("counter: %d", counter))
-				et.Add(fmt.Errorf("triangle: %d", i))
-				et.Add(fmt.Errorf("points :%.8f", p0))
-				et.Add(fmt.Errorf("points :%.8f", p1))
-				et.Add(fmt.Errorf("points :%.8f", p2))
-				et.Add(fmt.Errorf("distance 01 :%.8f", d01))
-				et.Add(fmt.Errorf("distance 12 :%.8f", d12))
-				et.Add(fmt.Errorf("distance 20 :%.8f", d20))
-				et.Add(err)
+				_ = et.Add(fmt.Errorf("counter: %d", counter))
+				_ = et.Add(fmt.Errorf("triangle: %d", i))
+				_ = et.Add(fmt.Errorf("points :%.8f", p0))
+				_ = et.Add(fmt.Errorf("points :%.8f", p1))
+				_ = et.Add(fmt.Errorf("points :%.8f", p2))
+				_ = et.Add(fmt.Errorf("distance 01 :%.8f", d01))
+				_ = et.Add(fmt.Errorf("distance 12 :%.8f", d12))
+				_ = et.Add(fmt.Errorf("distance 20 :%.8f", d20))
+				_ = et.Add(err)
 				err = et
 				return
 			}
@@ -1961,7 +1969,7 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 	defer func() {
 		if err != nil {
 			et := eTree.New("AddLine")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 		}
 	}()
@@ -1973,14 +1981,14 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		idp1, err = mesh.AddPoint(inp1, Fixed)
 		if err != nil {
 			et := eTree.New("add p1")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 			return
 		}
 		idp2, err = mesh.AddPoint(inp2, Fixed)
 		if err != nil {
 			et := eTree.New("add p2")
-			et.Add(err)
+			_ = et.Add(err)
 			err = et
 			return
 		}
@@ -1990,7 +1998,7 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		return []int{idp1, idp2}, nil
 	}(); err != nil {
 		et := eTree.New("generate list")
-		et.Add(err)
+		_ = et.Add(err)
 		err = et
 		return
 	}
@@ -2002,8 +2010,8 @@ again:
 		idp2 := list[i]
 		if idp1 == idp2 {
 			et := eTree.New("equal point index")
-			et.Add(fmt.Errorf("idp = %d", idp1))
-			et.Add(fmt.Errorf("list = %v", list))
+			_ = et.Add(fmt.Errorf("idp = %d", idp1))
+			_ = et.Add(fmt.Errorf("list = %v", list))
 			err = et
 			return
 		}
@@ -2033,10 +2041,10 @@ again:
 		idp, err = mesh.AddPoint(mid, Fixed)
 		if err != nil {
 			et := eTree.New("add mid")
-			et.Add(fmt.Errorf("mid = %e", mid))
-			et.Add(fmt.Errorf("len(list) = %d", len(list)))
-			et.Add(fmt.Errorf("list = %v", list))
-			et.Add(err)
+			_ = et.Add(fmt.Errorf("mid = %e", mid))
+			_ = et.Add(fmt.Errorf("len(list) = %d", len(list)))
+			_ = et.Add(fmt.Errorf("list = %v", list))
+			_ = et.Add(err)
 			err = et
 			return
 		}
