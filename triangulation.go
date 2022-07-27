@@ -119,7 +119,7 @@ func New(model Model) (mesh *Mesh, err error) {
 	if Debug {
 		err = mesh.Check()
 		if err != nil {
-			err = fmt.Errorf("After convex: %v", err)
+			err = fmt.Errorf("after convex: %v", err)
 			return
 		}
 	}
@@ -209,7 +209,7 @@ func (mesh Mesh) Check() (err error) {
 	et := eTree.New("check")
 	defer func() {
 		if et.IsError() {
-			_ = et.Add(fmt.Errorf("Amount of points: %5d", len(mesh.model.Points)))
+			_ = et.Add(fmt.Errorf("amount of points: %5d", len(mesh.model.Points)))
 			err = et
 		}
 	}()
@@ -270,8 +270,8 @@ func (mesh Mesh) Check() (err error) {
 		if or != ClockwisePoints {
 			ew := eTree.New("Clockwise")
 			_ = ew.Add(fmt.Errorf("triangle %d", i))
-			_ = ew.Add(fmt.Errorf("Is CounterClock : %v", or == CounterClockwisePoints))
-			_ = ew.Add(fmt.Errorf("Is CollinearPoints: %v", or == CollinearPoints))
+			_ = ew.Add(fmt.Errorf("is CounterClock : %v", or == CounterClockwisePoints))
+			_ = ew.Add(fmt.Errorf("is CollinearPoints: %v", or == CollinearPoints))
 			_ = et.Add(ew)
 		}
 	}
@@ -415,10 +415,10 @@ func (mesh Mesh) Check() (err error) {
 				j1 := mesh.model.Lines[j][1]
 				if (i0 == j0 && i1 == j1) || (i1 == j0 && i0 == j1) {
 					_ = em.Add(fmt.Errorf("line same points index: %d %d", i0, i1))
-					_ = em.Add(fmt.Errorf("Coord: %2d %.12e", i0, mesh.model.Points[i0]))
-					_ = em.Add(fmt.Errorf("Coord: %2d %.12e", i1, mesh.model.Points[i1]))
-					_ = em.Add(fmt.Errorf("Case %v", (i0 == j0 && i1 == j1)))
-					_ = em.Add(fmt.Errorf("Case %v", (i1 == j0 && i0 == j1)))
+					_ = em.Add(fmt.Errorf("coord: %2d %.12e", i0, mesh.model.Points[i0]))
+					_ = em.Add(fmt.Errorf("coord: %2d %.12e", i1, mesh.model.Points[i1]))
+					_ = em.Add(fmt.Errorf("case %v", (i0 == j0 && i1 == j1)))
+					_ = em.Add(fmt.Errorf("case %v", (i1 == j0 && i0 == j1)))
 				}
 				if i0 != j0 && i1 != j0 {
 					_, _, stB := PointLine(
@@ -1261,7 +1261,7 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 	if Debug {
 		err = mesh.Check()
 		if err != nil {
-			err = fmt.Errorf("Input: %v", err)
+			err = fmt.Errorf("input: %v", err)
 			return
 		}
 	}
@@ -1308,7 +1308,7 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 		if Debug {
 			err = mesh.Check()
 			if err != nil {
-				err = fmt.Errorf("End of loop: %v", err)
+				err = fmt.Errorf("end of loop: %v", err)
 				return
 			}
 		}
@@ -1322,7 +1322,7 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 	if Debug {
 		err = mesh.Check()
 		if err != nil {
-			err = fmt.Errorf("End: %v", err)
+			err = fmt.Errorf("end: %v", err)
 			return
 		}
 	}
@@ -1699,7 +1699,7 @@ func (mesh *Mesh) Smooth(pts ...int) (err error) {
 	if Debug {
 		err = mesh.Check()
 		if err != nil {
-			err = fmt.Errorf("End of func: %v", err)
+			err = fmt.Errorf("end of func: %v", err)
 			return
 		}
 	}
@@ -1953,7 +1953,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 	if Debug {
 		err = mesh.Check()
 		if err != nil {
-			err = fmt.Errorf("At the end: %v", err)
+			err = fmt.Errorf("at the end: %v", err)
 			return
 		}
 	}

@@ -6,7 +6,6 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/Konstantin8105/errors"
 	eTree "github.com/Konstantin8105/errors"
 	"github.com/Konstantin8105/pow"
 )
@@ -123,7 +122,7 @@ func (s State) String() string {
 
 // Check - check input data
 func Check(pps ...Point) error {
-	et := errors.New("Check points")
+	et := eTree.New("Check points")
 	for i := range pps {
 		if x, y := pps[i].X, pps[i].Y; math.IsNaN(x) || math.IsInf(x, 0) ||
 			math.IsNaN(y) || math.IsInf(y, 0) {
@@ -898,9 +897,9 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 	switch Orientation(Arc0, Arc1, Arc2) {
 	case CollinearPoints:
 		et := eTree.New("ArcSplitByPoint: collinear")
-		_ = et.Add(fmt.Errorf("Arc0 = %.12e", Arc0))
-		_ = et.Add(fmt.Errorf("Arc1 = %.12e", Arc1))
-		_ = et.Add(fmt.Errorf("Arc2 = %.12e", Arc2))
+		_ = et.Add(fmt.Errorf("arc0 = %.12e", Arc0))
+		_ = et.Add(fmt.Errorf("arc1 = %.12e", Arc1))
+		_ = et.Add(fmt.Errorf("arc2 = %.12e", Arc2))
 		panic(et)
 	case ClockwisePoints:
 		res, err = ArcSplitByPoint(Arc2, Arc1, Arc0, pi...)
