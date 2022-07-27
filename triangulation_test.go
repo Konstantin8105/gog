@@ -10,6 +10,53 @@ import (
 	"testing"
 )
 
+func BenchmarkTriangulation(b *testing.B) {
+	pps := []Point{
+		Point{X: 1, Y: 1}, // 0
+		Point{X: 4, Y: 4}, // 1
+		Point{X: 0, Y: 5}, // 2
+		Point{X: 5, Y: 0}, // 3
+	}
+
+	for n := 0; n < b.N; n++ {
+		var model Model
+		for i := range pps {
+			if i == 0 {
+				continue
+			}
+			model.AddLine(pps[i-1], pps[i], 10)
+		}
+
+		// distance
+		var dist float64
+		dist = model.MinPointDistance()
+		{
+			xmax := -math.MaxFloat64
+			xmin := +math.MaxFloat64
+			for i := range model.Points {
+				xmax = math.Max(xmax, model.Points[i].X)
+				xmin = math.Min(xmin, model.Points[i].X)
+			}
+			dist = math.Max(dist, math.Abs(xmax-xmin)/10.0)
+		}
+		model.Intersection()
+		model.Split(dist)
+		model.ArcsToLines()
+		mesh, err := New(model)
+		if err != nil {
+			panic(err)
+		}
+		err = mesh.Delanay()
+		if err != nil {
+			panic(err)
+		}
+		err = mesh.Check()
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func TestTriangulation(t *testing.T) {
 	pnts := [][]Point{
 		{ // 0

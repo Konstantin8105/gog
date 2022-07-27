@@ -6,6 +6,28 @@ import (
 	"testing"
 )
 
+func BenchmarkLine3d(b *testing.B) {
+	pps := []Point3d{
+		Point3d{1, 1, 0}, // 0
+		Point3d{4, 4, 0}, // 1
+		Point3d{0, 5, 0}, // 2
+		Point3d{5, 0, 0}, // 3
+	}
+	ra, rb, tint := LineLine3d(
+		pps[0], pps[1],
+		pps[2], pps[3],
+	)
+	if !tint {
+		panic(fmt.Errorf("%v %v %v", ra, rb, tint))
+	}
+	for n := 0; n < b.N; n++ {
+		LineLine3d(
+			pps[0], pps[1],
+			pps[2], pps[3],
+		)
+	}
+}
+
 func ExamplePlane() {
 	delta := 1.0
 	for i := 0; i < 30; i++ {

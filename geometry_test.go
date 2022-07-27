@@ -926,7 +926,7 @@ func ExampleLinear() {
 	// 0.00000000000000000000e+00
 }
 
-func Benchmark(b *testing.B) {
+func BenchmarkLineLine(b *testing.B) {
 	pps := []Point{
 		Point{X: 1, Y: 1}, // 0
 		Point{X: 4, Y: 4}, // 1

@@ -125,7 +125,8 @@ func LineLine3d(
 		{a1[1] - a0[1], -(b1[1] - b0[1]), b0[1] - a0[1]},
 		{a1[2] - a0[2], -(b1[2] - b0[2]), b0[2] - a0[2]},
 	}
-	var Ka, Kb []float64
+	Ka := make([]float64, 0, 3)
+	Kb := make([]float64, 0, 3)
 	for _, v := range [3][2]int{{0, 1}, {1, 2}, {2, 0}} {
 		x, y, err := Linear(
 			sys[v[0]][0], sys[v[0]][1], sys[v[0]][2],

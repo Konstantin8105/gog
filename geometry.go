@@ -1006,6 +1006,11 @@ again:
 
 // TODO: panic free
 
+var (
+	ErrorDivZero        = fmt.Errorf("div value is too small")
+	ErrorNotValidSystem = fmt.Errorf("not valid system")
+)
+
 // Linear equations solving:
 //	a11*x + a12*y = b1
 //	a21*x + a22*y = b2
@@ -1013,21 +1018,22 @@ func Linear(
 	a11, a12, b1 float64,
 	a21, a22, b2 float64,
 ) (x, y float64, err error) {
-	defer func() {
-		if err != nil {
-			et := eTree.New("Linear")
-			et.Add(fmt.Errorf("a11 = %.5e", a11))
-			et.Add(fmt.Errorf("a12 = %.5e", a12))
-			et.Add(fmt.Errorf("b1  = %.5e", b1))
-			et.Add(fmt.Errorf("a21 = %.5e", a21))
-			et.Add(fmt.Errorf("a22 = %.5e", a22))
-			et.Add(fmt.Errorf("b2 = %.5e", b2))
-			err = fmt.Errorf("%v\n%v", err, et)
-		}
-	}()
+	// only for debugging
+	// defer func() {
+	// 	if err != nil {
+	// 		et := eTree.New("Linear")
+	// 		et.Add(fmt.Errorf("a11 = %.5e", a11))
+	// 		et.Add(fmt.Errorf("a12 = %.5e", a12))
+	// 		et.Add(fmt.Errorf("b1  = %.5e", b1))
+	// 		et.Add(fmt.Errorf("a21 = %.5e", a21))
+	// 		et.Add(fmt.Errorf("a22 = %.5e", a22))
+	// 		et.Add(fmt.Errorf("b2 = %.5e", b2))
+	// 		err = fmt.Errorf("%v\n%v", err, et)
+	// 	}
+	// }()
 	if math.Abs(a11) < Eps {
 		if math.Abs(a12) < Eps {
-			err = fmt.Errorf("not valid data")
+			err = ErrorNotValidSystem
 			return
 		}
 		// swap parameters
@@ -1045,7 +1051,9 @@ func Linear(
 	// algoritm for FMA
 	div := math.FMA(a22, a11, -a21*a12)
 	if math.Abs(div) < Eps {
-		err = fmt.Errorf("error div = %e", div)
+		// only for debugging
+		// err = fmt.Errorf("error div = %e", div)
+		err = ErrorDivZero
 		return
 	}
 	y = math.FMA(b2, a11, -b1*a21) / div
