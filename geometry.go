@@ -140,6 +140,7 @@ var (
 	Eps = 1e-10
 )
 
+// PointPoint return states between two points.
 func PointPoint(
 	pt0, pt1 Point,
 ) (
@@ -154,6 +155,7 @@ func PointPoint(
 	return
 }
 
+// PointLine return states between point and line.
 func PointLine(
 	pt Point,
 	pb0, pb1 Point,
@@ -341,6 +343,7 @@ func LineLine(
 	return
 }
 
+// MiddlePoint calculate middle point precisionally.
 func MiddlePoint(p0, p1 Point) Point {
 	// const prec = 128
 	//
@@ -375,7 +378,7 @@ func MiddlePoint(p0, p1 Point) Point {
 	return Point{X: x, Y: y}
 }
 
-// LinePointDistance return distance between line and point
+// PointLineDistance return distance between line and point.
 //
 // Equation of line:
 //	(y2-y1)*(x-x1) = (x2-x1)(y-y1)

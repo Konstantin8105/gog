@@ -13,6 +13,12 @@ import (
 	eTree "github.com/Konstantin8105/errors"
 )
 
+func TestEmpty(t *testing.T){
+	if empty != 1 {
+		t.Errorf("First default value is not valid: %d", empty)
+	}
+}
+
 func getStates() (names []string) {
 	out, err := exec.Command("go", "doc", "-all", "State").CombinedOutput()
 	if err != nil {

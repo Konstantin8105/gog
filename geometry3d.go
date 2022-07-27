@@ -86,6 +86,7 @@ func ZeroLine3d(
 	return Distance3d(l0, l1) < Eps3D
 }
 
+// PointLineRatio3d return point in accroding to line ratio
 func PointLineRatio3d(
 	l0, l1 Point3d,
 	ratio float64,
@@ -99,6 +100,7 @@ func PointLineRatio3d(
 	return
 }
 
+// LineLine3d return intersection of two points.
 // Point on line corner ignored
 func LineLine3d(
 	a0, a1 Point3d,
@@ -199,6 +201,7 @@ func ZeroTriangle3d(
 	return ZeroLine3d(t0, t1) || ZeroLine3d(t1, t2) || ZeroLine3d(t2, t0)
 }
 
+// PointTriangle3d return true only if point located inside triangle but
 // do not check point on triangle edge
 func PointTriangle3d(
 	p Point3d,
@@ -227,6 +230,8 @@ func PointTriangle3d(
 	return true
 }
 
+// LineTriangle3dI1 return intersection points for case if line and
+// triangle is not on one plane.
 // line intersect triangle in one point
 func LineTriangle3dI1(
 	l0, l1 Point3d,
@@ -264,6 +269,8 @@ func LineTriangle3dI1(
 	return
 }
 
+// LineTriangle3dI2 return intersection points if line and triangle
+// located on one plane.
 // Line on triangle plane
 // Line is not zero
 // ignore triangle point on line
@@ -298,6 +305,7 @@ func LineTriangle3dI2(
 	return
 }
 
+// TriangleTriangle3d return intersection points between two triangles.
 // do not intersect with egdes
 func TriangleTriangle3d(
 	a0, a1, a2 Point3d,

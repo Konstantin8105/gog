@@ -13,18 +13,36 @@ const (
 	CounterClockwisePoints                   = 1
 )
 const (
-	Boundary  = -1
-	Removed   = -2
+	// Boundary edge
+	Boundary = -1
+
+	// Removed element
+	Removed = -2
+
+	// Undefined state only for not valid algorithm
 	Undefined = -3
 	Fixed     = 100
 	Movable   = 200
 )
+const Eps3D = 1e-5
+    Eps3D is default epsilon for 3D operations
+
 
 VARIABLES
 
 var (
+	// ErrorDivZero is typical result with not acceptable solving
+	ErrorDivZero = fmt.Errorf("div value is too small")
+
+	// ErrorNotValidSystem is typical return only if system of
+	// linear equation have not valid data
+	ErrorNotValidSystem = fmt.Errorf("not valid system")
+)
+var (
+	// Debug only for debugging
 	Debug = false
-	Log   = false
+	// Log only for minimal logging
+	Log = false
 )
 var (
 	// Eps is epsilon - precision of intersection
@@ -37,15 +55,19 @@ func AngleBetween(center, from, mid, to, a Point) (res bool)
     AngleBetween return true for angle case from <= a <= to
 
 func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64)
+    Arc return parameters of circle
+
 func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err error)
-    ArcSplit return points of arcs with middle point if pi is empty or slice of
-    arcs.
+    ArcSplitByPoint return points of arcs with middle point if pi is empty or
+    slice of arcs.
 
         DO NOT CHECKED POINT ON ARC
 
 func Area(
 	tr0, tr1, tr2 Point,
 ) float64
+    Area return area of triangle
+
 func Check(pps ...Point) error
     Check - check input data
 
@@ -53,10 +75,13 @@ func Distance(p0, p1 Point) float64
     Distance between two points
 
 func Distance128(p0, p1 Point) float64
-func Line(p0, p1 Point) (A, B, C float64)
-    line parameters
+    Distance128 is distance between 2 points with 128-bit precisions
 
-        Ax+By+C = 0
+func Distance3d(p0, p1 Point3d) float64
+    Distance3d is distance between 2 points in 3D
+
+func Line(p0, p1 Point) (A, B, C float64)
+    Line parameters by formula: Ax+By+C = 0
 
 func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
@@ -97,14 +122,30 @@ func LineLine(
 
         [1]  https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 
+func LineLine3d(
+	a0, a1 Point3d,
+	b0, b1 Point3d,
+) (
+	ratioA, ratioB float64,
+	intersect bool,
+)
+    LineLine3d return intersection of two points. Point on line corner ignored
+
 func Linear(
 	a11, a12, b1 float64,
 	a21, a22, b2 float64,
-) (x, y float64)
+) (x, y float64, err error)
     Linear equations solving:
 
         a11*x + a12*y = b1
         a21*x + a22*y = b2
+
+func Plane(
+	p1, p2, p3 Point3d,
+) (
+	A, B, C, D float64,
+)
+    Plane equation `A*x+B*y+C*z+D=0`
 
 func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
@@ -113,6 +154,9 @@ func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
     PointArc return state and intersections points between point and arc
 
 func PointInCircle(point Point, circle [3]Point) bool
+    PointInCircle return true only if point inside circle based on 3 circles
+    points
+
 func PointLine(
 	pt Point,
 	pb0, pb1 Point,
@@ -120,11 +164,21 @@ func PointLine(
 	pi []Point,
 	stA, stB State,
 )
+    PointLine return states between point and line.
+
+func PointLine3d(
+	p Point3d,
+	l0, l1 Point3d,
+) (
+	intersect bool,
+)
+    PointLine3d return true only if point located on line segment
+
 func PointLineDistance(
 	pc Point,
 	p0, p1 Point,
 ) (distance float64)
-    LinePointDistance return distance between line and point
+    PointLineDistance return distance between line and point.
 
     Equation of line:
 
@@ -140,13 +194,41 @@ func PointLineDistance(
 
         d = |(A*xm+B*ym+C)/sqrt(A^2+B^2)|
 
+func PointOnPlane3d(
+	A, B, C, D float64,
+	p Point3d,
+) (
+	on bool,
+)
 func PointPoint(
 	pt0, pt1 Point,
 ) (
 	pi []Point,
 	stA, stB State,
 )
+    PointPoint return states between two points.
+
+func PointPoint3d(
+	p0 Point3d,
+	p1 Point3d,
+) (
+	intersect bool,
+)
+    PointPoint3d return true only if points have same coordinate
+
+func PointTriangle3d(
+	p Point3d,
+	t0, t1, t2 Point3d,
+) (
+	intersect bool,
+)
+    PointTriangle3d return true only if point located inside triangle but do not
+    check point on triangle edge
+
 func SamePoints(p0, p1 Point) bool
+    SamePoints return true only if point on very distance or with same
+    coordinates
+
 func TriangleSplitByPoint(
 	pt Point,
 	tr0, tr1, tr2 Point,
@@ -155,6 +237,23 @@ func TriangleSplitByPoint(
 	lineIntersect int,
 	err error,
 )
+    TriangleSplitByPoint split triangle on triangles only if point inside
+    triangle or on triangle edge
+
+func ZeroLine3d(
+	l0, l1 Point3d,
+) (
+	zero bool,
+)
+    ZeroLine3d return true only if lenght of line segment is zero
+
+func ZeroTriangle3d(
+	t0, t1, t2 Point3d,
+) (
+	zero bool,
+)
+    ZeroTriangle3d return true only if triangle have zero area
+
 
 TYPES
 
@@ -163,8 +262,9 @@ type Mesh struct {
 	Triangles [][3]int // indexes of near triangles
 	// Has unexported fields.
 }
-    Triangle is data structure "Nodes, ribs и triangles" created by book
-    "Algoritm building and analyse triangulation", A.B.Skvorcov
+    Mesh is based structure of triangulation. Triangle is data structure "Nodes,
+    ribs и triangles" created by book "Algoritm building and analyse
+    triangulation", A.B.Skvorcov
 
         Scketch:
         +------------------------------------+
@@ -259,8 +359,8 @@ func (model *Model) Get(mesh *Mesh)
 func (m *Model) Intersection()
     Intersection change model with finding all model intersections
 
-func (m Model) Json() (_ string, err error)
-    Json convert in JSON format
+func (m Model) JSON() (_ string, err error)
+    JSON convert model in JSON format
 
 func (to *Model) Merge(from Model)
 
@@ -296,6 +396,7 @@ func (m Model) Write(filename string) (err error)
     Write model into file with filename in JSON format
 
 type OrientationPoints int8
+    OrientationPoints is orientation points state
 
 func Orientation(p1, p2, p3 Point) OrientationPoints
 
@@ -310,6 +411,7 @@ func ConvexHull(points []Point) (chain []Point)
     ConvexHull return chain of convex points
 
 func MiddlePoint(p0, p1 Point) Point
+    MiddlePoint calculate middle point precisionally.
 
 func MirrorLine(
 	sp0, sp1 Point,
@@ -327,32 +429,85 @@ func Rotate(xc, yc, angle float64, point Point) (p Point)
 func (p Point) String() string
     String is implementation of Stringer implementation for formating output
 
+type Point3d [3]float64
+    Point3d is point coordinate in 3D decart system
+
+func LineTriangle3dI1(
+	l0, l1 Point3d,
+	t0, t1, t2 Point3d,
+) (
+	intersect bool,
+	pi []Point3d,
+)
+    LineTriangle3dI1 return intersection points for case if line and triangle is
+    not on one plane. line intersect triangle in one point
+
+func LineTriangle3dI2(
+	l0, l1 Point3d,
+	t0, t1, t2 Point3d,
+) (
+	intersect bool,
+	pi []Point3d,
+)
+    LineTriangle3dI2 return intersection points if line and triangle located on
+    one plane. Line on triangle plane Line is not zero ignore triangle point on
+    line
+
+func PointLineRatio3d(
+	l0, l1 Point3d,
+	ratio float64,
+) (
+	p Point3d,
+)
+    PointLineRatio3d return point in accroding to line ratio
+
+func TriangleTriangle3d(
+	a0, a1, a2 Point3d,
+	b0, b1, b2 Point3d,
+) (
+	intersect bool,
+	pi []Point3d,
+)
+    TriangleTriangle3d return intersection points between two triangles. do not
+    intersect with egdes
+
 type State int64
     State is result of intersection
 
 const (
-	VerticalSegment State // vertical segment
 
-	HorizontalSegment // horizontal segment
+	// VerticalSegment return if segment is vertical
+	VerticalSegment State
 
-	ZeroLengthSegment // zero length segment
+	// HorizontalSegment return if segment is horizontal
+	HorizontalSegment
+
+	// ZeroLengthSegment return for zero length segment
+	ZeroLengthSegment
 
 	// Segment A and segment B are parallel.
 	// Intersection point data is not valid.
 	Parallel
 
+	// Collinear return if:
 	// Segment A and segment B are collinear.
 	// Intersection point data is not valid.
 	Collinear
 
-	OnSegment // intersection point on segment
+	// OnSegment is intersection point on segment
+	OnSegment
 
-	OnPoint0Segment // intersection point on point 0 segment
-	OnPoint1Segment // intersection point on point 1 segment
+	// OnPoint0Segment intersection point on point 0 segment
+	OnPoint0Segment
 
-	ArcIsLine  // wrong arc is line
-	ArcIsPoint // wrong arc is point
+	// OnPoint1Segment intersection point on point 1 segment
+	OnPoint1Segment
 
+	// ArcIsLine return only if wrong arc is line
+	ArcIsLine
+
+	// ArcIsPoint return only if wrong arc is point
+	ArcIsPoint
 )
 func (s State) Has(si State) bool
     Has is mean s-State has si-State
