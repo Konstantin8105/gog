@@ -32,6 +32,20 @@ func Distance3d(p0, p1 Point3d) float64 {
 	// https://arxiv.org/pdf/1904.09481.pdf
 }
 
+// SamePoints3d return true only if point on very distance or
+// with same coordinates
+func SamePoints3d(p0, p1 Point3d) bool {
+	if p0[0] == p1[0] && p0[1] == p1[1] && p0[2] == p1[2] {
+		return true
+	}
+	for i := 0; i < 3; i++ {
+		if Eps3D < math.Abs(p0[i]-p1[i]) {
+			return false
+		}
+	}
+	return Distance3d(p0, p1) < Eps3D
+}
+
 // PointPoint3d return true only if points have same coordinate
 func PointPoint3d(
 	p0 Point3d,
