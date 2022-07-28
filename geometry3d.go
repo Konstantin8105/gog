@@ -161,6 +161,16 @@ func LineLine3d(
 	if len(Ka) < 1 {
 		return
 	}
+	for _, ks := range [2][]float64{Ka, Kb} {
+		for i := range ks {
+			if i == 0 {
+				continue
+			}
+			if Eps3D < math.Abs(ks[i-1]-ks[i]) {
+				return
+			}
+		}
+	}
 	for i := range Ka {
 		ratioA = math.FMA(Ka[i], 1.0/float64(len(Ka)), ratioA)
 		ratioB = math.FMA(Kb[i], 1.0/float64(len(Kb)), ratioB)

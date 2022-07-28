@@ -174,6 +174,19 @@ func Test3D(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("LL false", func(t *testing.T) {
+		rA, rB, intersect := LineLine3d(
+			Point3d{0.5, 3, 0},
+			Point3d{2.5, 3, 0},
+			Point3d{0.25, 2.6, 0.4330127018922196},
+			Point3d{0.4330127018922194, 2.8, 0.25},
+		)
+		if intersect {
+			t.Errorf("false: %v, %v", rA, rB)
+		}
+	})
+
 	t.Run("PT false", func(t *testing.T) {
 		intersect := PointTriangle3d(
 			Point3d{0, 0, 1},
