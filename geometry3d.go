@@ -222,7 +222,10 @@ func ZeroTriangle3d(
 ) (
 	zero bool,
 ) {
-	return ZeroLine3d(t0, t1) || ZeroLine3d(t1, t2) || ZeroLine3d(t2, t0)
+	return ZeroLine3d(t0, t1) || ZeroLine3d(t1, t2) || ZeroLine3d(t2, t0) ||
+		PointLine3d(t0, t1, t2) ||
+		PointLine3d(t1, t0, t2) ||
+		PointLine3d(t2, t1, t0)
 }
 
 // PointTriangle3d return true only if point located inside triangle but
