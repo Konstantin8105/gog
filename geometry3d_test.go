@@ -352,4 +352,15 @@ func Test3D(t *testing.T) {
 			t.Errorf("false: %v", ip)
 		}
 	})
+
+	t.Run("ZeroTriangle3d true", func(t *testing.T) {
+		zero := ZeroTriangle3d(
+			Point3d{0, 0, 0},
+			Point3d{0, 2, 0},
+			Point3d{1, 2, 0},
+		)
+		if zero {
+			t.Errorf("false")
+		}
+	})
 }

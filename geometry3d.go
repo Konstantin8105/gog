@@ -87,6 +87,10 @@ func PointLine3d(
 			return
 		}
 	}
+	// compare distances
+	if Eps3D < math.Abs(Distance3d(l0, p)+Distance3d(l1, p)-Distance3d(l0, l1)) {
+		return
+	}
 	// is point on line
 	return true
 }
