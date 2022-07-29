@@ -253,7 +253,7 @@ func PointTriangle3d(
 	} {
 		var rA, rB float64
 		rA, rB, intersect = LineLine3d(*v[0], *v[1], *v[2], *v[3])
-		if !intersect || rA < 0.0 || rB < 0.0 {
+		if !intersect || rA < 0.0 || rB <= 0.0 || 1.0 <= rB {
 			// point is not in triangle
 			return false
 		}
@@ -343,9 +343,8 @@ func TriangleTriangle3d(
 	b0, b1, b2 Point3d,
 ) (
 	intersect bool,
-	pi []Point3d,
+	pis []Point3d,
 ) {
-	var pis []Point3d
 	for i := 0; i < 2; i++ {
 		if i == 1 {
 			a0, a1, a2, b0, b1, b2 = b0, b1, b2, a0, a1, a2 // swap
@@ -357,17 +356,10 @@ func TriangleTriangle3d(
 			for _, v := range [3][2]*Point3d{{&a0, &a1}, {&a1, &a2}, {&a2, &a0}} {
 				ilt, pit := f(*v[0], *v[1], b0, b1, b2)
 				if ilt {
-					intersect = intersect || ilt
+					intersect = true
 					pis = append(pis, pit...)
 				}
 			}
-		}
-	}
-	for i := range pis {
-		if PointTriangle3d(pis[i], a0, a1, a2) &&
-			PointTriangle3d(pis[i], b0, b1, b2) {
-			pi = append(pi, pis[i])
-			continue
 		}
 	}
 	return

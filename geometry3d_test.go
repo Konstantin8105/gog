@@ -187,7 +187,7 @@ func Test3D(t *testing.T) {
 		}
 	})
 
-	t.Run("PT false", func(t *testing.T) {
+	t.Run("PT0 false", func(t *testing.T) {
 		intersect := PointTriangle3d(
 			Point3d{0, 0, 1},
 			Point3d{-1, -1, 0}, Point3d{1, -1, 0}, Point3d{0, 10, 0},
@@ -196,7 +196,7 @@ func Test3D(t *testing.T) {
 			t.Errorf("false")
 		}
 	})
-	t.Run("PT true", func(t *testing.T) {
+	t.Run("PT0 true", func(t *testing.T) {
 		intersect := PointTriangle3d(
 			Point3d{0, 0, 0},
 			Point3d{-1, -1, 0}, Point3d{1, -1, 0}, Point3d{0, 10, 0},
@@ -205,6 +205,17 @@ func Test3D(t *testing.T) {
 			t.Errorf("false")
 		}
 	})
+
+	t.Run("PT1 false", func(t *testing.T) {
+		intersect := PointTriangle3d(
+			Point3d{0, 1, 0},
+			Point3d{0, 0, 0}, Point3d{0, 2, 0}, Point3d{1, 2, 0},
+		)
+		if intersect {
+			t.Errorf("false")
+		}
+	})
+
 	t.Run("ZeroT", func(t *testing.T) {
 		zero := ZeroTriangle3d(
 			Point3d{-1, 0, 0}, Point3d{-1, 0, 0}, Point3d{0, 10, 0},
@@ -343,13 +354,13 @@ func Test3D(t *testing.T) {
 		}
 	})
 
-	t.Run("TT 0 true", func(t *testing.T) {
+	t.Run("TT0 true", func(t *testing.T) {
 		intersect, ip := TriangleTriangle3d(
 			Point3d{-1.1, 0, -1}, Point3d{1.1, 0, -1}, Point3d{0, 0, 1},
-			Point3d{-1, -1, 0}, Point3d{1, -1, 0}, Point3d{0, 1, 0},
+			Point3d{-1.0, -1, 0}, Point3d{1.0, -1, 0}, Point3d{0, 1, 0},
 		)
 		if !intersect || len(ip) != 2 {
-			t.Errorf("false: %v", ip)
+			t.Errorf("false: %v %v",intersect, ip)
 		}
 	})
 
