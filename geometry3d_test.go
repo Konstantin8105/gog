@@ -331,8 +331,8 @@ func Test3D(t *testing.T) {
 			Point3d{-3, 10, 0}, Point3d{0.1, 10, 0},
 			Point3d{-1, -1, 0}, Point3d{1, -1, 0}, Point3d{0, 10, 0},
 		)
-		if !intersect || len(ip) != 2 {
-			t.Errorf("false: %v", ip)
+		if intersect {
+			t.Errorf("false: %v %v", intersect, ip)
 		}
 	})
 	t.Run("LT2 outside 1 false", func(t *testing.T) {
@@ -354,13 +354,26 @@ func Test3D(t *testing.T) {
 		}
 	})
 
-	t.Run("TT0 true", func(t *testing.T) {
+	t.Run("TT0 false", func(t *testing.T) {
+		intersect, ip := TriangleTriangle3d(
+			Point3d{0.4330127018922193, 0.4, 0.25000000000000006},
+			Point3d{1.2499999999999998, 0.2, 2.165063509461097},
+			Point3d{2.1650635094610964, 0.4, 1.2500000000000002},
+			Point3d{0.24999999999999997, 0.2, 0.43301270189221935},
+			Point3d{0.4330127018922193, 0.4, 0.25000000000000006},
+			Point3d{1.2499999999999998, 0.2, 2.165063509461097},
+		)
+		if intersect {
+			t.Errorf("false: %v %v", intersect, ip)
+		}
+	})
+	t.Run("TT1 true", func(t *testing.T) {
 		intersect, ip := TriangleTriangle3d(
 			Point3d{-1.1, 0, -1}, Point3d{1.1, 0, -1}, Point3d{0, 0, 1},
 			Point3d{-1.0, -1, 0}, Point3d{1.0, -1, 0}, Point3d{0, 1, 0},
 		)
 		if !intersect || len(ip) != 2 {
-			t.Errorf("false: %v %v",intersect, ip)
+			t.Errorf("false: %v %v", intersect, ip)
 		}
 	})
 

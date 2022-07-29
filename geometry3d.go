@@ -327,7 +327,7 @@ func LineTriangle3dI2(
 	// line outside triangle
 	for _, v := range [3][2]*Point3d{{&t0, &t1}, {&t1, &t2}, {&t2, &t0}} {
 		if rA, rB, ill := LineLine3d(l0, l1, *v[0], *v[1]); ill &&
-			0 <= rA && rA <= 1 && 0 <= rB && rB <= 1 {
+			0 < rA && rA < 1 && 0 < rB && rB < 1 {
 			intersect = true
 			p := PointLineRatio3d(l0, l1, rA)
 			pi = append(pi, p)
@@ -343,7 +343,7 @@ func TriangleTriangle3d(
 	b0, b1, b2 Point3d,
 ) (
 	intersect bool,
-	pis []Point3d,
+	pi []Point3d,
 ) {
 	for i := 0; i < 2; i++ {
 		if i == 1 {
@@ -357,7 +357,7 @@ func TriangleTriangle3d(
 				ilt, pit := f(*v[0], *v[1], b0, b1, b2)
 				if ilt {
 					intersect = true
-					pis = append(pis, pit...)
+					pi = append(pi, pit...)
 				}
 			}
 		}
