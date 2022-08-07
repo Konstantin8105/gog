@@ -388,3 +388,29 @@ func Test3D(t *testing.T) {
 		}
 	})
 }
+
+func TestMirror3d(t *testing.T) {
+	var (
+		a = +2.0
+		b = -1.0
+		c = +1.0
+		d = +3.0
+	)
+	vers := []Point3d{
+		{-1, 3, 4},
+		{0, 0, 0},
+		{1e3, 1e-3, 20},
+	}
+	for _, v := range vers {
+		plane := [3]Point3d{
+			Point3d{1, 0, (d - a*1 - b*0) / c},
+			Point3d{1, 1, (d - a*1 - b*1) / c},
+			Point3d{0, 1, (d - a*0 - b*1) / c},
+		}
+		mir := Mirror3d(plane, v)
+		mir2 := Mirror3d(plane, mir[0])
+		if Eps3D < Distance3d(v, mir2[0]) {
+			t.Errorf("FAIL")
+		}
+	}
+}

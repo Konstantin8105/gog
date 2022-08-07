@@ -364,3 +364,32 @@ func TriangleTriangle3d(
 	}
 	return
 }
+
+func Mirror3d(plane [3]Point3d, points ...Point3d) (mir []Point3d) {
+	// plane equation `A*x+B*y+C*z+D=0`
+	A, B, C, D := Plane(plane[0], plane[1], plane[2])
+
+	// A * A + B * B + C * C
+	div := math.FMA(A, A, math.FMA(B, B, C*C))
+	if div < Eps3D {
+		return
+	}
+
+	for _, p := range points {
+		// (-A * x1 - B * y1 - C * z1 - D)
+		k := math.FMA(-A, p[0], math.FMA(-B, p[1], math.FMA(-C, p[2], -D)))
+		k = k / div
+		pc := [3]float64{
+			math.FMA(A, k, p[0]),
+			math.FMA(B, k, p[1]),
+			math.FMA(C, k, p[2]),
+		} // point on plane
+		pr := [3]float64{
+			math.FMA(2, pc[0], -p[0]),
+			math.FMA(2, pc[1], -p[1]),
+			math.FMA(2, pc[2], -p[2]),
+		} // mirror point
+		mir = append(mir, pr)
+	}
+	return
+}
