@@ -193,6 +193,19 @@ func (m *Model) AddLine(start, end Point, tag int) {
 	m.Lines = append(m.Lines, [3]int{st, en, tag})
 }
 
+// AddMultiline add many lines with specific tag
+func (m *Model) AddMultiline(tag int, ps ...Point) {
+	if len(ps) < 2 {
+		return
+	}
+	for i := range ps {
+		if i == 0 {
+			continue
+		}
+		m.AddLine(ps[i-1], ps[i], tag)
+	}
+}
+
 // AddArc add arc into model with specific tag
 func (m *Model) AddArc(start, middle, end Point, tag int) {
 	// add points

@@ -229,6 +229,10 @@ func SamePoints(p0, p1 Point) bool
     SamePoints return true only if point on very distance or with same
     coordinates
 
+func SamePoints3d(p0, p1 Point3d) bool
+    SamePoints3d return true only if point on very distance or with same
+    coordinates
+
 func TriangleSplitByPoint(
 	pt Point,
 	tr0, tr1, tr2 Point,
@@ -334,6 +338,9 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int)
 
 func (m *Model) AddLine(start, end Point, tag int)
     AddLine add line into model with specific tag
+
+func (m *Model) AddMultiline(tag int, ps ...Point)
+    AddMultiline add many lines with specific tag
 
 func (m *Model) AddPoint(p Point) (index int)
     AddPoint return index in model slice point
@@ -452,6 +459,8 @@ func LineTriangle3dI2(
     LineTriangle3dI2 return intersection points if line and triangle located on
     one plane. Line on triangle plane Line is not zero ignore triangle point on
     line
+
+func Mirror3d(plane [3]Point3d, points ...Point3d) (mir []Point3d)
 
 func PointLineRatio3d(
 	l0, l1 Point3d,
