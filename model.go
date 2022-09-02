@@ -123,31 +123,33 @@ func (m Model) Dxf() string {
 	// text := func(str string, p1, p2 Point) {
 	// }
 
-	// draw convex
-	{
-		cps := ConvexHull(m.Points)
-		for i := 1; i < len(cps); i++ {
-			line(cps[i-1], cps[i], "convex")
+	if 1 < len(m.Points) {
+		// draw convex
+		{
+			cps := ConvexHull(m.Points)
+			for i := 1; i < len(cps); i++ {
+				line(cps[i-1], cps[i], "convex")
+			}
+			line(cps[len(cps)-1], cps[0], "convex")
 		}
-		line(cps[len(cps)-1], cps[0], "convex")
-	}
-	// draw lines
-	for i := range m.Lines {
-		name := fmt.Sprintf("lines%+2d", m.Lines[i][2])
-		line(m.Points[m.Lines[i][0]], m.Points[m.Lines[i][1]], name)
-	}
-	// draw arc
-	for i := range m.Arcs {
-		name := fmt.Sprintf("arcs%+2d", m.Arcs[i][3])
-		line(m.Points[m.Arcs[i][0]], m.Points[m.Arcs[i][1]], name)
-		line(m.Points[m.Arcs[i][1]], m.Points[m.Arcs[i][2]], name)
-	}
-	// draw triangles
-	for i := range m.Triangles {
-		name := fmt.Sprintf("triangles%+2d", m.Triangles[i][3])
-		line(m.Points[m.Triangles[i][0]], m.Points[m.Triangles[i][1]], name)
-		line(m.Points[m.Triangles[i][1]], m.Points[m.Triangles[i][2]], name)
-		line(m.Points[m.Triangles[i][2]], m.Points[m.Triangles[i][0]], name)
+		// draw lines
+		for i := range m.Lines {
+			name := fmt.Sprintf("lines%+2d", m.Lines[i][2])
+			line(m.Points[m.Lines[i][0]], m.Points[m.Lines[i][1]], name)
+		}
+		// draw arc
+		for i := range m.Arcs {
+			name := fmt.Sprintf("arcs%+2d", m.Arcs[i][3])
+			line(m.Points[m.Arcs[i][0]], m.Points[m.Arcs[i][1]], name)
+			line(m.Points[m.Arcs[i][1]], m.Points[m.Arcs[i][2]], name)
+		}
+		// draw triangles
+		for i := range m.Triangles {
+			name := fmt.Sprintf("triangles%+2d", m.Triangles[i][3])
+			line(m.Points[m.Triangles[i][0]], m.Points[m.Triangles[i][1]], name)
+			line(m.Points[m.Triangles[i][1]], m.Points[m.Triangles[i][2]], name)
+			line(m.Points[m.Triangles[i][2]], m.Points[m.Triangles[i][0]], name)
+		}
 	}
 
 	// end dxf
