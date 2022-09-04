@@ -1569,6 +1569,7 @@ func (mesh *Mesh) Smooth(pts ...int) (err error) {
 	}
 
 	// create list of all movable points
+	var nearPoints, nearTriangles []int
 	for _, p := range pts {
 		if mesh.Points[p] != Movable {
 			continue
@@ -1591,7 +1592,8 @@ func (mesh *Mesh) Smooth(pts ...int) (err error) {
 			}
 		}
 		// find near triangles
-		var nearPoints, nearTriangles []int
+		nearPoints = nearPoints[:0]
+		nearTriangles = nearTriangles[:0]
 		for index, tri := range mesh.model.Triangles {
 			if p != tri[0] && p != tri[1] && p != tri[2] {
 				continue
