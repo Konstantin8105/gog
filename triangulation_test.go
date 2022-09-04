@@ -57,6 +57,33 @@ func BenchmarkTriangulation(b *testing.B) {
 	}
 }
 
+func BenchmarkSplit(b *testing.B) {
+	pps := []Point{
+		Point{X: 1, Y: 1}, // 0
+		Point{X: 4, Y: 4}, // 1
+		Point{X: 0, Y: 5}, // 2
+		Point{X: 5, Y: 0}, // 3
+	}
+	var dist float64 = 0.1
+
+	for n := 0; n < b.N; n++ {
+		var model Model
+		for i := range pps {
+			if i == 0 {
+				continue
+			}
+			model.AddLine(pps[i-1], pps[i], 10)
+		}
+		mesh, err := New(model)
+		if err != nil {
+			panic(err)
+		}
+
+		// distance
+		mesh.Split(dist)
+	}
+}
+
 func TestTriangulation(t *testing.T) {
 	pnts := [][]Point{
 		{ // 0

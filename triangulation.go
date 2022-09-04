@@ -1272,9 +1272,10 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 		for tr := range mesh.model.Triangles {
 			if 0 < len(tri) {
 				found := false
-				for _, t := range tri {
-					if tr == t {
+				for i := range tri {
+					if tr == tri[i] {
 						found = true
+						break
 					}
 				}
 				if !found {
