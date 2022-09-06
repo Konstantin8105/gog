@@ -263,6 +263,19 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int) {
 	m.AddArc(up, left, down, tag)
 }
 
+// AddModel inject model into model
+func (m *Model) AddModel(from Model) {
+	for _, l := range from.Lines {
+		m.AddLine(from.Points[l[0]], from.Points[l[1]], l[2])
+	}
+	for _, a := range from.Arcs {
+		m.AddArc(from.Points[a[0]], from.Points[a[1]], from.Points[a[2]], a[3])
+	}
+	for _, t := range from.Triangles {
+		m.AddTriangle(from.Points[t[0]], from.Points[t[1]], from.Points[t[2]], t[3])
+	}
+}
+
 // Intersection change model with finding all model intersections
 func (m *Model) Intersection() {
 	// value `ai` is amount of intersections

@@ -339,6 +339,9 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int)
 func (m *Model) AddLine(start, end Point, tag int)
     AddLine add line into model with specific tag
 
+func (m *Model) AddModel(from Model)
+    AddModel inject model into model
+
 func (m *Model) AddMultiline(tag int, ps ...Point)
     AddMultiline add many lines with specific tag
 
