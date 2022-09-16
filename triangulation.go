@@ -1415,13 +1415,16 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 		// point on edge
 		for j := 0; j < 3; j++ {
 			if orient[j] == CollinearPoints {
-				mat := []int{i, mesh.Triangles[i][j]}
+				mat := []int{
+					mesh.model.Triangles[i][3], 
+					mesh.model.Triangles[mesh.Triangles[i][j]][3], 
+				}
 				if mat[1] == Boundary {
 					materials = append(materials, mat[0])
 					return
 				}
 				if mat[0] != mat[1] {
-					err = fmt.Errorf("not equal materials on edge")
+					err = fmt.Errorf("CollinearPoints: not equal materials on edge")
 					return
 				}
 				materials = append(materials, mat[0])
