@@ -266,8 +266,8 @@ type Mesh struct {
 	Triangles [][3]int // indexes of near triangles
 	// Has unexported fields.
 }
-    Mesh is based structure of triangulation. Triangle is data structure "Nodes,
-    ribs и triangles" created by book "Algoritm building and analyse
+    Mesh is based structure of triangulation. Triangle is data structure
+    "Nodes, ribs и triangles" created by book "Algoritm building and analyse
     triangulation", A.B.Skvorcov
 
         Scketch:
@@ -480,8 +480,8 @@ func TriangleTriangle3d(
 	intersect bool,
 	pi []Point3d,
 )
-    TriangleTriangle3d return intersection points between two triangles. do not
-    intersect with egdes
+    TriangleTriangle3d return intersection points between two triangles.
+    do not intersect with egdes
 
 type State int64
     State is result of intersection
@@ -529,6 +529,5 @@ func (s State) Not(si State) bool
 
 func (s State) String() string
     String is implementation of Stringer implementation for formating output
-
 
 ```

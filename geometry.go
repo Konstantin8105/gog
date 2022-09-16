@@ -10,15 +10,6 @@ import (
 	"github.com/Konstantin8105/pow"
 )
 
-//go:generate rm -f *.dxf
-//go:generate rm -f *.out
-//go:generate rm -f *.test
-//go:generate echo "# gog"
-//go:generate echo "golang geometry library between point and segments"
-//go:generate echo "```\n"
-//go:generate go doc -all .
-//go:generate echo "\n```"
-
 // Point is store of point coordinates
 type Point struct {
 	X, Y float64

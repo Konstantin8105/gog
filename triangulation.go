@@ -465,6 +465,8 @@ func (mesh Mesh) Check() (err error) {
 	return
 }
 
+// Get add into Model all triangles from Mesh
+// Recommendation after `Get` : model.Intersection()
 func (model *Model) Get(mesh *Mesh) {
 	if Log {
 		log.Printf("Get")
@@ -480,7 +482,6 @@ func (model *Model) Get(mesh *Mesh) {
 			tr[3],
 		)
 	}
-	model.Intersection()
 }
 
 // Clockwise change all triangles to clockwise orientation

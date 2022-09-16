@@ -292,6 +292,7 @@ func (m *Model) Intersection() {
 		}
 		return
 	}
+
 	boxIntersect := func(A, B []Point) bool {
 		Axin, Axax, Ayin, Ayax := box(A)
 		Bxin, Bxax, Byin, Byax := box(B)
