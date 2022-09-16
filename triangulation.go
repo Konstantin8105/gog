@@ -1383,7 +1383,7 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			return
 		}
 		// add triangles shall have same materials
-		mat := mesh.model.Triangles[0][3]
+		mat := mesh.model.Triangles[near[0]][3]
 		for _, n := range near {
 			if mat != mesh.model.Triangles[n][3] {
 				err = fmt.Errorf("not equal materials")
