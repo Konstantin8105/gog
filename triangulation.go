@@ -1331,6 +1331,22 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 	return nil
 }
 
+// RemoveMaterials remove material by specific points
+func (mesh *Mesh) RemoveMaterials(ps ...Point) (err error) {
+	mats, err := mesh.GetMaterials(ps...)
+	if err != nil {
+		return
+	}
+	for i := range mesh.model.Triangles {
+		for _, m := range mats {
+			if mesh.model.Triangles[i][3] == m {
+				mesh.model.Triangles[i][0] = Removed
+			}
+		}
+	}
+	return
+}
+
 // GetMaterials return materials for each point
 func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 	if Log {
@@ -1416,8 +1432,8 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 		for j := 0; j < 3; j++ {
 			if orient[j] == CollinearPoints {
 				mat := []int{
-					mesh.model.Triangles[i][3], 
-					mesh.model.Triangles[mesh.Triangles[i][j]][3], 
+					mesh.model.Triangles[i][3],
+					mesh.model.Triangles[mesh.Triangles[i][j]][3],
 				}
 				if mat[1] == Boundary {
 					materials = append(materials, mat[0])

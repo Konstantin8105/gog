@@ -316,6 +316,9 @@ func (mesh *Mesh) Materials() (err error)
     empty. If points slice is not empty, then return material mark number for
     each point
 
+func (mesh *Mesh) RemoveMaterials(ps ...Point) (err error)
+    RemoveMaterials remove material by specific points
+
 func (mesh *Mesh) Smooth(pts ...int) (err error)
     Smooth move all movable point by average distance
 
@@ -365,6 +368,8 @@ func (m Model) Dxf() string
     https://images.autodesk.com/adsk/files/autocad_2012_pdf_dxf-reference_enu.pdf
 
 func (model *Model) Get(mesh *Mesh)
+    Get add into Model all triangles from Mesh Recommendation after `Get` :
+    model.Intersection()
 
 func (m *Model) Intersection()
     Intersection change model with finding all model intersections
