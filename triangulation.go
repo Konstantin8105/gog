@@ -547,29 +547,35 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 	}
 
 	// add points on line
-	for i, size := 0, len(mesh.model.Lines); i < size; i++ {
-		if mesh.model.Lines[i][2] == Removed {
-			continue
-		}
-		// TODO fast box checking
-		_, _, stB := PointLine(
-			p,
-			mesh.model.Points[mesh.model.Lines[i][0]],
-			mesh.model.Points[mesh.model.Lines[i][1]],
-		)
-		if !stB.Has(OnSegment) {
-			continue
-		}
-		// replace point tag
-		tag = Fixed
-		// index of new point
-		idp = add()
-		// add new lines
-		tag := mesh.model.Lines[i][2]
-		mesh.model.AddLine(mesh.model.Points[mesh.model.Lines[i][0]], p, tag)
-		mesh.model.AddLine(p, mesh.model.Points[mesh.model.Lines[i][1]], tag)
-		for p := 0; p < 3; p++ {
-			mesh.model.Lines[i][p] = Removed
+	if tag != Movable {
+		for i, size := 0, len(mesh.model.Lines); i < size; i++ {
+			if mesh.model.Lines[i][2] == Removed {
+				continue
+			}
+			// TODO fast box checking
+			_, _, stB := PointLine(
+				p,
+				mesh.model.Points[mesh.model.Lines[i][0]],
+				mesh.model.Points[mesh.model.Lines[i][1]],
+			)
+			if !stB.Has(OnSegment) {
+				continue
+			}
+			if tag == Movable {
+				err = fmt.Errorf("movable point cannot be on line")
+				return
+			}
+			// replace point tag
+			tag = Fixed
+			// index of new point
+			idp = add()
+			// add new lines
+			tag := mesh.model.Lines[i][2]
+			mesh.model.AddLine(mesh.model.Points[mesh.model.Lines[i][0]], p, tag)
+			mesh.model.AddLine(p, mesh.model.Points[mesh.model.Lines[i][1]], tag)
+			for p := 0; p < 3; p++ {
+				mesh.model.Lines[i][p] = Removed
+			}
 		}
 	}
 	if Debug {
@@ -1749,6 +1755,10 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		}
 	}
 	d = math.Abs(d)
+	if d == 0 {
+		err = fmt.Errorf("zero distance is not valid")
+		return
+	}
 
 	// only for debug
 	var chains []Point
