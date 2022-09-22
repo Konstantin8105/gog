@@ -507,7 +507,7 @@ func (mesh *Mesh) Clockwise() {
 }
 
 // AddPoint is add points with tag
-func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
+func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err error) {
 	if Log {
 		log.Printf("AddPoint: %.20e. tag = %d", p, tag)
 	}
@@ -652,9 +652,21 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 		return true
 	}
 
-	for i, size := 0, len(mesh.Triangles); i < size; i++ {
+	found := false
+	for i := range triIndexes {
+		if i < 0 || len(triIndexes)-1 < i {
+			continue
+		}
 		if addInTriangle(i) {
+			found = true
 			break
+		}
+	}
+	if !found {
+		for i, size := 0, len(mesh.Triangles); i < size; i++ {
+			if addInTriangle(i) {
+				break
+			}
 		}
 	}
 	// outside of triangles or on corners
