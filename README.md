@@ -296,7 +296,7 @@ func New(model Model) (mesh *Mesh, err error)
 func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error)
     AddLine is add line in triangulation with tag
 
-func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error)
+func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err error)
     AddPoint is add points with tag
 
 func (mesh Mesh) Check() (err error)
@@ -305,7 +305,7 @@ func (mesh Mesh) Check() (err error)
 func (mesh *Mesh) Clockwise()
     Clockwise change all triangles to clockwise orientation
 
-func (mesh *Mesh) Delanay(tri ...int) (err error)
+func (mesh *Mesh) Delanay(triIndexes ...int) (err error)
     TODO delanay only for some triangles, if list empty then for all triangles
 
 func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error)
