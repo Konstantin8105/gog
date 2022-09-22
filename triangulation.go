@@ -586,11 +586,10 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 		}
 	}
 
-	// TODO : add to delanay flip linked list
-	for i, size := 0, len(mesh.Triangles); i < size; i++ {
+	addInTriangle := func(i int) (found bool) {
 		// ignore removed triangle
 		if mesh.model.Triangles[i][0] == Removed {
-			continue
+			return
 		}
 		// split triangle
 		var res [][3]Point
@@ -605,7 +604,7 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 			panic(err)
 		}
 		if len(res) == 0 {
-			continue
+			return
 		}
 		// index of new point
 		idp = add()
@@ -649,7 +648,14 @@ func (mesh *Mesh) AddPoint(p Point, tag int) (idp int, err error) {
 			_ = et.Add(fmt.Errorf("len of res: %d", len(res)))
 			err = et
 		}
-		break
+		// TODO : add to delanay flip linked list
+		return true
+	}
+
+	for i, size := 0, len(mesh.Triangles); i < size; i++ {
+		if addInTriangle(i) {
+			break
+		}
 	}
 	// outside of triangles or on corners
 	if Debug {
