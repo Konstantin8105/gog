@@ -1809,7 +1809,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		return
 	}
 
-	for iter := 0; ; iter++ {
+	iteration := func(do func() error) (err error) {
 		if Debug {
 			err = mesh.Check()
 			if err != nil {
@@ -1817,7 +1817,31 @@ func (mesh *Mesh) Split(d float64) (err error) {
 				return
 			}
 		}
-		counter = 0
+		for iter := 0; ; iter++ {
+			counter = 0
+			// action
+			if err = do(); err != nil {
+				return
+			}
+			if iter == 10000 {
+				err = fmt.Errorf("too many iterations")
+				return
+			}
+			if counter == 0 {
+				break
+			}
+		}
+		if Debug {
+			err = mesh.Check()
+			if err != nil {
+				err = fmt.Errorf("begin in loop: %v", err)
+				return
+			}
+		}
+		return nil
+	}
+
+	if err = iteration(func() (err error) {
 		// split fixed lines
 		for _, line := range mesh.model.Lines {
 			if line[2] == Removed {
@@ -1835,17 +1859,12 @@ func (mesh *Mesh) Split(d float64) (err error) {
 				return
 			}
 		}
-		if Debug {
-			err = mesh.Check()
-			if err != nil {
-				err = fmt.Errorf("in loop: %v", err)
-				return
-			}
-		}
+		return nil
+	}); err != nil {
+		return
+	}
 
-		if 0 < counter {
-			continue
-		}
+	if err = iteration(func() (err error) {
 		// split big triangle edges with boundary
 		for i := range mesh.model.Triangles {
 			if mesh.model.Triangles[i][0] == Removed {
@@ -1878,25 +1897,13 @@ func (mesh *Mesh) Split(d float64) (err error) {
 				err = et
 				return
 			}
-			if Debug {
-				err = mesh.Check()
-				if err != nil {
-					err = fmt.Errorf("deep loop 1 : %v", err)
-					return
-				}
-			}
 		}
-		if Debug {
-			err = mesh.Check()
-			if err != nil {
-				err = fmt.Errorf("end of loop: %v", err)
-				return
-			}
-		}
+		return nil
+	}); err != nil {
+		return
+	}
 
-		if 0 < counter {
-			continue
-		}
+	if err = iteration(func() (err error) {
 		// split big triangle edges
 		for i := range mesh.model.Triangles {
 			if mesh.model.Triangles[i][0] == Removed {
@@ -1936,30 +1943,10 @@ func (mesh *Mesh) Split(d float64) (err error) {
 				err = et
 				return
 			}
-			if Debug {
-				err = mesh.Check()
-				if err != nil {
-					err = fmt.Errorf("deep loop 1 : %v", err)
-					return
-				}
-			}
 		}
-		if Debug {
-			err = mesh.Check()
-			if err != nil {
-				err = fmt.Errorf("end of loop: %v", err)
-				return
-			}
-		}
-		// merge small triangle edges
-
-		if iter == 10000 {
-			err = fmt.Errorf("too many iterations")
-			return
-		}
-		if counter == 0 {
-			break
-		}
+		return nil
+	}); err != nil {
+		return
 	}
 
 	err = mesh.Delanay()
