@@ -1125,9 +1125,9 @@ func (mesh *Mesh) swap(elem, from, to int) {
 }
 
 // TODO delanay only for some triangles, if list empty then for  all triangles
-func (mesh *Mesh) Delanay(tri ...int) (err error) {
+func (mesh *Mesh) Delanay(triIndexes ...int) (err error) {
 	if Log {
-		log.Printf("Delanay: amount %d", len(tri))
+		log.Printf("Delanay: amount %d", len(triIndexes))
 	}
 	defer func() {
 		if err != nil {
@@ -1313,18 +1313,18 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 	// loop of triangles
 	for iter := 0; ; iter++ {
 		counter := 0
+
+		ignore := make([]bool, len(mesh.model.Triangles))
+		for _, index := range triIndexes {
+			if index < 0 {
+				continue
+			}
+			ignore[index] = true
+		}
+
 		for tr := range mesh.model.Triangles {
-			if 0 < len(tri) {
-				found := false
-				for i := range tri {
-					if tr == tri[i] {
-						found = true
-						break
-					}
-				}
-				if !found {
-					continue
-				}
+			if 0 < len(triIndexes) && !ignore[tr] {
+				continue
 			}
 			if mesh.model.Triangles[tr][0] == Removed {
 				continue
@@ -1361,7 +1361,8 @@ func (mesh *Mesh) Delanay(tri ...int) (err error) {
 			break
 		}
 		if iter == 5000 {
-			return fmt.Errorf("global delanay infinite loop")
+			err = fmt.Errorf("global delanay infinite loop")
+			return
 		}
 	}
 	if Debug {
