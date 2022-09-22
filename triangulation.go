@@ -586,7 +586,7 @@ func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err er
 		}
 	}
 
-	addInTriangle := func(i int) (found bool) {
+	addInTriangle := func(i int) (found bool, err error) {
 		// ignore removed triangle
 		if mesh.model.Triangles[i][0] == Removed {
 			return
@@ -647,24 +647,43 @@ func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err er
 			_ = et.Add(err)
 			_ = et.Add(fmt.Errorf("len of res: %d", len(res)))
 			err = et
+			return
 		}
 		// TODO : add to delanay flip linked list
-		return true
+		return true, nil
 	}
 
 	found := false
-	for i := range triIndexes {
-		if i < 0 || len(triIndexes)-1 < i {
+	for _, tri := range triIndexes {
+		if tri < 0 || len(mesh.Triangles)-1 < tri {
 			continue
 		}
-		if addInTriangle(i) {
+		var added bool
+		added, err = addInTriangle(tri)
+		if err != nil {
+			et := eTree.New("triangle indexes")
+			_ = et.Add(err)
+			_ = et.Add(fmt.Errorf("list: %v", triIndexes))
+			err = et
+			return
+		}
+		if added {
 			found = true
 			break
 		}
 	}
 	if !found {
+		if 0 < len(triIndexes) {
+			err = fmt.Errorf("wrong triangle indexes: %v", triIndexes)
+			return
+		}
 		for i, size := 0, len(mesh.Triangles); i < size; i++ {
-			if addInTriangle(i) {
+			var added bool
+			added, err = addInTriangle(i)
+			if err != nil {
+				return
+			}
+			if added {
 				break
 			}
 		}
@@ -1977,11 +1996,14 @@ func (mesh *Mesh) Split(d float64) (err error) {
 		return
 	}
 
-	err = mesh.Delanay()
-	if err != nil {
-		err = fmt.Errorf("at Delanay: %v", err)
-		return
-	}
+	//
+	// Delanay is no need, because inside function AddPoint
+	//
+	//	err = mesh.Delanay()
+	//	if err != nil {
+	//		err = fmt.Errorf("at Delanay: %v", err)
+	//		return
+	//	}
 
 	err = mesh.Smooth()
 	if err != nil {
