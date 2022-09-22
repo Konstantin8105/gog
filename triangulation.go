@@ -1782,7 +1782,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 	var chains []Point
 
 	counter := 0
-	addpoint := func(p1, p2 Point, tag int) (err error) {
+	addpoint := func(p1, p2 Point, tag int, triIndexes ...int) (err error) {
 		dist := Distance(p1, p2)
 		if dist < d {
 			return
@@ -1811,7 +1811,7 @@ func (mesh *Mesh) Split(d float64) (err error) {
 				return
 			}
 		}
-		idp, err := mesh.AddPoint(mid, tag)
+		idp, err := mesh.AddPoint(mid, tag, triIndexes...)
 		if err != nil {
 			return
 		}
@@ -1908,11 +1908,11 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			p2 := mesh.model.Points[t[2]]
 			switch {
 			case mesh.Triangles[i][0] == Boundary && d < Distance(p0, p1):
-				err = addpoint(p0, p1, Fixed)
+				err = addpoint(p0, p1, Fixed, i)
 			case mesh.Triangles[i][1] == Boundary && d < Distance(p1, p2):
-				err = addpoint(p1, p2, Fixed)
+				err = addpoint(p1, p2, Fixed, i)
 			case mesh.Triangles[i][2] == Boundary && d < Distance(p2, p0):
-				err = addpoint(p2, p0, Fixed)
+				err = addpoint(p2, p0, Fixed, i)
 			}
 			if err != nil {
 				et := eTree.New("split boundary triangle edge")
@@ -1951,11 +1951,11 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			maxd := math.Max(math.Max(d01, d12), d20)
 			switch {
 			case maxd == d12 && d < d12:
-				err = addpoint(p1, p2, Movable)
+				err = addpoint(p1, p2, Movable, i)
 			case maxd == d01 && d < d01:
-				err = addpoint(p0, p1, Movable)
+				err = addpoint(p0, p1, Movable, i)
 			case maxd == d20 && d < d20:
-				err = addpoint(p2, p0, Movable)
+				err = addpoint(p2, p0, Movable, i)
 			}
 			if err != nil {
 				et := eTree.New("split big triangle edge")
