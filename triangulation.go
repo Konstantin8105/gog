@@ -1461,8 +1461,8 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 	}
 
 	// Is point on triangulation triangle
-	for i, tri := range mesh.model.Triangles {
-		if mesh.model.Triangles[i][0] == Removed {
+	for it, tri := range mesh.model.Triangles {
+		if mesh.model.Triangles[it][0] == Removed {
 			continue
 		}
 		orient := [3]OrientationPoints{
@@ -1474,11 +1474,11 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			orient[1] == ClockwisePoints &&
 			orient[2] == ClockwisePoints {
 			// point in triangle
-			mat := mesh.model.Triangles[i][3]
+			mat := tri[3]
 			materials = append(materials, mat)
 			if Log {
-				log.Printf("GetMaterials triangle %d %v in triangle %d: %v",
-					i, tri, materials)
+				log.Printf("GetMaterials triangle %d %v in triangle: %v",
+					it, tri, materials)
 			}
 			return
 		}
@@ -1488,14 +1488,14 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 				continue
 			}
 			mat := []int{
-				mesh.model.Triangles[i][3],
-				mesh.model.Triangles[mesh.Triangles[i][j]][3],
+				mesh.model.Triangles[it][3],
+				mesh.model.Triangles[mesh.Triangles[it][j]][3],
 			}
 			if mat[1] == Boundary {
 				materials = append(materials, mat[0])
 				if Log {
 					log.Printf("GetMaterials triangle %d %v on edge with boundary: %v",
-						i, tri, materials)
+						it, tri, materials)
 				}
 				return
 			}
@@ -1503,10 +1503,12 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 				err = fmt.Errorf("CollinearPoints: not equal materials on edge: %v", mat)
 				return
 			}
-			materials = append(materials, mat[0])
+			materials = append(materials, mat...)
 			if Log {
-				log.Printf("GetMaterials triangle %d %v on edge: %v",
-					i, tri,  materials)
+				log.Printf("GetMaterials triangle %d %v and %d %v on edge: %v",
+					it, tri,
+					mesh.Triangles[it][j], mesh.model.Triangles[mesh.Triangles[it][j]][3],
+					materials)
 			}
 			return
 		}
