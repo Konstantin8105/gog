@@ -1484,7 +1484,7 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 					return
 				}
 				if mat[0] != mat[1] {
-					err = fmt.Errorf("CollinearPoints: not equal materials on edge")
+					err = fmt.Errorf("CollinearPoints: not equal materials on edge: %v", mat)
 					return
 				}
 				materials = append(materials, mat[0])
