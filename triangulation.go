@@ -1418,6 +1418,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 				return
 			}
 			materials = append(materials, mat...)
+			if Log {
+				log.Printf("GetMaterials multipoint: %v", materials)
+			}
 		}
 		return
 	}
@@ -1451,6 +1454,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			}
 		}
 		materials = append(materials, mat)
+		if Log {
+			log.Printf("GetMaterials point in point: %v", materials)
+		}
 		return
 	}
 
@@ -1470,6 +1476,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			// point in triangle
 			mat := mesh.model.Triangles[i][3]
 			materials = append(materials, mat)
+			if Log {
+				log.Printf("GetMaterials in triangle: %v", materials)
+			}
 			return
 		}
 		// point on edge
@@ -1481,6 +1490,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 				}
 				if mat[1] == Boundary {
 					materials = append(materials, mat[0])
+					if Log {
+						log.Printf("GetMaterials on edge with boundary: %v", materials)
+					}
 					return
 				}
 				if mat[0] != mat[1] {
@@ -1488,6 +1500,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 					return
 				}
 				materials = append(materials, mat[0])
+				if Log {
+					log.Printf("GetMaterials on edge: %v", materials)
+				}
 				return
 			}
 		}
