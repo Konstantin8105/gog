@@ -1507,7 +1507,7 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			if Log {
 				log.Printf("GetMaterials triangle %d %v and %d %v on edge: %v",
 					it, tri,
-					mesh.Triangles[it][j], mesh.model.Triangles[mesh.Triangles[it][j]][3],
+					mesh.Triangles[it][j], mesh.model.Triangles[mesh.Triangles[it][j]],
 					materials)
 			}
 			return
