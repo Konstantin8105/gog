@@ -1477,34 +1477,37 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			mat := mesh.model.Triangles[i][3]
 			materials = append(materials, mat)
 			if Log {
-				log.Printf("GetMaterials in triangle: %v", materials)
+				log.Printf("GetMaterials in triangle %d: %v", i, materials)
 			}
 			return
 		}
 		// point on edge
 		for j := 0; j < 3; j++ {
-			if orient[j] == CollinearPoints {
-				mat := []int{
-					mesh.model.Triangles[i][3],
-					mesh.model.Triangles[mesh.Triangles[i][j]][3],
-				}
-				if mat[1] == Boundary {
-					materials = append(materials, mat[0])
-					if Log {
-						log.Printf("GetMaterials on edge with boundary: %v", materials)
-					}
-					return
-				}
-				if mat[0] != mat[1] {
-					err = fmt.Errorf("CollinearPoints: not equal materials on edge: %v", mat)
-					return
-				}
+			if orient[j] != CollinearPoints {
+				continue
+			}
+			mat := []int{
+				mesh.model.Triangles[i][3],
+				mesh.model.Triangles[mesh.Triangles[i][j]][3],
+			}
+			if mat[1] == Boundary {
 				materials = append(materials, mat[0])
 				if Log {
-					log.Printf("GetMaterials on edge: %v", materials)
+					log.Printf("GetMaterials triangle %d on edge with boundary: %v",
+						i, materials)
 				}
 				return
 			}
+			if mat[0] != mat[1] {
+				err = fmt.Errorf("CollinearPoints: not equal materials on edge: %v", mat)
+				return
+			}
+			materials = append(materials, mat[0])
+			if Log {
+				log.Printf("GetMaterials triangle %d on edge: %v",
+					i, materials)
+			}
+			return
 		}
 	}
 
@@ -1528,6 +1531,13 @@ func (mesh *Mesh) Materials() (err error) {
 			err = et
 		}
 	}()
+
+	for i := range mesh.model.Triangles {
+		if mesh.model.Triangles[i][0] == Removed {
+			continue
+		}
+		mesh.model.Triangles[i][3] = Undefined
+	}
 
 	marks := make([]bool, len(mesh.model.Triangles))
 
@@ -1576,7 +1586,15 @@ func (mesh *Mesh) Materials() (err error) {
 				return
 			}
 		}
+		if mesh.model.Triangles[to][3] != Undefined {
+			err = fmt.Errorf("double mark: %v %v",
+				mesh.model.Triangles[from][3],
+				mesh.model.Triangles[to][3],
+			)
+			return
+		}
 		// mark
+		marks[from] = true
 		marks[to] = true
 		mesh.model.Triangles[to][3] = counter
 		for side := 0; side < 3; side++ {
@@ -1590,11 +1608,16 @@ func (mesh *Mesh) Materials() (err error) {
 
 	counter := 50
 	for i := range mesh.model.Triangles {
+		if mesh.model.Triangles[i][0] == Removed {
+			continue
+		}
 		if marks[i] {
 			continue
 		}
-		if mesh.model.Triangles[i][0] == Removed {
-			continue
+		if mesh.model.Triangles[i][3] != Undefined {
+			err = fmt.Errorf("Unmarked undefined triangle for triangle: %#v",
+				mesh.model.Triangles[i])
+			return
 		}
 		mesh.model.Triangles[i][3] = counter
 		for side := 0; side < 3; side++ {
