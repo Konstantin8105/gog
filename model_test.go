@@ -76,6 +76,20 @@ func ExampleModel() {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 		return
 	}
+	//
+	for _, p := range []Point{
+		Point{+0.5, +0.5},
+		Point{+0.5, -0.5},
+		Point{-0.5, -0.5},
+		Point{-0.5, +0.5},
+	} {
+		mat, err := mesh.GetMaterials(p)
+		if err != nil {
+			fmt.Fprintf(os.Stdout, "Error: %v\n", err)
+			return
+		}
+		fmt.Fprintf(os.Stdout, "%v %v\n", p, mat)
+	}
 	m.Get(mesh)
 	view() // 8
 	fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
@@ -93,6 +107,10 @@ func ExampleModel() {
 	// Arcs:
 	// 000	[  0   1   2   1]
 	// 001	[  2   3   0   1]
+	// [5.00000e-01,5.00000e-01] [51]
+	// [5.00000e-01,-5.00000e-01] [50]
+	// [-5.00000e-01,-5.00000e-01] [53]
+	// [-5.00000e-01,5.00000e-01] [52]
 	// After intersection:
 	// Points:
 	// 000	{+0.0000 -1.0000}
