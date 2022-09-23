@@ -1491,7 +1491,7 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 					return
 				}
 				materials = append(materials, mat[0])
-		fmt.Println(	">>> 4 ", materials)
+		fmt.Println(	">>> 4 ", materials, mat)
 				return
 			}
 		}
