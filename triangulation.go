@@ -1539,6 +1539,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			if xmin <= p.X && p.X <= xmax &&
 				ymin <= p.Y && p.Y <= ymax {
 				log.Printf("Triangle %#v in box", tri)
+				for s := 0; s < 3; s++ {
+					log.Printf("Point %d", s, mesh.model.Points[tri[s]])
+				}
 			}
 		}
 	}
