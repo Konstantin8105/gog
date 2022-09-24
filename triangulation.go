@@ -1465,28 +1465,27 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 		if mesh.model.Triangles[it][0] == Removed {
 			continue
 		}
-		orient := [3]OrientationPoints{
-			Orientation(mesh.model.Points[tri[0]], p, mesh.model.Points[tri[1]]),
-			Orientation(mesh.model.Points[tri[1]], p, mesh.model.Points[tri[2]]),
-			Orientation(mesh.model.Points[tri[2]], p, mesh.model.Points[tri[0]]),
+		var res [][3]Point
+		var lineIntersect int
+		res, lineIntersect, err = TriangleSplitByPoint(p,
+			mesh.model.Points[tri[0]],
+			mesh.model.Points[tri[1]],
+			mesh.model.Points[tri[2]],
+		)
+		if err != nil {
+			return
 		}
-		if orient[0] == ClockwisePoints &&
-			orient[1] == ClockwisePoints &&
-			orient[2] == ClockwisePoints {
-			// point in triangle
-			mat := tri[3]
-			materials = append(materials, mat)
+		if len(res) == 3 {
+			materials = append(materials, tri[3])
 			if Log {
 				log.Printf("GetMaterials triangle %d %v in triangle: %v",
 					it, tri, materials)
 			}
 			return
 		}
-		// point on edge
-		for j := 0; j < 3; j++ {
-			if orient[j] != CollinearPoints {
-				continue
-			}
+		if len(res) == 2 {
+			j := lineIntersect
+			// on edge
 			mat := []int{
 				mesh.model.Triangles[it][3],
 				mesh.model.Triangles[mesh.Triangles[it][j]][3],
@@ -1503,7 +1502,7 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 				err = fmt.Errorf("CollinearPoints: not equal materials on edge: %v", mat)
 				return
 			}
-			materials = append(materials, mat...)
+			materials = append(materials, mat[0])
 			if Log {
 				log.Printf("GetMaterials triangle %d %v and %d %v on edge: %v",
 					it, tri,
