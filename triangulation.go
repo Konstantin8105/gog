@@ -1513,6 +1513,26 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 		}
 	}
 
+	if Log {
+		for it, tri := range mesh.model.Triangles {
+			if mesh.model.Triangles[it][0] == Removed {
+				continue
+			}
+			var res [][3]Point
+			var lineIntersect int
+			res, lineIntersect, err = TriangleSplitByPoint(
+				p,
+				mesh.model.Points[tri[0]],
+				mesh.model.Points[tri[1]],
+				mesh.model.Points[tri[2]],
+			)
+			if err != nil {
+				panic(err)
+			}
+			log.Printf("T%03d:res = %v. lineIntersect=%v", it, res, lineIntersect)
+		}
+	}
+
 	// possible point is outside of triangulation
 	err = fmt.Errorf("point %.3f is outside of triangulation", p)
 	return
