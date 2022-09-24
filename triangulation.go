@@ -1514,22 +1514,32 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 	}
 
 	if Log {
+		box := func(ps ...Point) (xmin, xmax, ymax, ymin float64) {
+			xmin = +math.MaxFloat64
+			xmax = -math.MaxFloat64
+			ymin = +math.MaxFloat64
+			ymax = -math.MaxFloat64
+			for i := range ps {
+				xmin = math.Min(xmin, ps[i].X)
+				xmax = math.Max(xmax, ps[i].X)
+				ymin = math.Min(ymin, ps[i].Y)
+				ymax = math.Max(ymax, ps[i].Y)
+			}
+			return
+		}
 		for it, tri := range mesh.model.Triangles {
 			if mesh.model.Triangles[it][0] == Removed {
 				continue
 			}
-			var res [][3]Point
-			var lineIntersect int
-			res, lineIntersect, err = TriangleSplitByPoint(
-				p,
+			xmin, xmax, ymax, ymin := box(
 				mesh.model.Points[tri[0]],
 				mesh.model.Points[tri[1]],
 				mesh.model.Points[tri[2]],
 			)
-			if err != nil {
-				panic(err)
+			if xmin <= p.X && p.X <= xmax &&
+				ymin <= p.Y && p.Y <= ymax {
+				log.Printf("Triangle %#v in box", tri)
 			}
-			log.Printf("T%03d:res = %v. lineIntersect=%v", it, res, lineIntersect)
 		}
 	}
 
