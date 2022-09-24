@@ -1404,150 +1404,130 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 		}
 	}()
 
-	switch len(ps) {
-	case 0:
-		return
-	case 1:
-		// do outside switch
-	default:
-		// get material for each points
-		for _, p := range ps {
-			var mat []int
-			mat, err = mesh.GetMaterials(p)
-			if err != nil {
-				return
+	for _, p := range ps {
+		for i := range mesh.model.Points {
+			if Eps < Distance(p, mesh.model.Points[i]) {
+				continue
 			}
-			materials = append(materials, mat...)
-			if Log {
-				log.Printf("GetMaterials multipoint: %v", materials)
-			}
-		}
-		return
-	}
-	// get material for one point
-	p := ps[0]
+			// point on triangulation point
 
-	// Is point on triangulation point
-	for i := range mesh.model.Points {
-		if Eps < Distance(p, mesh.model.Points[i]) {
-			continue
-		}
-		// point on triangulation point
-
-		// find all triangles with that point
-		var near []int
-		for t, tri := range mesh.model.Triangles {
-			if i == tri[0] || i == tri[1] || i == tri[2] {
-				near = append(near, t)
-			}
-		}
-		if len(near) == 0 {
-			err = fmt.Errorf("cannot find point in triangles")
-			return
-		}
-		// add triangles shall have same materials
-		mat := mesh.model.Triangles[near[0]][3]
-		for _, n := range near {
-			if mat != mesh.model.Triangles[n][3] {
-				err = fmt.Errorf("not equal materials: %v", near)
-				return
-			}
-		}
-		materials = append(materials, mat)
-		if Log {
-			log.Printf("GetMaterials point in point: %v", materials)
-		}
-		return
-	}
-
-	// Is point on triangulation triangle
-	for it, tri := range mesh.model.Triangles {
-		if mesh.model.Triangles[it][0] == Removed {
-			continue
-		}
-		var res [][3]Point
-		var lineIntersect int
-		res, lineIntersect, err = TriangleSplitByPoint(p,
-			mesh.model.Points[tri[0]],
-			mesh.model.Points[tri[1]],
-			mesh.model.Points[tri[2]],
-		)
-		if err != nil {
-			return
-		}
-		if len(res) == 3 {
-			materials = append(materials, tri[3])
-			if Log {
-				log.Printf("GetMaterials triangle %d %v in triangle: %v",
-					it, tri, materials)
-			}
-			return
-		}
-		if len(res) == 2 {
-			j := lineIntersect
-			// on edge
-			mat := []int{
-				mesh.model.Triangles[it][3],
-				mesh.model.Triangles[mesh.Triangles[it][j]][3],
-			}
-			if mat[1] == Boundary {
-				materials = append(materials, mat[0])
-				if Log {
-					log.Printf("GetMaterials triangle %d %v on edge with boundary: %v",
-						it, tri, materials)
+			// find all triangles with that point
+			var near []int
+			for t, tri := range mesh.model.Triangles {
+				if i == tri[0] || i == tri[1] || i == tri[2] {
+					near = append(near, t)
 				}
+			}
+			if len(near) == 0 {
+				err = fmt.Errorf("cannot find point in triangles")
 				return
 			}
-			if mat[0] != mat[1] {
-				err = fmt.Errorf("CollinearPoints: not equal materials on edge: %v", mat)
-				return
+			// add triangles shall have same materials
+			mat := mesh.model.Triangles[near[0]][3]
+			for _, n := range near {
+				if mat != mesh.model.Triangles[n][3] {
+					err = fmt.Errorf("not equal materials: %v", near)
+					return
+				}
 			}
-			materials = append(materials, mat[0])
+			materials = append(materials, mat)
 			if Log {
-				log.Printf("GetMaterials triangle %d %v and %d %v on edge: %v",
-					it, tri,
-					mesh.Triangles[it][j], mesh.model.Triangles[mesh.Triangles[it][j]],
-					materials)
+				log.Printf("GetMaterials point in point: %v", materials)
 			}
-			return
 		}
-	}
 
-	if Log {
-		box := func(ps ...Point) (xmin, xmax, ymax, ymin float64) {
-			xmin = +math.MaxFloat64
-			xmax = -math.MaxFloat64
-			ymin = +math.MaxFloat64
-			ymax = -math.MaxFloat64
-			for i := range ps {
-				xmin = math.Min(xmin, ps[i].X)
-				xmax = math.Max(xmax, ps[i].X)
-				ymin = math.Min(ymin, ps[i].Y)
-				ymax = math.Max(ymax, ps[i].Y)
-			}
-			return
-		}
+		// Is point on triangulation triangle
 		for it, tri := range mesh.model.Triangles {
 			if mesh.model.Triangles[it][0] == Removed {
 				continue
 			}
-			xmin, xmax, ymax, ymin := box(
+			var res [][3]Point
+			var lineIntersect int
+			res, lineIntersect, err = TriangleSplitByPoint(p,
 				mesh.model.Points[tri[0]],
 				mesh.model.Points[tri[1]],
 				mesh.model.Points[tri[2]],
 			)
-			if xmin <= p.X && p.X <= xmax &&
-				ymin <= p.Y && p.Y <= ymax {
-				log.Printf("Triangle %#v in box", tri)
-				for s := 0; s < 3; s++ {
-					log.Printf("Point %d", s, mesh.model.Points[tri[s]])
+			if err != nil {
+				return
+			}
+			if len(res) == 3 {
+				materials = append(materials, tri[3])
+				if Log {
+					log.Printf("GetMaterials triangle %d %v in triangle: %v",
+						it, tri, materials)
+				}
+				continue
+			}
+			if len(res) == 2 {
+				j := lineIntersect
+				// on edge
+				mat := []int{
+					mesh.model.Triangles[it][3],
+					mesh.model.Triangles[mesh.Triangles[it][j]][3],
+				}
+				if mat[1] == Boundary {
+					materials = append(materials, mat[0])
+					if Log {
+						log.Printf("GetMaterials triangle %d %v on edge with boundary: %v",
+							it, tri, materials)
+					}
+					continue
+				}
+				if mat[0] != mat[1] {
+					err = fmt.Errorf("CollinearPoints: not equal materials on edge: %v", mat)
+					return
+				}
+				materials = append(materials, mat[0])
+				if Log {
+					log.Printf("GetMaterials triangle %d %v and %d %v on edge: %v",
+						it, tri,
+						mesh.Triangles[it][j], mesh.model.Triangles[mesh.Triangles[it][j]],
+						materials)
+				}
+			}
+		}
+
+		if Log {
+			box := func(ps ...Point) (xmin, xmax, ymax, ymin float64) {
+				xmin = +math.MaxFloat64
+				xmax = -math.MaxFloat64
+				ymin = +math.MaxFloat64
+				ymax = -math.MaxFloat64
+				for i := range ps {
+					xmin = math.Min(xmin, ps[i].X)
+					xmax = math.Max(xmax, ps[i].X)
+					ymin = math.Min(ymin, ps[i].Y)
+					ymax = math.Max(ymax, ps[i].Y)
+				}
+				return
+			}
+			for it, tri := range mesh.model.Triangles {
+				if mesh.model.Triangles[it][0] == Removed {
+					continue
+				}
+				xmin, xmax, ymax, ymin := box(
+					mesh.model.Points[tri[0]],
+					mesh.model.Points[tri[1]],
+					mesh.model.Points[tri[2]],
+				)
+				if xmin <= p.X && p.X <= xmax &&
+					ymin <= p.Y && p.Y <= ymax {
+					log.Printf("Triangle %#v in box", tri)
+					for s := 0; s < 3; s++ {
+						log.Printf("Point %d: %#v", s, mesh.model.Points[tri[s]])
+					}
 				}
 			}
 		}
 	}
 
+	if 0 < len(materials) {
+		return
+	}
+
 	// possible point is outside of triangulation
-	err = fmt.Errorf("point %.3f is outside of triangulation", p)
+	err = fmt.Errorf("point %.3f is outside of triangulation", ps)
 	return
 }
 
