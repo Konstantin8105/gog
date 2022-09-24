@@ -1466,9 +1466,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			continue
 		}
 		orient := [3]OrientationPoints{
-			Orientation(mesh.model.Points[tri[0]], mesh.model.Points[tri[1]], p),
-			Orientation(mesh.model.Points[tri[1]], mesh.model.Points[tri[2]], p),
-			Orientation(mesh.model.Points[tri[2]], mesh.model.Points[tri[0]], p),
+			Orientation(mesh.model.Points[tri[0]], p, mesh.model.Points[tri[1]]),
+			Orientation(mesh.model.Points[tri[1]], p, mesh.model.Points[tri[2]]),
+			Orientation(mesh.model.Points[tri[2]], p, mesh.model.Points[tri[0]]),
 		}
 		if orient[0] == ClockwisePoints &&
 			orient[1] == ClockwisePoints &&
