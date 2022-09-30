@@ -1251,7 +1251,7 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 						m.Points[m.Triangles[i][c[5]]],
 					)
 					quadrs = append(quadrs, quadr{
-						symmetric: L205 / L215,
+						symmetric: math.Min(L205/L215, 1.0-L205/L215),
 						onOneLine: math.Min(L205/L25, L215/L25),
 						triangles: [2]int{i, j},
 						points: [5]int{
