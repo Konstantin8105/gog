@@ -1283,7 +1283,7 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 		if factorSymm < q.symmetric {
 			continue
 		}
-		if factorOneLine < q.onOneLine {
+		if q.onOneLine < factorOneLine {
 			continue
 		}
 		if removedTriangles[q.triangles[0]] {
