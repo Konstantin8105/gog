@@ -15,6 +15,7 @@ type Model struct {
 	Lines     [][3]int // Lines store 2 index of Points and last for tag
 	Arcs      [][4]int // Arcs store 3 index of Points and last for tag
 	Triangles [][4]int // Triangles store 3 index of Points and last for tag/material
+	Quadrs    [][5]int // Rectanges store 4 index of Points and last for tag/material
 }
 
 // TagProperty return length of lines, area of triangles for each tag.
@@ -95,6 +96,12 @@ func (m Model) String() string {
 	for i := range m.Triangles {
 		str += fmt.Sprintf("%03d\t%3d\n", i, m.Triangles[i])
 	}
+	if 0 < len(m.Quadrs) {
+		str += "Quadrs:\n"
+	}
+	for i := range m.Quadrs {
+		str += fmt.Sprintf("%03d\t%3d\n", i, m.Quadrs[i])
+	}
 	return str
 }
 
@@ -149,6 +156,14 @@ func (m Model) Dxf() string {
 			line(m.Points[m.Triangles[i][0]], m.Points[m.Triangles[i][1]], name)
 			line(m.Points[m.Triangles[i][1]], m.Points[m.Triangles[i][2]], name)
 			line(m.Points[m.Triangles[i][2]], m.Points[m.Triangles[i][0]], name)
+		}
+		// draw quadrs
+		for i := range m.Quadrs {
+			name := fmt.Sprintf("quadrs%+2d", m.Quadrs[i][4])
+			line(m.Points[m.Quadrs[i][0]], m.Points[m.Quadrs[i][1]], name)
+			line(m.Points[m.Quadrs[i][1]], m.Points[m.Quadrs[i][2]], name)
+			line(m.Points[m.Quadrs[i][2]], m.Points[m.Quadrs[i][3]], name)
+			line(m.Points[m.Quadrs[i][3]], m.Points[m.Quadrs[i][0]], name)
 		}
 	}
 
@@ -1138,5 +1153,152 @@ func (m *Model) Read(filename string) (err error) {
 	if err != nil {
 		return
 	}
+	return
+}
+
+// Combine triangles to quadr with same tag
+func (m *Model) Combine() (err error) {
+	cases := [][6]int{
+		// side0 - side0
+		{0, 1, 2, 0, 1, 2},
+		{0, 1, 2, 1, 0, 2},
+		// side1 - side0
+		{1, 2, 0, 0, 1, 2},
+		{1, 2, 0, 1, 0, 2},
+		// side2 - side0
+		{2, 0, 1, 0, 1, 2},
+		{2, 0, 1, 1, 0, 2},
+
+		// side0 - side1
+		{0, 1, 2, 1, 2, 0},
+		{0, 1, 2, 2, 1, 0},
+		// side1 - side1
+		{1, 2, 0, 1, 2, 0},
+		{1, 2, 0, 2, 1, 0},
+		// side2 - side1
+		{2, 0, 1, 1, 2, 0},
+		{2, 0, 1, 2, 1, 0},
+
+		// side0 - side2
+		{0, 1, 2, 2, 0, 1},
+		{0, 1, 2, 0, 2, 1},
+		// side1 - side2
+		{1, 2, 0, 2, 0, 1},
+		{1, 2, 0, 0, 2, 1},
+		// side2 - side2
+		{2, 0, 1, 2, 0, 1},
+		{2, 0, 1, 0, 2, 1},
+	}
+	type quadr struct {
+		symmetric float64
+		onOneLine float64
+		triangles [2]int
+		points    [5]int // [4] for tag
+	}
+	var quadrs []quadr
+	for i := range m.Triangles {
+		for j := range m.Triangles {
+			if i <= j {
+				continue
+			}
+			if m.Triangles[i][3] != m.Triangles[j][3] {
+				continue
+			}
+			for _, c := range cases {
+				if m.Triangles[i][c[0]] == m.Triangles[j][c[3]] &&
+					m.Triangles[i][c[1]] == m.Triangles[j][c[4]] {
+					// intersect by side
+					var res [][3]Point
+					res, _, err = TriangleSplitByPoint(
+						m.Points[m.Triangles[i][c[1]]],
+						m.Points[m.Triangles[i][c[0]]],
+						m.Points[m.Triangles[i][c[2]]],
+						m.Points[m.Triangles[j][c[5]]])
+					if err != nil {
+						return
+					}
+					if len(res) == 3 {
+						continue
+					}
+					res, _, err = TriangleSplitByPoint(
+						m.Points[m.Triangles[i][c[0]]],
+						m.Points[m.Triangles[i][c[2]]],
+						m.Points[m.Triangles[i][c[1]]],
+						m.Points[m.Triangles[j][c[5]]])
+					if err != nil {
+						return
+					}
+					if len(res) == 3 {
+						continue
+					}
+					//
+					L205 := (Distance(
+						m.Points[m.Triangles[i][c[2]]],
+						m.Points[m.Triangles[i][c[0]]],
+					) + Distance(
+						m.Points[m.Triangles[j][c[3]]],
+						m.Points[m.Triangles[j][c[5]]],
+					))
+					L215 := (Distance(
+						m.Points[m.Triangles[i][c[2]]],
+						m.Points[m.Triangles[i][c[1]]],
+					) + Distance(
+						m.Points[m.Triangles[j][c[4]]],
+						m.Points[m.Triangles[j][c[5]]],
+					))
+					L25 := Distance(
+						m.Points[m.Triangles[i][c[2]]],
+						m.Points[m.Triangles[i][c[5]]],
+					)
+					quadrs = append(quadrs, quadr{
+						symmetric: L205 / L215,
+						onOneLine: math.Min(L205/L25, L215/L25),
+						triangles: [2]int{i, j},
+						points: [5]int{
+							m.Triangles[i][c[1]],
+							m.Triangles[i][c[2]],
+							m.Triangles[i][c[0]],
+							m.Triangles[j][c[5]],
+							m.Triangles[i][3],
+						},
+					})
+				}
+			}
+		}
+	}
+	// sorting
+	sort.Slice(quadrs, func(i, j int) bool {
+		return quadrs[i].symmetric < quadrs[j].symmetric
+	})
+	// generate quadrs
+	removedTriangles := make([]bool, len(m.Triangles))
+	const factor = 1.1
+	for i := range quadrs {
+		q := quadrs[i]
+		if factor < q.symmetric {
+			continue
+		}
+		if factor < q.onOneLine {
+			continue
+		}
+		if removedTriangles[q.triangles[0]] {
+			continue
+		}
+		if removedTriangles[q.triangles[1]] {
+			continue
+		}
+		removedTriangles[q.triangles[0]] = true
+		removedTriangles[q.triangles[1]] = true
+		m.Quadrs = append(m.Quadrs, q.points)
+	}
+	var newTris [][4]int
+	for i := range removedTriangles {
+		if removedTriangles[i] {
+			continue
+		}
+		newTris = append(newTris, m.Triangles[i])
+	}
+	m.Triangles = newTris
+
 	return
 }
