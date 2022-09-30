@@ -8,8 +8,6 @@ import (
 	"math"
 	"os"
 	"sort"
-
-	"github.com/Konstantin8105/gog"
 )
 
 // Model of points, lines, arcs for prepare of triangulation
@@ -1279,14 +1277,14 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 						m.Points[m.Triangles[i][c[0]]],
 						m.Points[m.Triangles[i][c[2]]],
 						m.Points[m.Triangles[j][c[5]]],
-					); stB.Has(gog.OnSegment) {
+					); stB.Has(OnSegment) {
 						continue
 					}
 					if _, _, stB := PointLine(
 						m.Points[m.Triangles[i][c[1]]],
 						m.Points[m.Triangles[i][c[2]]],
 						m.Points[m.Triangles[j][c[5]]],
-					); stB.Has(gog.OnSegment) {
+					); stB.Has(OnSegment) {
 						continue
 					}
 					quadrs = append(quadrs, quadr{
