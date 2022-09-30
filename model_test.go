@@ -94,7 +94,7 @@ func ExampleModel() {
 	view() // 8
 	fmt.Fprintf(os.Stdout, "After intersection:\n%s", m)
 	fmt.Fprintf(os.Stdout, "Minimal distance between points:\n%.4f\n", m.MinPointDistance())
-	if err := m.Combine(); err != nil {
+	if err := m.Combine(1.1, 1.1); err != nil {
 		panic(err)
 	}
 	view() // 9

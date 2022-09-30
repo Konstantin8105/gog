@@ -1157,7 +1157,7 @@ func (m *Model) Read(filename string) (err error) {
 }
 
 // Combine triangles to quadr with same tag
-func (m *Model) Combine() (err error) {
+func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 	cases := [][6]int{
 		// side0 - side0
 		{0, 1, 2, 0, 1, 2},
@@ -1272,13 +1272,12 @@ func (m *Model) Combine() (err error) {
 	})
 	// generate quadrs
 	removedTriangles := make([]bool, len(m.Triangles))
-	const factor = 1.1
 	for i := range quadrs {
 		q := quadrs[i]
-		if factor < q.symmetric {
+		if factorSymm < q.symmetric {
 			continue
 		}
-		if factor < q.onOneLine {
+		if factorOneLine < q.onOneLine {
 			continue
 		}
 		if removedTriangles[q.triangles[0]] {
