@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"sort"
@@ -1250,6 +1251,11 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 						m.Points[m.Triangles[i][c[2]]],
 						m.Points[m.Triangles[i][c[5]]],
 					)
+					eps := 1e-6
+					if math.Abs(L205/L25-1) < eps ||
+						math.Abs(L215/L25-1) < eps {
+						continue
+					}
 					quadrs = append(quadrs, quadr{
 						symmetric: math.Min(L205/L215, 1.0-L205/L215),
 						onOneLine: math.Min(L205/L25, L215/L25),
@@ -1285,6 +1291,9 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 		}
 		if removedTriangles[q.triangles[1]] {
 			continue
+		}
+		if Log {
+			log.Printf("Combine: %#v", q)
 		}
 		removedTriangles[q.triangles[0]] = true
 		removedTriangles[q.triangles[1]] = true
