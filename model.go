@@ -1257,7 +1257,7 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 						continue
 					}
 					quadrs = append(quadrs, quadr{
-						symmetric: math.Min(L205/L215, math.Abs(1.0-L205/L215)),
+						symmetric: math.Max(L205, L215) / math.Min(L205, L215),
 						onOneLine: math.Min(L205/L25, L215/L25),
 						triangles: [2]int{i, j},
 						points: [5]int{
@@ -1280,7 +1280,7 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 	removedTriangles := make([]bool, len(m.Triangles))
 	for i := range quadrs {
 		q := quadrs[i]
-		if q.symmetric < factorSymm {
+		if factorSymm < q.symmetric {
 			continue
 		}
 		if factorOneLine < q.onOneLine {
