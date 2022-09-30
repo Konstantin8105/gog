@@ -1193,7 +1193,7 @@ func TriangleSplitByPoint(
 	err error,
 ) {
 	// check valid triangle
-	for _, c := range [...]struct {
+	for is, c := range [...]struct {
 		isTrue bool
 	}{
 		{isTrue: SamePoints(tr0, tr1)},
@@ -1201,7 +1201,7 @@ func TriangleSplitByPoint(
 		{isTrue: SamePoints(tr0, tr2)},
 	} {
 		if c.isTrue {
-			err = fmt.Errorf("invalid points of triangle")
+			err = fmt.Errorf("invalid points of triangle: %v", is)
 			return
 		}
 	}

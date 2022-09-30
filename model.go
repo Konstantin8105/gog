@@ -1223,7 +1223,7 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 					}
 					res, _, err = TriangleSplitByPoint(
 						m.Points[m.Triangles[i][c[1]]],
-						m.Points[m.Triangles[i][c[5]]],
+						m.Points[m.Triangles[j][c[5]]],
 						m.Points[m.Triangles[i][c[2]]],
 						m.Points[m.Triangles[j][c[0]]])
 					if err != nil {
@@ -1245,9 +1245,9 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 					}
 					res, _, err = TriangleSplitByPoint(
 						m.Points[m.Triangles[i][c[0]]],
-						m.Points[m.Triangles[i][c[5]]],
+						m.Points[m.Triangles[j][c[5]]],
 						m.Points[m.Triangles[i][c[1]]],
-						m.Points[m.Triangles[j][c[2]]])
+						m.Points[m.Triangles[i][c[2]]])
 					if err != nil {
 						return
 					}
