@@ -1158,7 +1158,9 @@ func (m *Model) Read(filename string) (err error) {
 }
 
 // Combine triangles to quadr with same tag
-func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
+//	factorOneLine from 1 to 2/sqrt(2) = 1.41
+// Recommendation value is 1.05
+func (m *Model) Combine(factorOneLine float64) (err error) {
 	cases := [][6]int{
 		// side0 - side0
 		{0, 1, 2, 0, 1, 2},
@@ -1191,7 +1193,6 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 		{2, 0, 1, 0, 2, 1},
 	}
 	type quadr struct {
-		symmetric float64
 		onOneLine float64
 		triangles [2]int
 		points    [5]int // [4] for tag
@@ -1255,41 +1256,20 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 						continue
 					}
 					//
-					L205 := (Distance(
-						m.Points[m.Triangles[i][c[2]]],
-						m.Points[m.Triangles[i][c[0]]],
-					) + Distance(
-						m.Points[m.Triangles[j][c[3]]],
-						m.Points[m.Triangles[j][c[5]]],
-					))
-					L215 := (Distance(
-						m.Points[m.Triangles[i][c[2]]],
-						m.Points[m.Triangles[i][c[1]]],
-					) + Distance(
-						m.Points[m.Triangles[j][c[4]]],
-						m.Points[m.Triangles[j][c[5]]],
-					))
-					L25 := Distance(
-						m.Points[m.Triangles[i][c[2]]],
-						m.Points[m.Triangles[i][c[5]]],
-					)
-					if _, _, stB := PointLine(
-						m.Points[m.Triangles[i][c[0]]],
-						m.Points[m.Triangles[i][c[2]]],
-						m.Points[m.Triangles[j][c[5]]],
-					); stB.Has(OnSegment) {
-						continue
-					}
-					if _, _, stB := PointLine(
-						m.Points[m.Triangles[i][c[1]]],
-						m.Points[m.Triangles[i][c[2]]],
-						m.Points[m.Triangles[j][c[5]]],
-					); stB.Has(OnSegment) {
-						continue
+					onOneLine := 1e6
+					for _, group := range [4][3]int{
+						{m.Triangles[i][c[0]], m.Triangles[i][c[2]], m.Triangles[i][c[1]]},
+						{m.Triangles[i][c[2]], m.Triangles[i][c[1]], m.Triangles[j][c[5]]},
+						{m.Triangles[i][c[1]], m.Triangles[j][c[5]], m.Triangles[i][c[0]]},
+						{m.Triangles[j][c[5]], m.Triangles[i][c[0]], m.Triangles[i][c[2]]},
+					} {
+						onOneLine = math.Min(onOneLine,
+							(Distance(m.Points[group[0]], m.Points[group[1]])+
+								Distance(m.Points[group[1]], m.Points[group[2]]))/
+								Distance(m.Points[group[0]], m.Points[group[2]]))
 					}
 					quadrs = append(quadrs, quadr{
-						symmetric: math.Max(L205, L215) / math.Min(L205, L215),
-						onOneLine: math.Min(L205/L25, L215/L25),
+						onOneLine: onOneLine,
 						triangles: [2]int{i, j},
 						points: [5]int{
 							m.Triangles[i][c[1]],
@@ -1305,13 +1285,13 @@ func (m *Model) Combine(factorSymm, factorOneLine float64) (err error) {
 	}
 	// sorting
 	sort.Slice(quadrs, func(i, j int) bool {
-		return quadrs[i].symmetric < quadrs[j].symmetric
+		return quadrs[i].onOneLine < quadrs[j].onOneLine
 	})
 	// generate quadrs
 	removedTriangles := make([]bool, len(m.Triangles))
 	for i := range quadrs {
 		q := quadrs[i]
-		if factorSymm < q.symmetric {
+		if math.Abs(q.onOneLine-1.0) < Eps {
 			continue
 		}
 		if q.onOneLine < factorOneLine {
