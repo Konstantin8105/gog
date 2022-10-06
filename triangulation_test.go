@@ -37,7 +37,7 @@ func BenchmarkTriangulation(b *testing.B) {
 				xmax = math.Max(xmax, model.Points[i].X)
 				xmin = math.Min(xmin, model.Points[i].X)
 			}
-			dist = math.Max(dist, math.Abs(xmax-xmin)/10.0)
+			dist = math.Min(dist, math.Abs(xmax-xmin)/10.0)
 		}
 		model.Intersection()
 		model.Split(dist)
@@ -47,6 +47,14 @@ func BenchmarkTriangulation(b *testing.B) {
 			panic(err)
 		}
 		err = mesh.Delanay()
+		if err != nil {
+			panic(err)
+		}
+		err = mesh.Split(dist)
+		if err != nil {
+			panic(err)
+		}
+		err = mesh.Smooth()
 		if err != nil {
 			panic(err)
 		}

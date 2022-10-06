@@ -1310,11 +1310,18 @@ func (mesh *Mesh) Delanay(triIndexes ...int) (err error) {
 		}
 	}
 
+	// initialize
+	ignore := make([]bool, len(mesh.model.Triangles))
+
 	// loop of triangles
 	for iter := 0; ; iter++ {
 		counter := 0
 
-		ignore := make([]bool, len(mesh.model.Triangles))
+		// reset values
+		for i := range ignore {
+			ignore[i] = false
+		}
+
 		for _, index := range triIndexes {
 			if index < 0 {
 				continue
