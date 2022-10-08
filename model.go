@@ -295,35 +295,38 @@ func (m *Model) AddModel(from Model) {
 // Intersection change model with finding all model intersections
 func (m *Model) Intersection() {
 	// value `ai` is amount of intersections
-	box := func(ps []Point) (xmin, xmax, ymin, ymax float64) {
-		xmin = +math.MaxFloat64
-		xmax = -math.MaxFloat64
-		ymin = +math.MaxFloat64
-		ymax = -math.MaxFloat64
-		for i := range ps {
-			xmin = math.Min(xmin, ps[i].X)
-			xmax = math.Max(xmax, ps[i].X)
-			ymin = math.Min(ymin, ps[i].Y)
-			ymax = math.Max(ymax, ps[i].Y)
+	boxX := func(ps []Point) (min, max float64) {
+		min = ps[0].X
+		max = ps[0].X
+		for i := 1; i < len(ps); i++ {
+			min = math.Min(min, ps[i].X)
+			max = math.Max(max, ps[i].X)
+		}
+		return
+	}
+	boxY := func(ps []Point) (min, max float64) {
+		min = ps[0].Y
+		max = ps[0].Y
+		for i := 1; i < len(ps); i++ {
+			min = math.Min(min, ps[i].Y)
+			max = math.Max(max, ps[i].Y)
 		}
 		return
 	}
 
 	boxIntersect := func(A, B []Point) bool {
-		Axin, Axax, Ayin, Ayax := box(A)
-		Bxin, Bxax, Byin, Byax := box(B)
-		if Axax < Bxin {
+		Axin, Axax := boxX(A)
+		Bxin, Bxax := boxX(B)
+		if Axax < Bxin || Bxax < Axin {
 			return false
 		}
-		if Bxax < Axin {
+
+		Ayin, Ayax := boxY(A)
+		Byin, Byax := boxY(B)
+		if Ayax < Byin || Byax < Ayin {
 			return false
 		}
-		if Ayax < Byin {
-			return false
-		}
-		if Byax < Ayin {
-			return false
-		}
+
 		// try or may-be
 		return true
 	}
