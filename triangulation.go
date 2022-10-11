@@ -1149,6 +1149,9 @@ func (mesh *Mesh) Delanay(triIndexes ...int) (err error) {
 		if neartr == Removed {
 			return
 		}
+		if mesh.model.Triangles[neartr][0] == Removed{
+			return
+		}
 		// rotate near triangle
 		for iter := 0; ; iter++ {
 			if iter == 50 {
