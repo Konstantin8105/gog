@@ -10,6 +10,54 @@ import (
 	"testing"
 )
 
+func BenchmarkNew(b *testing.B) {
+	b.StopTimer()
+	var pps []Point
+	size := 200
+	for i := 0; i < size; i++ {
+		pps = append(pps, Point{X: float64(i), Y: float64(i)})
+	}
+	for i := 0; i < size; i++ {
+		pps = append(pps, Point{X: float64(size - i), Y: float64(i)})
+	}
+	for i := 0; i < size; i++ {
+		pps = append(pps, Point{X: float64(size - i), Y: float64(size - i)})
+	}
+	for i := 0; i < size; i++ {
+		pps = append(pps, Point{X: float64(i), Y: float64(size - i)})
+	}
+	for i := 0; i < size; i++ {
+		pps = append(pps, Point{X: float64(size/2 + i + 1), Y: float64(size/2 + 1 - i)})
+	}
+	var model Model
+	for i := range pps {
+		if i == 0 {
+			continue
+		}
+		model.AddLine(pps[i-1], pps[i], 10)
+	}
+
+	// distance
+	var dist float64 = 1.0
+	model.Split(dist)
+	model.Intersection()
+
+	new := func() {
+		mesh, err := New(model)
+		if err != nil {
+			panic(err)
+		}
+		_ = mesh
+	}
+	new()
+
+	for n := 0; n < b.N; n++ {
+		b.StartTimer()
+		new()
+		b.StopTimer()
+	}
+}
+
 func BenchmarkTriangulation(b *testing.B) {
 	pps := []Point{
 		Point{X: 1, Y: 1}, // 0
