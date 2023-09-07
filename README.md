@@ -80,6 +80,14 @@ func Distance128(p0, p1 Point) float64
 func Distance3d(p0, p1 Point3d) float64
     Distance3d is distance between 2 points in 3D
 
+func IsParallelLines(
+	a0, a1 Point3d,
+	b0, b1 Point3d,
+) (
+	parallel bool,
+)
+    IsParallelLines return true, if lines are parallel
+
 func Line(p0, p1 Point) (A, B, C float64)
     Line parameters by formula: Ax+By+C = 0
 
@@ -330,6 +338,7 @@ type Model struct {
 	Lines     [][3]int // Lines store 2 index of Points and last for tag
 	Arcs      [][4]int // Arcs store 3 index of Points and last for tag
 	Triangles [][4]int // Triangles store 3 index of Points and last for tag/material
+	Quadrs    [][5]int // Rectanges store 4 index of Points and last for tag/material
 }
     Model of points, lines, arcs for prepare of triangulation
 
@@ -356,6 +365,13 @@ func (m *Model) AddTriangle(start, middle, end Point, tag int)
 
 func (m *Model) ArcsToLines()
     ArcsToLines convert arc to lines
+
+func (m *Model) Combine(factorOneLine float64) (err error)
+    Combine triangles to quadr with same tag
+
+        factorOneLine from 1 to 2/sqrt(2) = 1.41
+
+    Recommendation value is 1.05
 
 func (m *Model) ConvexHullTriangles()
     ConvexHullTriangles add triangles of model convex hull

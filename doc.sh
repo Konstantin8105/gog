@@ -10,3 +10,7 @@ echo -e "\`\`\`\n"
 go doc -all .
 
 echo -e "\`\`\`"
+
+rm -f *.dxf
+rm -f *.out
+rm -f *.test

@@ -118,6 +118,44 @@ func PointLineRatio3d(
 	return
 }
 
+// IsParallelLines return true, if lines are parallel
+func IsParallelLine3d(
+	a0, a1 Point3d,
+	b0, b1 Point3d,
+) (
+	parallel bool,
+) {
+	var (
+		dx1 = a0[0] - a1[0]
+		dy1 = a0[1] - a1[1]
+		dz1 = a0[2] - a1[2]
+
+		dx2 = b0[0] - b1[0]
+		dy2 = b0[1] - b1[1]
+		dz2 = b0[2] - b1[2]
+	)
+
+	if math.Abs(dx1) < Eps3D && Eps3D < math.Abs(dx2-dx1) {
+		return false
+	}
+	if math.Abs(dy1) < Eps3D && Eps3D < math.Abs(dy2-dy1) {
+		return false
+	}
+	if math.Abs(dz1) < Eps3D && Eps3D < math.Abs(dz2-dz1) {
+		return false
+	}
+	if Eps3D < math.Abs(dx1) && Eps3D < math.Abs((dx2-dx1)/dx1) {
+		return false
+	}
+	if Eps3D < math.Abs(dy1) && Eps3D < math.Abs((dy2-dy1)/dy1) {
+		return false
+	}
+	if Eps3D < math.Abs(dz1) && Eps3D < math.Abs((dz2-dz1)/dz1) {
+		return false
+	}
+	return true
+}
+
 // LineLine3d return intersection of two points.
 // Point on line corner ignored
 func LineLine3d(
