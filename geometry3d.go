@@ -134,23 +134,13 @@ func IsParallelLine3d(
 		dy2 = b0[1] - b1[1]
 		dz2 = b0[2] - b1[2]
 	)
-
-	if math.Abs(dx1) < Eps3D && Eps3D < math.Abs(dx2-dx1) {
+	if Eps3D*math.Abs(dy1*dx2) < math.Abs(dy1*dx2-dy2*dx1) {
 		return false
 	}
-	if math.Abs(dy1) < Eps3D && Eps3D < math.Abs(dy2-dy1) {
+	if Eps3D*math.Abs(dz1*dx2) < math.Abs(dz1*dx2-dz2*dx1) {
 		return false
 	}
-	if math.Abs(dz1) < Eps3D && Eps3D < math.Abs(dz2-dz1) {
-		return false
-	}
-	if Eps3D < math.Abs(dx1) && Eps3D < math.Abs((dx2-dx1)/dx1) {
-		return false
-	}
-	if Eps3D < math.Abs(dy1) && Eps3D < math.Abs((dy2-dy1)/dy1) {
-		return false
-	}
-	if Eps3D < math.Abs(dz1) && Eps3D < math.Abs((dz2-dz1)/dz1) {
+	if Eps3D*math.Abs(dz1*dy2) < math.Abs(dz1*dy2-dz2*dy1) {
 		return false
 	}
 	return true
