@@ -80,7 +80,7 @@ func Distance128(p0, p1 Point) float64
 func Distance3d(p0, p1 Point3d) float64
     Distance3d is distance between 2 points in 3D
 
-func IsParallelLines(
+func IsParallelLine3d(
 	a0, a1 Point3d,
 	b0, b1 Point3d,
 ) (
