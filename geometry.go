@@ -205,6 +205,7 @@ func PointLine(
 // LineLine return analisys of two segments
 //
 // Design of segments:
+//
 //	                                            //
 //	<-- rb00 -- pb0*==========*pb1 -- rb11 -->  // Segment B
 //	                                            //
@@ -213,15 +214,18 @@ func PointLine(
 //	                                            //
 //
 // Input data:
+//
 //	ipa0, ipa1 - point indexes of segment A
 //	ipb0, ipb1 - point indexes of segment B
 //	pps      - pointer of point slice
 //
 // Output data:
+//
 //	pi - intersection point
 //	st - states of analisys
 //
 // Reference:
+//
 //	[1]  https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 func LineLine(
 	pa0, pa1 Point,
@@ -372,6 +376,7 @@ func MiddlePoint(p0, p1 Point) Point {
 // PointLineDistance return distance between line and point.
 //
 // Equation of line:
+//
 //	(y2-y1)*(x-x1) = (x2-x1)(y-y1)
 //	dy*(x-x1) = dx*(y-y1)
 //	dy*x-dy*x1-dx*y+dx*y1 = 0
@@ -381,6 +386,7 @@ func MiddlePoint(p0, p1 Point) Point {
 //	C = -dy*x1+dx*y1
 //
 // Distance from point (xm,ym) to line:
+//
 //	d = |(A*xm+B*ym+C)/sqrt(A^2+B^2)|
 func PointLineDistance(
 	pc Point,
@@ -465,8 +471,11 @@ func Distance(p0, p1 Point) float64 {
 
 // Rotate point about (xc,yc) on angle
 func Rotate(xc, yc, angle float64, point Point) (p Point) {
-	p.X = math.Cos(angle)*(point.X-xc) - math.Sin(angle)*(point.Y-yc) + xc
-	p.Y = math.Sin(angle)*(point.X-xc) + math.Cos(angle)*(point.Y-yc) + yc
+	// FMA returns x * y + z, computed with only one rounding.
+	// p.X = math.Cos(angle)*(point.X-xc) - math.Sin(angle)*(point.Y-yc) + xc
+	// p.Y = math.Sin(angle)*(point.X-xc) + math.Cos(angle)*(point.Y-yc) + yc
+	p.X = math.FMA(math.Cos(angle), (point.X - xc), -math.FMA(math.Sin(angle), (point.Y-yc), xc))
+	p.Y = math.FMA(math.Sin(angle), (point.X - xc), +math.FMA(math.Cos(angle), (point.Y-yc), yc))
 	return
 }
 
@@ -486,8 +495,11 @@ func MirrorLine(
 	A, B, C := Line(mp0, mp1)
 
 	mir := func(x1, y1 float64) Point {
-		temp := -2 * (A*x1 + B*y1 + C) / (A*A + B*B)
-		return Point{X: temp*A + x1, Y: temp*B + y1}
+		// FMA returns x * y + z, computed with only one rounding.
+		// temp := -2 * (A*x1 + B*y1 + C) / (A*A + B*B)
+		temp := -2 * math.FMA(A, x1, math.FMA(B, y1, C)) / math.FMA(A, A, B*B)
+		// return Point{X: temp*A + x1, Y: temp*B + y1}
+		return Point{X: math.FMA(temp, A, x1), Y: math.FMA(temp, B, y1)}
 	}
 
 	ml0 = mir(sp0.X, sp0.Y)
@@ -808,18 +820,21 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 			// D == 0
 			// have one root
 			y := -b / (2.0 * a)
-			x := -(B*y + C) * 1 / A
+			// x := -(B*y + C) * 1 / A
+			x := -math.FMA(B, y, C) * 1 / A
 			roots = append(roots, Point{X: x, Y: y})
 		default:
 			// 0 < D
 			{
 				y := (-b + math.Sqrt(D)) / (2.0 * a)
-				x := -(B*y + C) * 1 / A
+				// x := -(B*y + C) * 1 / A
+				x := -math.FMA(B, y, C) * 1 / A
 				roots = append(roots, Point{X: x, Y: y})
 			}
 			{
 				y := (-b - math.Sqrt(D)) / (2.0 * a)
-				x := -(B*y + C) * 1 / A
+				// x := -(B*y + C) * 1 / A
+				x := -math.FMA(B, y, C) * 1 / A
 				roots = append(roots, Point{X: x, Y: y})
 			}
 		}
@@ -886,6 +901,7 @@ func LineArc(Line0, Line1 Point, Arc0, Arc1, Arc2 Point) (
 
 // ArcSplitByPoint return points of arcs with middle point if pi is empty or
 // slice of arcs.
+//
 //	DO NOT CHECKED POINT ON ARC
 func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err error) {
 	switch Orientation(Arc0, Arc1, Arc2) {
@@ -973,11 +989,13 @@ again:
 	// add middle angles
 	if len(pi) == 0 {
 		for _, f := range []float64{0.25, 0.5, 0.75} {
-			b = append(b, b[0]+f*(b[1]-b[0]))
+			// b = append(b, f*(b[1]-b[0])+ b[0])
+			b = append(b, math.FMA(f, b[1]-b[0], b[0]))
 		}
 	} else {
 		for i, size := 0, len(b)-1; i < size; i++ {
-			b = append(b, b[i]+0.5*(b[i+1]-b[i]))
+			// b = append(b,0.5*(b[i+1]-b[i])+ b[i])
+			b = append(b, math.FMA(0.5, b[i+1]-b[i], b[i]))
 		}
 	}
 	sort.Float64s(b)
@@ -1021,6 +1039,7 @@ var (
 )
 
 // Linear equations solving:
+//
 //	a11*x + a12*y = b1
 //	a21*x + a22*y = b2
 func Linear(
