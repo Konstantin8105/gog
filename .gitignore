@@ -1,3 +1,4 @@
 *.dxf
 *.out
 *.test
+.*.new
