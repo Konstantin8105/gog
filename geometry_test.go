@@ -1479,22 +1479,42 @@ func TestConvexHull(t *testing.T) {
 	tcs := []struct {
 		name string
 		ps   []Point
-		res  []Point
+		res1 []Point
+		res2 []Point
 	}{{
-		ps:  []Point{{0, 3}, {2, 2}, {1, 1}, {2, 1}, {3, 0}, {0, 0}, {3, 3}},
-		res: []Point{{+0, +0}, {+3, +0}, {+3, +3}, {+0, +3}},
+		ps:   []Point{{0, 3}, {2, 2}, {1, 1}, {2, 1}, {3, 0}, {0, 0}, {3, 3}},
+		res1: []Point{{+0, +0}, {+3, +0}, {+3, +3}, {+0, +3}},
+		res2: []Point{{+0, +0}, {+3, +0}, {+3, +3}, {+0, +3}},
 	}, {
-		ps:  []Point{{0, 3}, {1, 1}, {2, 2}, {4, 4}, {0, 0}, {1, 2}, {3, 1}, {3, 3}},
-		res: []Point{{+0, +0}, {+3, +1}, {+4, +4}, {+0, +3}},
+		ps:   []Point{{0, 3}, {1, 1}, {2, 2}, {4, 4}, {0, 0}, {1, 2}, {3, 1}, {3, 3}},
+		res1: []Point{{+0, +0}, {+3, +1}, {+4, +4}, {+0, +3}},
+		res2: []Point{{+0, +0}, {+3, +1}, {+4, +4}, {+0, +3}},
 	}, {
-		ps:  []Point{{0, 0}, {0, 4}, {-4, 0}, {5, 0}, {0, -6}, {1, 0}},
-		res: []Point{{+0, -6}, {+5, +0}, {+0, +4}, {-4, +0}},
-	}, {
+		ps:   []Point{{0, 0}, {0, 4}, {-4, 0}, {5, 0}, {0, -6}, {1, 0}},
+		res1: []Point{{+0, -6}, {+5, +0}, {+0, +4}, {-4, +0}},
+		res2: []Point{{+0, -6}, {+5, +0}, {+0, +4}, {-4, +0}},
+	}, { // t_3
 		ps: []Point{
 			{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4},
 			{1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4},
 		},
-		res: []Point{{0, 0}, {1, 0}, {1, 4}, {0, 4}},
+		res1: []Point{{0, 0}, {1, 0}, {1, 4}, {0, 4}},
+		res2: []Point{{0, 0}, {1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4},
+			{0, 4}, {0, 3}, {0, 2}, {0, 1}},
+	}, { // t_4
+		ps: []Point{
+			{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4},
+			{1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4},
+			{2, 0}, {2, 1}, {2, 2}, {2, 3}, {2, 4},
+			{3, 0}, {3, 1}, {3, 2}, {3, 3}, {3, 4},
+		},
+		res1: []Point{{0, 0}, {3, 0}, {3, 4}, {0, 4}},
+		res2: []Point{
+			{0, 0}, {1, 0}, {2, 0}, {3, 0},
+			{3, 1}, {3, 2}, {3, 3}, {3, 4},
+			{2, 4}, {1, 4},
+			{0, 4}, {0, 3}, {0, 2}, {0, 1},
+		},
 	}}
 	for i := range tcs {
 		tcs[i].name = fmt.Sprintf("t%2d", i)
@@ -1502,16 +1522,30 @@ func TestConvexHull(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			_, res := ConvexHull(tc.ps)
-			if len(res) != len(tc.res) {
-				t.Errorf("not same length:\n%v\n%v", res, tc.res)
-				return
-			}
-			for i := range res {
-				if Eps < Distance(res[i], tc.res[i]) {
-					t.Errorf("Not same points: %v != %v", res[i], tc.res[i])
+			t.Run("withoutCollinearPoints", func(t *testing.T) {
+				_, res := ConvexHull(tc.ps, true)
+				if len(res) != len(tc.res1) {
+					t.Errorf("not same length:\n%v\n%v", res, tc.res1)
+					return
 				}
-			}
+				for i := range res {
+					if Eps < Distance(res[i], tc.res1[i]) {
+						t.Errorf("Not same points: %v != %v", res[i], tc.res1[i])
+					}
+				}
+			})
+			t.Run("withCollinearPoints", func(t *testing.T) {
+				_, res := ConvexHull(tc.ps, false)
+				if len(res) != len(tc.res2) {
+					t.Errorf("not same length:\n%v\n%v", res, tc.res2)
+					return
+				}
+				for i := range res {
+					if Eps < Distance(res[i], tc.res2[i]) {
+						t.Errorf("Not same points: %v != %v", res[i], tc.res2[i])
+					}
+				}
+			})
 		})
 	}
 }

@@ -91,7 +91,7 @@ func New(model Model) (mesh *Mesh, err error) {
 	// create a new Mesh
 	mesh = new(Mesh)
 	// convex
-	_, cps := ConvexHull(model.Points) // points on convex hull
+	_, cps := ConvexHull(model.Points, true) // points on convex hull
 	if len(cps) < 3 {
 		err = fmt.Errorf("not enought points for convex")
 		return
@@ -99,13 +99,13 @@ func New(model Model) (mesh *Mesh, err error) {
 	// add last point for last triangle
 	cps = append(cps, cps[0])
 	// prepare mesh triangles
-	for i := 3; i < len(cps); i++ {
-		// TODO : triangles is not boundary, side is boundary
-		mesh.model.AddTriangle(cps[0], cps[i-2], cps[i-1], Boundary)
-		if i == 3 {
+	for i, initialize := 3, false; i < len(cps); i++ {
+		mesh.model.AddTriangle(cps[0], cps[i-2], cps[i-1], 1) // Default material
+		if !initialize {
 			mesh.Triangles = append(mesh.Triangles,
 				[3]int{Boundary, Boundary, 1},
 			)
+			initialize = true
 		} else {
 			mesh.Triangles = append(mesh.Triangles,
 				[3]int{i - 4, Boundary, i - 2},
