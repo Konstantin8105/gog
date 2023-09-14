@@ -155,6 +155,13 @@ func Plane(
 )
     Plane equation `A*x+B*y+C*z+D=0`
 
+func PlaneAverage(
+	ps []Point3d,
+) (
+	A, B, C, D float64,
+)
+    PlaneAverage return parameters of average plane for points
+
 func PointArc(pt Point, Arc0, Arc1, Arc2 Point) (
 	pi []Point,
 	stA, stB State,
@@ -462,6 +469,9 @@ func (p Point) String() string
 
 type Point3d [3]float64
     Point3d is point coordinate in 3D decart system
+
+func BorderPoints(ps ...Point3d) (min, max Point3d)
+    BorderPoints return (min..max) points coordinates
 
 func LineTriangle3dI1(
 	l0, l1 Point3d,

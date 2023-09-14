@@ -61,6 +61,26 @@ func PointPoint3d(
 	return Distance3d(p0, p1) < Eps3D
 }
 
+// BorderPoints return (min..max) points coordinates
+func BorderPoints(ps ...Point3d) (min, max Point3d) {
+	initialized := false
+	for _, p := range ps {
+		if !initialized {
+			initialized = true
+			for k := 0; k < 3; k++ {
+				min[k] = p[k]
+				max[k] = p[k]
+			}
+		}
+		// find external values
+		for k := 0; k < 3; k++ {
+			min[k] = math.Min(min[k], p[k])
+			max[k] = math.Max(max[k], p[k])
+		}
+	}
+	return
+}
+
 // PointLine3d return true only if point located on line segment
 func PointLine3d(
 	p Point3d,
@@ -236,6 +256,26 @@ func Plane(
 	B = math.FMA(a2, c1, -a1*c2)
 	C = math.FMA(a1, b2, -b1*a2)
 	D = math.FMA(-A, p1[0], math.FMA(-B, p1[1], -C*p1[2]))
+	return
+}
+
+// PlaneAverage return parameters of average plane for points
+func PlaneAverage(
+	ps []Point3d,
+) (
+	A, B, C, D float64,
+) {
+	l := len(ps)
+	for i := range ps {
+		if i < 2 {
+			continue
+		}
+		a, b, c, d := Plane(ps[i-2], ps[i-1], ps[i])
+		A = A + a/float64(l)
+		B = B + b/float64(l)
+		C = C + c/float64(l)
+		D = D + d/float64(l)
+	}
 	return
 }
 
