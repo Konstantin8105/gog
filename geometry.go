@@ -1359,12 +1359,25 @@ func ConvexHull(points []Point) (chain []int, res []Point) {
 	}
 	// sorting
 	sort.Slice(indexes, func(i, j int) bool {
-		if points[indexes[i]].Y == points[indexes[j]].Y {
-			return points[indexes[i]].X < points[indexes[j]].X
-		}
 		return points[indexes[i]].Y < points[indexes[j]].Y
 	})
-
+	for iter := 0; iter < 1000; iter++ {
+		change := false
+		for i := 0; i < len(indexes); i++ {
+			j := i + 1
+			if j == len(indexes) {
+				continue
+			}
+			if math.Abs(points[indexes[j]].Y-points[indexes[i]].Y) < Eps3D/10 &&
+				points[indexes[j]].X < points[indexes[i]].X {
+				indexes[i], indexes[j] = indexes[j], indexes[i]
+				change = true
+			}
+		}
+		if !change {
+			break
+		}
+	}
 	// lower hull
 	// var hull []Point
 	var hull []int
@@ -1377,7 +1390,6 @@ func ConvexHull(points []Point) (chain []int, res []Point) {
 		hull = append(hull, ind)
 	}
 	chain = append(chain, hull...)
-
 	// upper hull
 	hull = []int{}
 	for i := len(points) - 1; 0 <= i; i-- {
@@ -1388,7 +1400,6 @@ func ConvexHull(points []Point) (chain []int, res []Point) {
 		}
 		hull = append(hull, indexes[i])
 	}
-
 	// merge hulls
 	if 0 < len(chain) && 0 < len(hull) && Distance(points[chain[len(chain)-1]], points[hull[0]]) < Eps {
 		hull = hull[1:]
@@ -1397,12 +1408,11 @@ func ConvexHull(points []Point) (chain []int, res []Point) {
 		hull = hull[:len(hull)-1]
 	}
 	chain = append(chain, hull...)
-
+	// generate points
 	res = make([]Point, len(chain))
 	for i, ind := range chain {
 		res[i] = points[ind]
 	}
-
 	return
 }
 
