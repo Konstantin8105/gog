@@ -13,7 +13,7 @@ import (
 	eTree "github.com/Konstantin8105/errors"
 )
 
-func TestEmpty(t *testing.T){
+func TestEmpty(t *testing.T) {
 	if empty != 1 {
 		t.Errorf("First default value is not valid: %d", empty)
 	}
@@ -1489,6 +1489,12 @@ func TestConvexHull(t *testing.T) {
 	}, {
 		ps:  []Point{{0, 0}, {0, 4}, {-4, 0}, {5, 0}, {0, -6}, {1, 0}},
 		res: []Point{{+0, -6}, {+5, +0}, {+0, +4}, {-4, +0}},
+	}, {
+		ps: []Point{
+			{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4},
+			{1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4},
+		},
+		res: []Point{{0, 0}, {1, 0}, {1, 4}, {0, 4}},
 	}}
 	for i := range tcs {
 		tcs[i].name = fmt.Sprintf("t%2d", i)
@@ -1498,7 +1504,7 @@ func TestConvexHull(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			_, res := ConvexHull(tc.ps)
 			if len(res) != len(tc.res) {
-				t.Errorf("not same length")
+				t.Errorf("not same length:\n%v\n%v", res, tc.res)
 				return
 			}
 			for i := range res {

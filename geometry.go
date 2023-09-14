@@ -1399,7 +1399,7 @@ func ConvexHull(points []Point) (chain []int, res []Point) {
 	chain = append(chain, hull...)
 
 	res = make([]Point, len(chain))
-	for i,ind := range chain {
+	for i, ind := range chain {
 		res[i] = points[ind]
 	}
 
