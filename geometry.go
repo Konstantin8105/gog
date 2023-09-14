@@ -1347,56 +1347,61 @@ func PointInCircle(point Point, circle [3]Point) bool {
 }
 
 // ConvexHull return chain of convex points
-func ConvexHull(points []Point) (chain []Point) {
+func ConvexHull(points []Point) (chain []int, res []Point) {
 	if len(points) < 3 {
 		// points slice is small
 		return
 	}
-
-	// copy of points
-	{
-		c := make([]Point, len(points))
-		copy(c, points)
-		points = c
+	// create indexes
+	indexes := make([]int, len(points))
+	for i := range indexes {
+		indexes[i] = i
 	}
 	// sorting
-	sort.Slice(points, func(i, j int) bool {
-		if points[i].Y == points[j].Y {
-			return points[i].X < points[j].X
+	sort.Slice(indexes, func(i, j int) bool {
+		if points[indexes[i]].Y == points[indexes[j]].Y {
+			return points[indexes[i]].X < points[indexes[j]].X
 		}
-		return points[i].Y < points[j].Y
+		return points[indexes[i]].Y < points[indexes[j]].Y
 	})
 
 	// lower hull
-	var hull []Point
-	for _, point := range points {
-		for 2 <= len(hull) && (Orientation(hull[len(hull)-2], hull[len(hull)-1], point) == CollinearPoints ||
-			Orientation(hull[len(hull)-2], hull[len(hull)-1], point) == ClockwisePoints) {
+	// var hull []Point
+	var hull []int
+	for _, ind := range indexes {
+		point := points[ind]
+		for 2 <= len(hull) && (Orientation(points[hull[len(hull)-2]], points[hull[len(hull)-1]], point) == CollinearPoints ||
+			Orientation(points[hull[len(hull)-2]], points[hull[len(hull)-1]], point) == ClockwisePoints) {
 			hull = hull[:len(hull)-1]
 		}
-		hull = append(hull, point)
+		hull = append(hull, ind)
 	}
 	chain = append(chain, hull...)
 
 	// upper hull
-	hull = []Point{}
+	hull = []int{}
 	for i := len(points) - 1; 0 <= i; i-- {
-		point := points[i]
-		for 2 <= len(hull) && (Orientation(hull[len(hull)-2], hull[len(hull)-1], point) == CollinearPoints ||
-			Orientation(hull[len(hull)-2], hull[len(hull)-1], point) == ClockwisePoints) {
+		point := points[indexes[i]]
+		for 2 <= len(hull) && (Orientation(points[hull[len(hull)-2]], points[hull[len(hull)-1]], point) == CollinearPoints ||
+			Orientation(points[hull[len(hull)-2]], points[hull[len(hull)-1]], point) == ClockwisePoints) {
 			hull = hull[:len(hull)-1]
 		}
-		hull = append(hull, point)
+		hull = append(hull, indexes[i])
 	}
 
 	// merge hulls
-	if 0 < len(chain) && 0 < len(hull) && Distance(chain[len(chain)-1], hull[0]) < Eps {
+	if 0 < len(chain) && 0 < len(hull) && Distance(points[chain[len(chain)-1]], points[hull[0]]) < Eps {
 		hull = hull[1:]
 	}
-	if 0 < len(chain) && 0 < len(hull) && Distance(chain[0], hull[len(hull)-1]) < Eps {
+	if 0 < len(chain) && 0 < len(hull) && Distance(points[chain[0]], points[hull[len(hull)-1]]) < Eps {
 		hull = hull[:len(hull)-1]
 	}
 	chain = append(chain, hull...)
+
+	res = make([]Point, len(chain))
+	for i,ind := range chain {
+		res[i] = points[ind]
+	}
 
 	return
 }

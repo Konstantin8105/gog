@@ -134,7 +134,7 @@ func (m Model) Dxf() string {
 	if 1 < len(m.Points) {
 		// draw convex
 		{
-			cps := ConvexHull(m.Points)
+			_, cps := ConvexHull(m.Points)
 			for i := 1; i < len(cps); i++ {
 				line(cps[i-1], cps[i], "convex")
 			}
@@ -1105,7 +1105,7 @@ func (m *Model) ArcsToLines() {
 
 // ConvexHullTriangles add triangles of model convex hull
 func (m *Model) ConvexHullTriangles() {
-	cps := ConvexHull(m.Points) // points on convex hull
+	_, cps := ConvexHull(m.Points) // points on convex hull
 	for i := 2; i < len(cps); i++ {
 		m.AddTriangle(cps[0], cps[i-2], cps[i-1], -1)
 	}

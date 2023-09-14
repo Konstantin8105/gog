@@ -91,7 +91,7 @@ func New(model Model) (mesh *Mesh, err error) {
 	// create a new Mesh
 	mesh = new(Mesh)
 	// convex
-	cps := ConvexHull(model.Points) // points on convex hull
+	_, cps := ConvexHull(model.Points) // points on convex hull
 	if len(cps) < 3 {
 		err = fmt.Errorf("not enought points for convex")
 		return

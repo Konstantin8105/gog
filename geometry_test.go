@@ -1496,7 +1496,7 @@ func TestConvexHull(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			res := ConvexHull(tc.ps)
+			_, res := ConvexHull(tc.ps)
 			if len(res) != len(tc.res) {
 				t.Errorf("not same length")
 				return
