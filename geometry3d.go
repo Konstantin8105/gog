@@ -85,7 +85,7 @@ func BorderPoints(ps ...Point3d) (min, max Point3d) {
 func BorderIntersection(ps1, ps2 []Point3d) (intersect bool) {
 	mi1, ma1 := BorderPoints(ps1...)
 	mi2, ma2 := BorderPoints(ps2...)
-	for k :=0;k < 3; k++{
+	for k := 0; k < 3; k++ {
 		if ma2[k] < mi1[k] || ma1[k] < mi2[k] {
 			return
 		}
@@ -109,15 +109,6 @@ func PointLine3d(
 	// line zero lenght
 	if ZeroLine3d(l0, l1) {
 		return
-	}
-	// is point in line box
-	for i := range p {
-		if p[i] < l0[i] && p[i] < l1[i] {
-			return
-		}
-		if l0[i] < p[i] && l1[i] < p[i] {
-			return
-		}
 	}
 	// compare distances
 	if Eps3D < math.Abs(Distance3d(l0, p)+Distance3d(l1, p)-Distance3d(l0, l1)) {
