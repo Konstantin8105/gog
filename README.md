@@ -68,6 +68,9 @@ func Area(
 ) float64
     Area return area of triangle
 
+func BorderIntersection(ps1, ps2 []Point3d) (intersect bool)
+    BorderIntersection return true only if Borders are intersect
+
 func Check(pps ...Point) error
     Check - check input data
 
@@ -445,7 +448,7 @@ type Point struct {
 }
     Point is store of point coordinates
 
-func ConvexHull(points []Point) (chain []Point)
+func ConvexHull(points []Point, withoutCollinearPoints bool) (chain []int, res []Point)
     ConvexHull return chain of convex points
 
 func MiddlePoint(p0, p1 Point) Point

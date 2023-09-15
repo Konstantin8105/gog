@@ -81,6 +81,18 @@ func BorderPoints(ps ...Point3d) (min, max Point3d) {
 	return
 }
 
+// BorderIntersection return true only if Borders are intersect
+func BorderIntersection(ps1, ps2 []Point3d) (intersect bool) {
+	mi1, ma1 := BorderPoints(ps1...)
+	mi2, ma2 := BorderPoints(ps2...)
+	for k :=0;k < 3; k++{
+		if ma2[k] < mi1[k] || ma1[k] < mi2[k] {
+			return
+		}
+	}
+	return true
+}
+
 // PointLine3d return true only if point located on line segment
 func PointLine3d(
 	p Point3d,
