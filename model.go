@@ -1161,7 +1161,9 @@ func (m *Model) Read(filename string) (err error) {
 }
 
 // Combine triangles to quadr with same tag
+//
 //	factorOneLine from 1 to 2/sqrt(2) = 1.41
+//
 // Recommendation value is 1.05
 func (m *Model) Combine(factorOneLine float64) (err error) {
 	cases := [][6]int{

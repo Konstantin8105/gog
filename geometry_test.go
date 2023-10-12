@@ -1,14 +1,17 @@
 package gog
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 	"math/big"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/Konstantin8105/compare"
 	"github.com/Konstantin8105/cs"
 	eTree "github.com/Konstantin8105/errors"
 )
@@ -1329,7 +1332,44 @@ func TestAngleBetween(t *testing.T) {
 
 }
 
-func ExampleArcSplitByPoint() {
+// cpu: Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz
+// BenchmarkArcSplitByPoint/WithoutPoint-4         	  702073	      1678 ns/op	     592 B/op	      13 allocs/op
+// BenchmarkArcSplitByPoint/WithPoint-4            	  656035	      1786 ns/op	     616 B/op	      13 allocs/op
+//
+// BenchmarkArcSplitByPoint/WithoutPoint-4         	  662924	      1577 ns/op	     496 B/op	      10 allocs/op
+// BenchmarkArcSplitByPoint/WithPoint-4            	  783086	      1518 ns/op	     456 B/op	       9 allocs/op
+//
+// BenchmarkArcSplitByPoint/WithoutPoint-4         	  877332	      1434 ns/op	     552 B/op	      12 allocs/op
+// BenchmarkArcSplitByPoint/WithPoint-4            	  828496	      1412 ns/op	     552 B/op	      12 allocs/op
+//
+// BenchmarkArcSplitByPoint/WithoutPoint-4         	 1245926	       959.5 ns/op	     320 B/op	       6 allocs/op
+// BenchmarkArcSplitByPoint/WithPoint-4            	 1356279	       865.0 ns/op	     272 B/op	       5 allocs/op
+//
+// BenchmarkArcSplitByPoint/WithoutPoint-4         	 1297148	       939.4 ns/op	     240 B/op	       5 allocs/op
+// BenchmarkArcSplitByPoint/WithPoint-4            	 1397499	       815.6 ns/op	     192 B/op	       4 allocs/op
+//
+// BenchmarkArcSplitByPoint/WithoutPoint-4         	 1328588	       909.7 ns/op	     240 B/op	       5 allocs/op
+// BenchmarkArcSplitByPoint/WithPoint-4            	 1495153	       850.5 ns/op	     192 B/op	       4 allocs/op
+func BenchmarkArcSplitByPoint(b *testing.B) {
+	b.Run("WithoutPoint", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_, err := ArcSplitByPoint(Point{-2, 0}, Point{0, +2}, Point{+2, 0})
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+	b.Run("WithPoint", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_, err := ArcSplitByPoint(Point{0, -1}, Point{1, 0}, Point{0, 1}, Point{1, 0})
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+func TestArcSplitByPoint(t *testing.T) {
 	tcs := [][]Point{
 		[]Point{ // 0
 			Point{-2, 0}, Point{0, +2}, Point{+2, 0},
@@ -1361,76 +1401,62 @@ func ExampleArcSplitByPoint() {
 			Point{0, -1}, Point{-1, 0}, Point{0, 1},
 			Point{-1, 0},
 		},
+		[]Point{ // 8
+			Point{-7.39920e-02, -8.67401e-02},
+			Point{-6.63436e-02, -8.84357e-02},
+			Point{-5.07500e-02, -8.98000e-02},
+		},
+	}
+	// move center
+	for i, size := 0, len(tcs); i < size; i++ {
+		tc := append([]Point{}, tcs[i]...)
+		for p := range tc {
+			tc[p].X += 1
+			tc[p].Y += 2
+		}
+		tcs = append(tcs, tc)
 	}
 	for index, tc := range tcs {
-		fmt.Fprintf(os.Stdout, "case %d:\n", index)
-		res, err := ArcSplitByPoint(tc[0], tc[1], tc[2], tc[3:]...)
-		if err != nil {
-			panic(fmt.Errorf("index %d: %v", index, err))
-		}
-		for i := range res {
-			for j := range res[i] {
-				fmt.Fprintf(os.Stdout, "[%02d,%02d] = %+.5f\n", i, j, res[i][j])
+		name := filepath.Join("testdata", fmt.Sprintf("ArcSplitByPoint%02d", index))
+		t.Run(name, func(t *testing.T) {
+			res, err := ArcSplitByPoint(tc[0], tc[1], tc[2], tc[3:]...)
+			if err != nil {
+				t.Fatal(fmt.Errorf("index %d: %v", index, err))
 			}
-		}
+			var buf bytes.Buffer
+			// before
+			fmt.Fprintf(&buf, "Before:\n")
+			for j := range tc {
+				fmt.Fprintf(&buf, "Point %02d = %+.5f\n", j, tc[j])
+			}
+			// after
+			fmt.Fprintf(&buf, "After:\n")
+			for i := range res {
+				for j := range res[i] {
+					fmt.Fprintf(&buf, "[%02d,%02d] = %+.5f\n", i, j, res[i][j])
+				}
+			}
+			// finding in results
+			for index, p := range []Point{tc[0], tc[2]} {
+				if index == 1 {
+					// middle arc point is not importance
+					continue
+				}
+				found := false
+				for _, rs := range res {
+					for _, r := range rs {
+						if SamePoints(p, r) {
+							found = true
+						}
+					}
+				}
+				if !found {
+					t.Errorf("Not found point with index %d: %v", index, tc[index])
+				}
+			}
+			compare.Test(t, name, buf.Bytes())
+		})
 	}
-	// Output:
-	// case 0:
-	// [00,00] = {+0.00000 +2.00000}
-	// [00,01] = {+1.41421 +1.41421}
-	// [00,02] = {+2.00000 +0.00000}
-	// [01,00] = {-2.00000 +0.00000}
-	// [01,01] = {-1.41421 +1.41421}
-	// [01,02] = {+0.00000 +2.00000}
-	// case 1:
-	// [00,00] = {+2.00000 +0.00000}
-	// [00,01] = {+1.41421 +1.41421}
-	// [00,02] = {+0.00000 +2.00000}
-	// [01,00] = {+0.00000 +2.00000}
-	// [01,01] = {-1.41421 +1.41421}
-	// [01,02] = {-2.00000 +0.00000}
-	// case 2:
-	// [00,00] = {-0.00000 +2.00000}
-	// [00,01] = {+1.41421 +1.41421}
-	// [00,02] = {+2.00000 +0.00000}
-	// [01,00] = {-2.00000 +0.00000}
-	// [01,01] = {-1.41421 +1.41421}
-	// [01,02] = {-0.00000 +2.00000}
-	// case 3:
-	// [00,00] = {+2.00000 +0.00000}
-	// [00,01] = {+1.41421 +1.41421}
-	// [00,02] = {-0.00000 +2.00000}
-	// [01,00] = {-0.00000 +2.00000}
-	// [01,01] = {-1.41421 +1.41421}
-	// [01,02] = {-2.00000 +0.00000}
-	// case 4:
-	// [00,00] = {+1.41421 +1.41421}
-	// [00,01] = {+1.84776 +0.76537}
-	// [00,02] = {+2.00000 +0.00000}
-	// [01,00] = {-2.00000 +0.00000}
-	// [01,01] = {-0.76537 +1.84776}
-	// [01,02] = {+1.41421 +1.41421}
-	// case 5:
-	// [00,00] = {+0.00000 +1.00000}
-	// [00,01] = {-0.70711 +0.70711}
-	// [00,02] = {-1.00000 +0.00000}
-	// [01,00] = {-1.00000 +0.00000}
-	// [01,01] = {-0.70711 -0.70711}
-	// [01,02] = {-0.00000 -1.00000}
-	// case 6:
-	// [00,00] = {+0.00000 -1.00000}
-	// [00,01] = {+0.70711 -0.70711}
-	// [00,02] = {+1.00000 +0.00000}
-	// [01,00] = {+1.00000 +0.00000}
-	// [01,01] = {+0.70711 +0.70711}
-	// [01,02] = {+0.00000 +1.00000}
-	// case 7:
-	// [00,00] = {-1.00000 +0.00000}
-	// [00,01] = {-0.70711 +0.70711}
-	// [00,02] = {+0.00000 +1.00000}
-	// [01,00] = {-0.00000 -1.00000}
-	// [01,01] = {-0.70711 -0.70711}
-	// [01,02] = {-1.00000 +0.00000}
 }
 
 func TestPointLineDistance(t *testing.T) {

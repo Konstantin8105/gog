@@ -916,6 +916,9 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 		for i := range res {
 			res[i][0], res[i][2] = res[i][2], res[i][0]
 		}
+		for i, j := 0, len(res)-1; i < j; i, j = i+1, j-1 {
+			res[i], res[j] = res[j], res[i]
+		}
 		return
 	}
 	// CounterClockwisePoints
@@ -959,21 +962,24 @@ againRemove:
 	xc, yc, r := Arc(Arc0, Arc1, Arc2)
 
 	// angle for rotate
-	angle0 := -math.Atan2(Arc0.Y-yc, Arc0.X-xc) - math.Pi + 0.01
-
-	// rotate
-	ps := []Point{
-		Rotate(xc, yc, +angle0, Arc0),
-		Rotate(xc, yc, +angle0, Arc2),
-	}
-	for i := range pi {
-		ps = append(ps, Rotate(xc, yc, +angle0, pi[i]))
-	}
+	angle0 := math.Atan2(Arc0.Y-yc, Arc0.X-xc)
 
 	// points angles
-	var b []float64
-	for i := range ps {
-		b = append(b, math.Atan2(ps[i].Y-yc, ps[i].X-xc))
+	b := make([]float64, 0, (len(pi)+2)*2)
+	b = append(b, angle0)
+	{
+		angle := math.Atan2(Arc2.Y-yc, Arc2.X-xc)
+		if angle < angle0 {
+			angle += 2 * math.Pi
+		}
+		b = append(b, angle)
+	}
+	for i := range pi {
+		angle := math.Atan2(pi[i].Y-yc, pi[i].X-xc)
+		if angle < angle0 {
+			angle += 2 * math.Pi
+		}
+		b = append(b, angle)
 	}
 	sort.Float64s(b)
 
@@ -1000,29 +1006,35 @@ again:
 	}
 	sort.Float64s(b)
 
-	if b[0] < -math.Pi {
-		panic(fmt.Errorf("debug: %v", b))
-	}
-
-	ps = []Point{}
-	for _, angle := range b {
-		p := Point{
-			// X: r*math.Cos(angle-angle0) + xc,
-			// Y: r*math.Sin(angle-angle0) + yc,
-			X: math.FMA(r, math.Cos(angle-angle0), xc),
-			Y: math.FMA(r, math.Sin(angle-angle0), yc),
-		}
-		ps = append(ps, p)
-	}
-
 	// prepare arcs
 	// 0-1-2=3=4-5-6
 	// len=7 arcs=3
 	// len=5 arcs=2
 	// len=3 arcs=1
-	for i := 0; i <= (len(ps)-1)/2; i += 2 {
-		res = append(res, [3]Point{ps[i], ps[i+1], ps[i+2]})
+	res = make([][3]Point, (len(b)-1)/2)
+	for i := 0; i < len(res); i++ {
+		bi := i * 2
+		res[i][0] = Point{
+			// X: r*math.Cos(angle) + xc,
+			// Y: r*math.Sin(angle) + yc,
+			X: math.FMA(r, math.Cos(b[bi+0]), xc),
+			Y: math.FMA(r, math.Sin(b[bi+0]), yc),
+		}
+		res[i][1] = Point{
+			// X: r*math.Cos(angle) + xc,
+			// Y: r*math.Sin(angle) + yc,
+			X: math.FMA(r, math.Cos(b[bi+1]), xc),
+			Y: math.FMA(r, math.Sin(b[bi+1]), yc),
+		}
+		res[i][2] = Point{
+			// X: r*math.Cos(angle) + xc,
+			// Y: r*math.Sin(angle) + yc,
+			X: math.FMA(r, math.Cos(b[bi+2]), xc),
+			Y: math.FMA(r, math.Sin(b[bi+2]), yc),
+		}
 	}
+	res[0][0] = Arc0
+	res[len(res)-1][2] = Arc2
 
 	return
 }
