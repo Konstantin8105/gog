@@ -34,12 +34,14 @@ import (
 //	|             \/                     |
 //	|              o  nodes[2]           |
 //	+------------------------------------+
-//
 type Mesh struct {
 	model     Model
 	Points    []int    // tags for points
 	Triangles [][3]int // indexes of near triangles
 	// TODO
+	templorary struct {
+		ignore []bool
+	}
 }
 
 var (
@@ -712,6 +714,7 @@ func (mesh *Mesh) shiftTriangle(i int) {
 // rt is removed triangles
 //
 // state:
+//
 //	100 - point on line with 2 triangles
 //	200 - point on line with 1 boundary triangle
 //	300 - point in triangle
@@ -1149,7 +1152,7 @@ func (mesh *Mesh) Delanay(triIndexes ...int) (err error) {
 		if neartr == Removed {
 			return
 		}
-		if mesh.model.Triangles[neartr][0] == Removed{
+		if mesh.model.Triangles[neartr][0] == Removed {
 			return
 		}
 		// rotate near triangle
@@ -1317,26 +1320,32 @@ func (mesh *Mesh) Delanay(triIndexes ...int) (err error) {
 	}
 
 	// initialize
-	ignore := make([]bool, len(mesh.model.Triangles))
+	{
+		size := len(mesh.model.Triangles)
+		if len(mesh.templorary.ignore) < size {
+			mesh.templorary.ignore = make([]bool, size*2)
+		}
+	}
+	ignore := &mesh.templorary.ignore
 
 	// loop of triangles
 	for iter := 0; ; iter++ {
 		counter := 0
 
 		// reset values
-		for i := range ignore {
-			ignore[i] = false
+		for i := range *ignore {
+			(*ignore)[i] = false
 		}
 
 		for _, index := range triIndexes {
 			if index < 0 {
 				continue
 			}
-			ignore[index] = true
+			(*ignore)[index] = true
 		}
 
 		for tr := range mesh.model.Triangles {
-			if 0 < len(triIndexes) && !ignore[tr] {
+			if 0 < len(triIndexes) && !(*ignore)[tr] {
 				continue
 			}
 			if mesh.model.Triangles[tr][0] == Removed {
@@ -1699,7 +1708,8 @@ func (mesh *Mesh) Smooth(pts ...int) (err error) {
 	}
 
 	// create list of all movable points
-	var nearPoints, nearTriangles []int
+	nearPoints := make([]int, 0, 20)
+	nearTriangles := make([]int, 0, 20)
 	for _, p := range pts {
 		if mesh.Points[p] != Movable {
 			continue

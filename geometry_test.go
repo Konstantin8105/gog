@@ -935,25 +935,6 @@ func ExampleLinear() {
 	// 0.00000000000000000000e+00
 }
 
-func BenchmarkLineLine(b *testing.B) {
-	pps := []Point{
-		Point{X: 1, Y: 1}, // 0
-		Point{X: 4, Y: 4}, // 1
-		Point{X: 0, Y: 5}, // 2
-		Point{X: 5, Y: 0}, // 3
-	}
-
-	if err := Check(pps...); err != nil {
-		panic(err)
-	}
-	for n := 0; n < b.N; n++ {
-		LineLine(
-			pps[0], pps[1],
-			pps[2], pps[3],
-		)
-	}
-}
-
 func TestLinePointDistance(t *testing.T) {
 	for _, tc := range tcs {
 		if len(tc.pi) != 4 {
@@ -1330,43 +1311,6 @@ func TestAngleBetween(t *testing.T) {
 		})
 	}
 
-}
-
-// cpu: Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz
-// BenchmarkArcSplitByPoint/WithoutPoint-4         	  702073	      1678 ns/op	     592 B/op	      13 allocs/op
-// BenchmarkArcSplitByPoint/WithPoint-4            	  656035	      1786 ns/op	     616 B/op	      13 allocs/op
-//
-// BenchmarkArcSplitByPoint/WithoutPoint-4         	  662924	      1577 ns/op	     496 B/op	      10 allocs/op
-// BenchmarkArcSplitByPoint/WithPoint-4            	  783086	      1518 ns/op	     456 B/op	       9 allocs/op
-//
-// BenchmarkArcSplitByPoint/WithoutPoint-4         	  877332	      1434 ns/op	     552 B/op	      12 allocs/op
-// BenchmarkArcSplitByPoint/WithPoint-4            	  828496	      1412 ns/op	     552 B/op	      12 allocs/op
-//
-// BenchmarkArcSplitByPoint/WithoutPoint-4         	 1245926	       959.5 ns/op	     320 B/op	       6 allocs/op
-// BenchmarkArcSplitByPoint/WithPoint-4            	 1356279	       865.0 ns/op	     272 B/op	       5 allocs/op
-//
-// BenchmarkArcSplitByPoint/WithoutPoint-4         	 1297148	       939.4 ns/op	     240 B/op	       5 allocs/op
-// BenchmarkArcSplitByPoint/WithPoint-4            	 1397499	       815.6 ns/op	     192 B/op	       4 allocs/op
-//
-// BenchmarkArcSplitByPoint/WithoutPoint-4         	 1328588	       909.7 ns/op	     240 B/op	       5 allocs/op
-// BenchmarkArcSplitByPoint/WithPoint-4            	 1495153	       850.5 ns/op	     192 B/op	       4 allocs/op
-func BenchmarkArcSplitByPoint(b *testing.B) {
-	b.Run("WithoutPoint", func(b *testing.B) {
-		for n := 0; n < b.N; n++ {
-			_, err := ArcSplitByPoint(Point{-2, 0}, Point{0, +2}, Point{+2, 0})
-			if err != nil {
-				b.Fatal(err)
-			}
-		}
-	})
-	b.Run("WithPoint", func(b *testing.B) {
-		for n := 0; n < b.N; n++ {
-			_, err := ArcSplitByPoint(Point{0, -1}, Point{1, 0}, Point{0, 1}, Point{1, 0})
-			if err != nil {
-				b.Fatal(err)
-			}
-		}
-	})
 }
 
 func TestArcSplitByPoint(t *testing.T) {

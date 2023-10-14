@@ -10,136 +10,6 @@ import (
 	"testing"
 )
 
-func BenchmarkNew(b *testing.B) {
-	b.StopTimer()
-	var pps []Point
-	size := 200
-	for i := 0; i < size; i++ {
-		pps = append(pps, Point{X: float64(i), Y: float64(i)})
-	}
-	for i := 0; i < size; i++ {
-		pps = append(pps, Point{X: float64(size - i), Y: float64(i)})
-	}
-	for i := 0; i < size; i++ {
-		pps = append(pps, Point{X: float64(size - i), Y: float64(size - i)})
-	}
-	for i := 0; i < size; i++ {
-		pps = append(pps, Point{X: float64(i), Y: float64(size - i)})
-	}
-	for i := 0; i < size; i++ {
-		pps = append(pps, Point{X: float64(size/2 + i + 1), Y: float64(size/2 + 1 - i)})
-	}
-	var model Model
-	for i := range pps {
-		if i == 0 {
-			continue
-		}
-		model.AddLine(pps[i-1], pps[i], 10)
-	}
-
-	// distance
-	var dist float64 = 1.0
-	model.Split(dist)
-	model.Intersection()
-
-	new := func() {
-		mesh, err := New(model)
-		if err != nil {
-			panic(err)
-		}
-		_ = mesh
-	}
-	new()
-
-	for n := 0; n < b.N; n++ {
-		b.StartTimer()
-		new()
-		b.StopTimer()
-	}
-}
-
-func BenchmarkTriangulation(b *testing.B) {
-	pps := []Point{
-		Point{X: 1, Y: 1}, // 0
-		Point{X: 4, Y: 4}, // 1
-		Point{X: 0, Y: 5}, // 2
-		Point{X: 5, Y: 0}, // 3
-	}
-
-	for n := 0; n < b.N; n++ {
-		var model Model
-		for i := range pps {
-			if i == 0 {
-				continue
-			}
-			model.AddLine(pps[i-1], pps[i], 10)
-		}
-
-		// distance
-		var dist float64
-		dist = model.MinPointDistance()
-		{
-			xmax := -math.MaxFloat64
-			xmin := +math.MaxFloat64
-			for i := range model.Points {
-				xmax = math.Max(xmax, model.Points[i].X)
-				xmin = math.Min(xmin, model.Points[i].X)
-			}
-			dist = math.Min(dist, math.Abs(xmax-xmin)/10.0)
-		}
-		model.Intersection()
-		model.Split(dist)
-		model.ArcsToLines()
-		mesh, err := New(model)
-		if err != nil {
-			panic(err)
-		}
-		err = mesh.Delanay()
-		if err != nil {
-			panic(err)
-		}
-		err = mesh.Split(dist)
-		if err != nil {
-			panic(err)
-		}
-		err = mesh.Smooth()
-		if err != nil {
-			panic(err)
-		}
-		err = mesh.Check()
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func BenchmarkSplit(b *testing.B) {
-	pps := []Point{
-		Point{X: 1, Y: 1}, // 0
-		Point{X: 4, Y: 4}, // 1
-		Point{X: 0, Y: 5}, // 2
-		Point{X: 5, Y: 0}, // 3
-	}
-	var dist float64 = 0.1
-
-	for n := 0; n < b.N; n++ {
-		var model Model
-		for i := range pps {
-			if i == 0 {
-				continue
-			}
-			model.AddLine(pps[i-1], pps[i], 10)
-		}
-		mesh, err := New(model)
-		if err != nil {
-			panic(err)
-		}
-
-		// distance
-		mesh.Split(dist)
-	}
-}
-
 func TestTriangulation(t *testing.T) {
 	if testing.Verbose() {
 		Log = true
@@ -423,7 +293,7 @@ func TestTriangulation(t *testing.T) {
 			ts.model.Split(dist)
 			ts.model.ArcsToLines()
 			if err := ioutil.WriteFile(
-				"." + ts.name+".model.dxf",
+				"."+ts.name+".model.dxf",
 				[]byte(ts.model.Dxf()),
 				0644,
 			); err != nil {
@@ -445,7 +315,7 @@ func TestTriangulation(t *testing.T) {
 				// write dxf file
 				ts.model.Get(mesh)
 				if err := ioutil.WriteFile(
-					"." + ts.name+".dxf",
+					"."+ts.name+".dxf",
 					[]byte(ts.model.Dxf()),
 					0644,
 				); err != nil {
