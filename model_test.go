@@ -49,7 +49,7 @@ func TestModel(t *testing.T) {
 	// view result in dxf format
 	view := func() {
 		if err := ioutil.WriteFile(
-			fmt.Sprintf(".ExampleModelOnState%02d.dxf", state),
+			fmt.Sprintf(filepath.Join("testdata", ".ExampleModelOnState%02d.dxf"), state),
 			[]byte(m.Dxf()),
 			0644,
 		); err != nil {

@@ -282,6 +282,7 @@ TYPES
 type Mesh struct {
 	Points    []int    // tags for points
 	Triangles [][3]int // indexes of near triangles
+
 	// Has unexported fields.
 }
     Mesh is based structure of triangulation. Triangle is data structure

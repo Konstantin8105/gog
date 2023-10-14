@@ -293,7 +293,7 @@ func TestTriangulation(t *testing.T) {
 			ts.model.Split(dist)
 			ts.model.ArcsToLines()
 			if err := ioutil.WriteFile(
-				"."+ts.name+".model.dxf",
+				filepath.Join("testdata", "."+ts.name+".model.dxf"),
 				[]byte(ts.model.Dxf()),
 				0644,
 			); err != nil {
@@ -315,7 +315,7 @@ func TestTriangulation(t *testing.T) {
 				// write dxf file
 				ts.model.Get(mesh)
 				if err := ioutil.WriteFile(
-					"."+ts.name+".dxf",
+					filepath.Join("testdata", "."+ts.name+".dxf"),
 					[]byte(ts.model.Dxf()),
 					0644,
 				); err != nil {
