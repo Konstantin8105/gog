@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"testing"
 
 	"github.com/Konstantin8105/compare"
@@ -34,7 +35,7 @@ func TestCopy(t *testing.T) {
 }
 
 func TestModel(t *testing.T) {
-	if Log == false {
+	if testing.Verbose() {
 		Log = true
 		defer func() {
 			Log = false
@@ -48,7 +49,7 @@ func TestModel(t *testing.T) {
 	// view result in dxf format
 	view := func() {
 		if err := ioutil.WriteFile(
-			fmt.Sprintf("ExampleModelOnState%02d.dxf", state),
+			fmt.Sprintf(".ExampleModelOnState%02d.dxf", state),
 			[]byte(m.Dxf()),
 			0644,
 		); err != nil {
@@ -108,5 +109,5 @@ func TestModel(t *testing.T) {
 	view() // 9
 	fmt.Fprintf(&buf, "After combine:\n%s", m)
 
-	compare.Test(t, ".example", buf.Bytes())
+	compare.Test(t, filepath.Join("testdata", "test.model"), buf.Bytes())
 }

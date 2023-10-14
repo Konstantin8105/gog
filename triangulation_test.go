@@ -141,6 +141,13 @@ func BenchmarkSplit(b *testing.B) {
 }
 
 func TestTriangulation(t *testing.T) {
+	if testing.Verbose() {
+		Log = true
+		defer func() {
+			Log = false
+		}()
+	}
+
 	pnts := [][]Point{
 		{ // 0
 			Point{48, 47},
@@ -297,13 +304,6 @@ func TestTriangulation(t *testing.T) {
 		}()
 	}
 
-	if Log == false {
-		Log = true
-		defer func() {
-			Log = false
-		}()
-	}
-
 	type testcase struct {
 		name  string
 		model Model
@@ -423,7 +423,7 @@ func TestTriangulation(t *testing.T) {
 			ts.model.Split(dist)
 			ts.model.ArcsToLines()
 			if err := ioutil.WriteFile(
-				ts.name+".model.dxf",
+				"." + ts.name+".model.dxf",
 				[]byte(ts.model.Dxf()),
 				0644,
 			); err != nil {
@@ -445,7 +445,7 @@ func TestTriangulation(t *testing.T) {
 				// write dxf file
 				ts.model.Get(mesh)
 				if err := ioutil.WriteFile(
-					ts.name+".dxf",
+					"." + ts.name+".dxf",
 					[]byte(ts.model.Dxf()),
 					0644,
 				); err != nil {
