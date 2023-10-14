@@ -89,7 +89,7 @@ func IsParallelLine3d(
 ) (
 	parallel bool,
 )
-    IsParallelLines return true, if lines are parallel
+    IsParallelLines3d return true, if lines are parallel
 
 func Line(p0, p1 Point) (A, B, C float64)
     Line parameters by formula: Ax+By+C = 0
@@ -218,6 +218,8 @@ func PointOnPlane3d(
 ) (
 	on bool,
 )
+    PointOnPlane3d return true if all points on plane
+
 func PointPoint(
 	pt0, pt1 Point,
 ) (
@@ -405,6 +407,7 @@ func (m Model) JSON() (_ string, err error)
     JSON convert model in JSON format
 
 func (to *Model) Merge(from Model)
+    Merge `from` model to `to` model
 
 func (m Model) MinPointDistance() (distance float64)
     MinPointDistance return minimal between 2 points
@@ -499,6 +502,7 @@ func LineTriangle3dI2(
     line
 
 func Mirror3d(plane [3]Point3d, points ...Point3d) (mir []Point3d)
+    Mirror3d return mirror points by mirror plane
 
 func PointLineRatio3d(
 	l0, l1 Point3d,
@@ -532,7 +536,7 @@ const (
 	// ZeroLengthSegment return for zero length segment
 	ZeroLengthSegment
 
-	// Segment A and segment B are parallel.
+	// Parallel is segment A and segment B.
 	// Intersection point data is not valid.
 	Parallel
 

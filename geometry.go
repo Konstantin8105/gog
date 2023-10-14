@@ -35,7 +35,7 @@ const (
 	// ZeroLengthSegment return for zero length segment
 	ZeroLengthSegment
 
-	// Segment A and segment B are parallel.
+	// Parallel is segment A and segment B.
 	// Intersection point data is not valid.
 	Parallel
 

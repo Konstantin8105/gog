@@ -794,6 +794,7 @@ func (m *Model) Intersection() {
 	}
 }
 
+// Merge `from` model to `to` model
 func (to *Model) Merge(from Model) {
 	for i := range from.Points {
 		to.AddPoint(from.Points[i])

@@ -141,7 +141,7 @@ func PointLineRatio3d(
 	return
 }
 
-// IsParallelLines return true, if lines are parallel
+// IsParallelLines3d return true, if lines are parallel
 func IsParallelLine3d(
 	a0, a1 Point3d,
 	b0, b1 Point3d,
@@ -282,6 +282,7 @@ func PlaneAverage(
 	return
 }
 
+// PointOnPlane3d return true if all points on plane
 func PointOnPlane3d(
 	A, B, C, D float64,
 	p Point3d,
@@ -436,6 +437,7 @@ func TriangleTriangle3d(
 	return
 }
 
+// Mirror3d return mirror points by mirror plane
 func Mirror3d(plane [3]Point3d, points ...Point3d) (mir []Point3d) {
 	// plane equation `A*x+B*y+C*z+D=0`
 	A, B, C, D := Plane(plane[0], plane[1], plane[2])

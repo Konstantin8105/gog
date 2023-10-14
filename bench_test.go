@@ -107,11 +107,14 @@ func Benchmark(b *testing.B) {
 			}
 			mesh, err := New(model)
 			if err != nil {
-				panic(err)
+				b.Fatal(err)
 			}
 
 			// distance
-			mesh.Split(dist)
+			err = mesh.Split(dist)
+			if err != nil {
+				b.Fatal(err)
+			}
 		}
 	})
 	b.Run("New", func(b *testing.B) {
