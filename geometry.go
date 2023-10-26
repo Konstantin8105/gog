@@ -2,6 +2,7 @@ package gog
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/big"
 	"sort"
@@ -1144,6 +1145,9 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	var err error
 	xc, yc, err = Linear(a11, a12, b1, a21, a22, b2)
 	if err != nil {
+		if Log {
+			log.Printf("Arc: %v %v %v", Arc0, Arc1, Arc2)
+		}
 		panic(err)
 	}
 
