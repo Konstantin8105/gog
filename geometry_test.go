@@ -1004,20 +1004,20 @@ func TestMirrorLine(t *testing.T) {
 	eps := 0.001
 	for index, tc := range tcs {
 		t.Run(fmt.Sprintf("%d", index), func(t *testing.T) {
-			ml0, ml1, err := MirrorLine(
-				tc.segment[0],
-				tc.segment[1],
+			mls, err := MirrorPoint(
 				tc.mirror[0],
 				tc.mirror[1],
+				tc.segment[0],
+				tc.segment[1],
 			)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if eps < Distance(tc.expect[0], ml0) || eps < Distance(tc.expect[1], ml1) {
-				t.Errorf("Not valid points: %v %v", ml0, ml1)
+			if eps < Distance(tc.expect[0], mls[0]) || eps < Distance(tc.expect[1], mls[1]) {
+				t.Errorf("Not valid points: %v %v", mls[0], mls[1])
 				t.Logf("Points : %v", tc.segment)
 				t.Logf("Mirror : %v", tc.mirror)
-				t.Logf("Distance: %v %v", Distance(tc.expect[0], ml0), Distance(tc.expect[1], ml1))
+				t.Logf("Distance: %v %v", Distance(tc.expect[0], mls[0]), Distance(tc.expect[1], mls[1]))
 			}
 		})
 	}

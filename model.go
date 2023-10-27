@@ -70,6 +70,13 @@ func (src Model) Copy() (dst Model) {
 	return
 }
 
+// Mirror return mirror of model
+func (m Model) Mirror(p1, p2 Point) (mir Model, err error) {
+	mir = m.Copy()
+	mir.Points, err = MirrorPoint(p1,p2, mir.Points...)
+	return
+}
+
 // String return a stantard model view
 func (m Model) String() string {
 	var str string

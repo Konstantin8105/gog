@@ -480,21 +480,16 @@ func Rotate(xc, yc, angle float64, point Point) (p Point) {
 	return
 }
 
-// MirrorLine return intersection point and second mirrored point from mirror
-// line (mp0-mp1) and ray (sp0-sp1)
-func MirrorLine(
-	sp0, sp1 Point,
-	mp0, mp1 Point,
-) (
-	ml0, ml1 Point,
+// MirrorPoint return mirror point by line
+func MirrorPoint(mp0, mp1 Point, sp ...Point) (
+	mp []Point,
 	err error,
 ) {
 	if SamePoints(mp0, mp1) {
-		panic("mirror line is point")
+		err = fmt.Errorf("MirrorPoint: mirror line is point")
+		return
 	}
-
 	A, B, C := Line(mp0, mp1)
-
 	mir := func(x1, y1 float64) Point {
 		// FMA returns x * y + z, computed with only one rounding.
 		// temp := -2 * (A*x1 + B*y1 + C) / (A*A + B*B)
@@ -502,9 +497,10 @@ func MirrorLine(
 		// return Point{X: temp*A + x1, Y: temp*B + y1}
 		return Point{X: math.FMA(temp, A, x1), Y: math.FMA(temp, B, y1)}
 	}
-
-	ml0 = mir(sp0.X, sp0.Y)
-	ml1 = mir(sp1.X, sp1.Y)
+	mp = make([]Point, len(sp))
+	for i, p := range sp {
+		mp[i] = mir(p.X, p.Y)
+	}
 	return
 }
 

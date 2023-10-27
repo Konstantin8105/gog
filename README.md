@@ -426,6 +426,9 @@ func (to *Model) Merge(from Model)
 func (m Model) MinPointDistance() (distance float64)
     MinPointDistance return minimal between 2 points
 
+func (m Model) Mirror(p1, p2 Point) (mir Model, err error)
+    Mirror return mirror of model
+
 func (m *Model) Move(dx, dy float64)
     Move all points of model
 
@@ -472,15 +475,11 @@ func ConvexHull(points []Point, withoutCollinearPoints bool) (chain []int, res [
 func MiddlePoint(p0, p1 Point) Point
     MiddlePoint calculate middle point precisionally.
 
-func MirrorLine(
-	sp0, sp1 Point,
-	mp0, mp1 Point,
-) (
-	ml0, ml1 Point,
+func MirrorPoint(mp0, mp1 Point, sp ...Point) (
+	mp []Point,
 	err error,
 )
-    MirrorLine return intersection point and second mirrored point from mirror
-    line (mp0-mp1) and ray (sp0-sp1)
+    MirrorPoint return mirror point by line
 
 func Rotate(xc, yc, angle float64, point Point) (p Point)
     Rotate point about (xc,yc) on angle
