@@ -340,11 +340,25 @@ func (mesh *Mesh) Materials() (err error)
 func (mesh *Mesh) RemoveMaterials(ps ...Point) (err error)
     RemoveMaterials remove material by specific points
 
+func (mesh *Mesh) SetMaterial(p Point, material int) (err error)
+    SetMaterial change material for point
+
 func (mesh *Mesh) Smooth(pts ...int) (err error)
     Smooth move all movable point by average distance
 
-func (mesh *Mesh) Split(d float64) (err error)
-    Split all triangles edge on distance `d`
+func (mesh *Mesh) Split(factor float64) (err error)
+    Split all triangles edge on distance `factor`
+
+func (mesh *Mesh) SplitFunc(factorFunc func(p1, p2 Point) bool) (err error)
+    SplitFunc split all triangles edge on distance only if function argument
+    return true. Example of factorFunc:
+
+        factorFunc = func(p1, p2 Point) bool {
+        	d := gog.Distance(p1, p2)
+        	return factor < d
+        }
+
+    If factorFunc is not valid, then splitting will be infinite.
 
 type Model struct {
 	Points    []Point  // Points is slice of points

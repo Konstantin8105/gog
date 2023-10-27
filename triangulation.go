@@ -1413,6 +1413,22 @@ func (mesh *Mesh) RemoveMaterials(ps ...Point) (err error) {
 	return
 }
 
+// SetMaterial change material for point
+func (mesh *Mesh) SetMaterial(p Point, material int) (err error) {
+	mats, err := mesh.GetMaterials(p)
+	if err != nil {
+		return
+	}
+	for i := range mesh.model.Triangles {
+		for _, m := range mats {
+			if mesh.model.Triangles[i][3] == m {
+				mesh.model.Triangles[i][3] = material
+			}
+		}
+	}
+	return
+}
+
 // GetMaterials return materials for each point
 func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 	if Log {
@@ -1849,8 +1865,29 @@ func (mesh *Mesh) Smooth(pts ...int) (err error) {
 	return
 }
 
-// Split all triangles edge on distance `d`
-func (mesh *Mesh) Split(d float64) (err error) {
+// Split all triangles edge on distance `factor`
+func (mesh *Mesh) Split(factor float64) (err error) {
+	factor = math.Abs(factor)
+	if factor == 0 {
+		err = fmt.Errorf("zero distance is not valid")
+		return
+	}
+	return mesh.SplitFunc(func(p1, p2 Point) bool {
+		d := Distance(p1, p2)
+		return factor < d
+	})
+}
+
+// SplitFunc split all triangles edge on distance only if function argument return true.
+// Example of factorFunc:
+//
+//	factorFunc = func(p1, p2 Point) bool {
+//		d := gog.Distance(p1, p2)
+//		return factor < d
+//	}
+//
+// If factorFunc is not valid, then splitting will be infinite.
+func (mesh *Mesh) SplitFunc(factorFunc func(p1, p2 Point) bool) (err error) {
 	if Log {
 		log.Printf("Split")
 	}
@@ -1868,19 +1905,13 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			return
 		}
 	}
-	d = math.Abs(d)
-	if d == 0 {
-		err = fmt.Errorf("zero distance is not valid")
-		return
-	}
 
 	// only for debug
 	var chains []Point
 
 	counter := 0
 	addpoint := func(p1, p2 Point, tag int, triIndexes ...int) (err error) {
-		dist := Distance(p1, p2)
-		if dist < d {
+		if !factorFunc(p1, p2) {
 			return
 		}
 		counter++
@@ -2003,11 +2034,11 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			p1 := mesh.model.Points[t[1]]
 			p2 := mesh.model.Points[t[2]]
 			switch {
-			case mesh.Triangles[i][0] == Boundary && d < Distance(p0, p1):
+			case mesh.Triangles[i][0] == Boundary && factorFunc(p0, p1):
 				err = addpoint(p0, p1, Fixed, i)
-			case mesh.Triangles[i][1] == Boundary && d < Distance(p1, p2):
+			case mesh.Triangles[i][1] == Boundary && factorFunc(p1, p2):
 				err = addpoint(p1, p2, Fixed, i)
-			case mesh.Triangles[i][2] == Boundary && d < Distance(p2, p0):
+			case mesh.Triangles[i][2] == Boundary && factorFunc(p2, p0):
 				err = addpoint(p2, p0, Fixed, i)
 			}
 			if err != nil {
@@ -2046,11 +2077,11 @@ func (mesh *Mesh) Split(d float64) (err error) {
 			d20 := Distance(p2, p0)
 			maxd := math.Max(math.Max(d01, d12), d20)
 			switch {
-			case maxd == d12 && d < d12:
+			case maxd == d12 && factorFunc(p1, p2):
 				err = addpoint(p1, p2, Movable, i)
-			case maxd == d01 && d < d01:
+			case maxd == d01 && factorFunc(p0, p1):
 				err = addpoint(p0, p1, Movable, i)
-			case maxd == d20 && d < d20:
+			case maxd == d20 && factorFunc(p2, p0):
 				err = addpoint(p2, p0, Movable, i)
 			}
 			if err != nil {
