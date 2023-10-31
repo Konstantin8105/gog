@@ -2111,6 +2111,11 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		}
 	}()
 
+	if SamePoints(inp1, inp2) {
+		err = fmt.Errorf("AddLine: points are same")
+		return
+	}
+
 	var list []int
 	if list, err = func() (_ []int, err error) {
 		// add points of points

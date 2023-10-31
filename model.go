@@ -177,6 +177,12 @@ func (m Model) Dxf() string {
 
 // AddPoint return index in model slice point
 func (m *Model) AddPoint(p Point) (index int) {
+	if math.Abs(p.X) < Eps {
+		p.X = 0
+	}
+	if math.Abs(p.Y) < Eps {
+		p.Y = 0
+	}
 	// search in exist points
 	for i := range m.Points {
 		if p.X == m.Points[i].X && p.Y == m.Points[i].Y {
