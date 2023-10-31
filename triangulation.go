@@ -79,9 +79,9 @@ func New(model Model) (mesh *Mesh, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			et := eTree.New("panic error")
+			_ = et.Add(fmt.Errorf("%v", r))
 			_ = et.Add(fmt.Errorf("stacktrace from panic: %s",
 				string(debug.Stack())))
-			_ = et.Add(fmt.Errorf("%v", r))
 			err = et
 		}
 	}()

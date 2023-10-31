@@ -33,6 +33,15 @@ import (
 // Benchmark/Split-8              	       1	1632291808 ns/op	45196712 B/op	  257346 allocs/op
 // Benchmark/New-8                	       1	2294259064 ns/op	29537544 B/op	  851695 allocs/op
 // Benchmark/Triangulation-8      	      88	  15954597 ns/op	  527464 B/op	   10823 allocs/op
+//
+// cpu: Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz
+// Benchmark/LineLine3d-4         	 7504720	       150.1 ns/op	       0 B/op	       0 allocs/op
+// Benchmark/LineLine-4           	 1259445	       882.8 ns/op	      48 B/op	       3 allocs/op
+// Benchmark/ArcSplitNoPoint-4    	  884901	      1201 ns/op	     240 B/op	       5 allocs/op
+// Benchmark/ArcSplitPoint-4      	 1228023	      1091 ns/op	     192 B/op	       4 allocs/op
+// Benchmark/Split-4              	       2	 877110258 ns/op	12689864 B/op	  233365 allocs/op
+// Benchmark/New-4                	       1	1513065216 ns/op	21567288 B/op	  849719 allocs/op
+// Benchmark/Triangulation-4      	     122	   9730151 ns/op	  470788 B/op	   10084 allocs/op
 func Benchmark(b *testing.B) {
 	b.Run("LineLine3d", func(b *testing.B) {
 		pps := []Point3d{
