@@ -9,4 +9,4 @@ require (
 	github.com/Konstantin8105/pow v0.1.0
 )
 
-require github.com/Konstantin8105/tree v0.1.0 // indirect
+require github.com/Konstantin8105/tree v0.1.1 // indirect
