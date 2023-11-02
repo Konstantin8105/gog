@@ -302,6 +302,9 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int) {
 
 // AddModel inject model into model
 func (m *Model) AddModel(from Model) {
+	for _, n := range from.Points{
+		m.AddPoint(n)
+	}
 	for _, l := range from.Lines {
 		m.AddLine(from.Points[l[0]], from.Points[l[1]], l[2])
 	}

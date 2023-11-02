@@ -1500,6 +1500,9 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			if len(res) == 2 {
 				j := lineIntersect
 				// on edge
+				if mesh.Triangles[it][j] == Boundary {
+					continue
+				}
 				mat := []int{
 					mesh.model.Triangles[it][3],
 					mesh.model.Triangles[mesh.Triangles[it][j]][3],
