@@ -306,12 +306,21 @@ func (m *Model) AddModel(from Model) {
 		m.AddPoint(n)
 	}
 	for _, l := range from.Lines {
+		if l[0] == Removed || l[1] == Removed || l[2] == Removed {
+			continue
+		}
 		m.AddLine(from.Points[l[0]], from.Points[l[1]], l[2])
 	}
 	for _, a := range from.Arcs {
+		if a[0] == Removed || a[1] == Removed || a[2] == Removed || a[3] == Removed {
+			continue
+		}
 		m.AddArc(from.Points[a[0]], from.Points[a[1]], from.Points[a[2]], a[3])
 	}
 	for _, t := range from.Triangles {
+		if t[0] == Removed || t[1] == Removed || t[2] == Removed || t[3] == Removed {
+			continue
+		}
 		m.AddTriangle(from.Points[t[0]], from.Points[t[1]], from.Points[t[2]], t[3])
 	}
 }
