@@ -475,8 +475,10 @@ func Rotate(xc, yc, angle float64, point Point) (p Point) {
 	// FMA returns x * y + z, computed with only one rounding.
 	// p.X = math.Cos(angle)*(point.X-xc) - math.Sin(angle)*(point.Y-yc) + xc
 	// p.Y = math.Sin(angle)*(point.X-xc) + math.Cos(angle)*(point.Y-yc) + yc
-	p.X = math.FMA(math.Cos(angle), (point.X - xc), -math.FMA(math.Sin(angle), (point.Y-yc), xc))
-	p.Y = math.FMA(math.Sin(angle), (point.X - xc), +math.FMA(math.Cos(angle), (point.Y-yc), yc))
+	//
+	// fix in formula p.X at the end -xc because -(-xc) = +xc
+	p.X = math.FMA(math.Cos(angle), (point.X - xc), -math.FMA(math.Sin(angle), (point.Y-yc), -xc))
+	p.Y = math.FMA(math.Sin(angle), (point.X - xc), +math.FMA(math.Cos(angle), (point.Y-yc), +yc))
 	return
 }
 
