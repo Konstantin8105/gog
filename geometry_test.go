@@ -16,6 +16,41 @@ import (
 	eTree "github.com/Konstantin8105/errors"
 )
 
+func ExampleLineLine() {
+	pi, stA, stB := LineLine(
+		Point{0.15352383914054077, 0}, Point{-1.8772126877812385, 2.167050797333941},
+		Point{0, 0}, Point{6.123233995736757e-17, 1},
+	)
+	fmt.Fprintf(os.Stdout, "pi = %.5f\n", pi)
+	fmt.Fprintf(os.Stdout, "stA\n%s\n", stA)
+	fmt.Fprintf(os.Stdout, "stB\n%s\n", stB)
+	// Output:
+	// pi = [{-0.00000 0.16383}]
+	// stA
+	//  1	               VerticalSegment	not found
+	//  2	             HorizontalSegment	not found
+	//  3	             ZeroLengthSegment	not found
+	//  4	                      Parallel	not found
+	//  5	                     Collinear	not found
+	//  6	                     OnSegment	found
+	//  7	               OnPoint0Segment	not found
+	//  8	               OnPoint1Segment	not found
+	//  9	                     ArcIsLine	not found
+	// 10	                    ArcIsPoint	not found
+	//
+	// stB
+	//  1	               VerticalSegment	found
+	//  2	             HorizontalSegment	not found
+	//  3	             ZeroLengthSegment	not found
+	//  4	                      Parallel	not found
+	//  5	                     Collinear	not found
+	//  6	                     OnSegment	found
+	//  7	               OnPoint0Segment	not found
+	//  8	               OnPoint1Segment	not found
+	//  9	                     ArcIsLine	not found
+	// 10	                    ArcIsPoint	not found
+}
+
 func TestEmpty(t *testing.T) {
 	if empty != 1 {
 		t.Errorf("First default value is not valid: %d", empty)

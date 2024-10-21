@@ -192,8 +192,8 @@ func PointLine(
 	}
 
 	// is point on line
-	if math.Min(pb0.X, pb1.X) <= pt.X && pt.X <= math.Max(pb0.X, pb1.X) &&
-		math.Min(pb0.Y, pb1.Y) <= pt.Y && pt.Y <= math.Max(pb0.Y, pb1.Y) {
+	if math.Min(pb0.X, pb1.X) <= pt.X+Eps && pt.X-Eps <= math.Max(pb0.X, pb1.X) &&
+		math.Min(pb0.Y, pb1.Y) <= pt.Y+Eps && pt.Y-Eps <= math.Max(pb0.Y, pb1.Y) {
 		stA |= OnPoint0Segment | OnPoint1Segment
 		stB |= OnSegment
 		pi = []Point{pt}
