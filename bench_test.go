@@ -42,6 +42,24 @@ import (
 // Benchmark/Split-4              	       2	 877110258 ns/op	12689864 B/op	  233365 allocs/op
 // Benchmark/New-4                	       1	1513065216 ns/op	21567288 B/op	  849719 allocs/op
 // Benchmark/Triangulation-4      	     122	   9730151 ns/op	  470788 B/op	   10084 allocs/op
+//
+// cpu: Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz
+// Benchmark/LineLine3d-4         	 8530584	       137.4 ns/op	       0 B/op	       0 allocs/op
+// Benchmark/LineLine-4           	 1496764	       797.0 ns/op	      48 B/op	       3 allocs/op
+// Benchmark/ArcSplitNoPoint-4    	 1651136	       723.0 ns/op	     192 B/op	       3 allocs/op
+// Benchmark/ArcSplitPoint-4      	 1828788	       624.1 ns/op	     144 B/op	       2 allocs/op
+// Benchmark/Split-4              	       2	 811401014 ns/op	11925824 B/op	  222620 allocs/op
+// Benchmark/New-4                	       1	1363595467 ns/op	21564008 B/op	  849643 allocs/op
+// Benchmark/Triangulation-4      	     142	   8284052 ns/op	  446659 B/op	    9645 allocs/op
+//
+// cpu: Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz
+// Benchmark/LineLine3d-4         	 8361111	       146.6 ns/op	       0 B/op	       0 allocs/op
+// Benchmark/LineLine-4           	 1391710	       837.9 ns/op	      48 B/op	       3 allocs/op
+// Benchmark/ArcSplitNoPoint-4    	 1486761	       757.0 ns/op	     192 B/op	       3 allocs/op
+// Benchmark/ArcSplitPoint-4      	 1942293	       623.4 ns/op	     144 B/op	       2 allocs/op
+// Benchmark/Split-4              	       2	 813958700 ns/op	 8520072 B/op	   70906 allocs/op
+// Benchmark/New-4                	       1	1291804152 ns/op	 4608328 B/op	   51161 allocs/op
+// Benchmark/Triangulation-4      	     147	   7875483 ns/op	  311667 B/op	    3905 allocs/op
 func Benchmark(b *testing.B) {
 	b.Run("LineLine3d", func(b *testing.B) {
 		pps := []Point3d{

@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/big"
 	"sort"
+	"sync"
 
 	eTree "github.com/Konstantin8105/errors"
 	"github.com/Konstantin8105/pow"
@@ -437,27 +438,56 @@ func Line(p0, p1 Point) (A, B, C float64) {
 	// return
 }
 
+var d128 = &sync.Pool{
+	New: func() interface{} {
+		const prec = 128
+		var arr [10]*big.Float
+		for i := range arr {
+			arr[i] = new(big.Float).SetPrec(prec)
+		}
+		return &arr
+	},
+}
+
 // Distance128 is distance between 2 points with 128-bit precisions
 func Distance128(p0, p1 Point) float64 {
 	if p0.X == p1.X && p0.Y == p1.Y {
 		return 0
 	}
-	const prec = 128
+	// 	const prec = 128
+	//
+	// 	var (
+	// 		x0   = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
+	// 		x1   = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
+	// 		y0   = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
+	// 		y1   = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
+	// 		x    = new(big.Float).SetPrec(prec).Sub(x0, x1)
+	// 		y    = new(big.Float).SetPrec(prec).Sub(y0, y1)
+	// 		xx   = new(big.Float).SetPrec(prec).Mul(x, x)
+	// 		yy   = new(big.Float).SetPrec(prec).Mul(y, y)
+	// 		summ = new(big.Float).SetPrec(prec).Add(xx, yy)
+	// 		s    = new(big.Float).SetPrec(prec).Sqrt(summ)
+	// 	)
+	//
+	// 	sf, _ := s.Float64()
 
-	var (
-		x0   = new(big.Float).SetPrec(prec).SetFloat64(p0.X)
-		x1   = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
-		y0   = new(big.Float).SetPrec(prec).SetFloat64(p0.Y)
-		y1   = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
-		x    = new(big.Float).SetPrec(prec).Sub(x0, x1)
-		y    = new(big.Float).SetPrec(prec).Sub(y0, y1)
-		xx   = new(big.Float).SetPrec(prec).Mul(x, x)
-		yy   = new(big.Float).SetPrec(prec).Mul(y, y)
-		summ = new(big.Float).SetPrec(prec).Add(xx, yy)
-		s    = new(big.Float).SetPrec(prec).Sqrt(summ)
-	)
+	arr := d128.Get().(*[10]*big.Float)
+	defer func() {
+		d128.Put(arr)
+	}()
+	*arr[0] = *arr[0].SetFloat64(p0.X)    // x0
+	*arr[1] = *arr[1].SetFloat64(p1.X)    // x1
+	*arr[2] = *arr[2].SetFloat64(p0.Y)    // y0
+	*arr[3] = *arr[3].SetFloat64(p1.Y)    // y1
+	*arr[4] = *arr[4].Sub(arr[0], arr[1]) // x
+	*arr[5] = *arr[5].Sub(arr[2], arr[3]) // y
+	*arr[6] = *arr[6].Mul(arr[4], arr[4]) // xx
+	*arr[7] = *arr[7].Mul(arr[5], arr[5]) // yy
+	*arr[8] = *arr[8].Add(arr[6], arr[7]) // summ
+	*arr[9] = *arr[9].Sqrt(arr[8])        // s
 
-	sf, _ := s.Float64()
+	sf, _ := (*arr[9]).Float64()
+
 	return sf
 }
 
@@ -553,31 +583,67 @@ func Orientation(p1, p2, p3 Point) OrientationPoints {
 	return CounterClockwisePoints
 }
 
+var o128 = &sync.Pool{
+	New: func() interface{} {
+		const prec = 128
+		var arr [13]*big.Float
+		for i := range arr {
+			arr[i] = new(big.Float).SetPrec(prec)
+		}
+		return &arr
+	},
+}
+
 func Orientation128(p1, p2, p3 Point) OrientationPoints {
-	const prec = 128
+	// 	const prec = 128
+	//
+	// 	var (
+	// 		x1 = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
+	// 		x2 = new(big.Float).SetPrec(prec).SetFloat64(p2.X)
+	// 		x3 = new(big.Float).SetPrec(prec).SetFloat64(p3.X)
+	//
+	// 		y1 = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
+	// 		y2 = new(big.Float).SetPrec(prec).SetFloat64(p2.Y)
+	// 		y3 = new(big.Float).SetPrec(prec).SetFloat64(p3.Y)
+	//
+	// 		y21 = new(big.Float).SetPrec(prec).Sub(y2, y1)
+	// 		y32 = new(big.Float).SetPrec(prec).Sub(y3, y2)
+	//
+	// 		x21 = new(big.Float).SetPrec(prec).Sub(x2, x1)
+	// 		x32 = new(big.Float).SetPrec(prec).Sub(x3, x2)
+	//
+	// 		left  = new(big.Float).SetPrec(prec).Mul(y21, x32)
+	// 		right = new(big.Float).SetPrec(prec).Mul(x21, y32)
+	//
+	// 		s = new(big.Float).SetPrec(prec).Sub(left, right)
+	// 	)
+	//
+	// 	v, _ := s.Float64()
 
-	var (
-		x1 = new(big.Float).SetPrec(prec).SetFloat64(p1.X)
-		x2 = new(big.Float).SetPrec(prec).SetFloat64(p2.X)
-		x3 = new(big.Float).SetPrec(prec).SetFloat64(p3.X)
+	arr := o128.Get().(*[13]*big.Float)
+	defer func() {
+		o128.Put(arr)
+	}()
+	*arr[0] = *arr[0].SetFloat64(p1.X) // x1
+	*arr[1] = *arr[1].SetFloat64(p2.X) // x2
+	*arr[2] = *arr[2].SetFloat64(p3.X) // x3
 
-		y1 = new(big.Float).SetPrec(prec).SetFloat64(p1.Y)
-		y2 = new(big.Float).SetPrec(prec).SetFloat64(p2.Y)
-		y3 = new(big.Float).SetPrec(prec).SetFloat64(p3.Y)
+	*arr[3] = *arr[3].SetFloat64(p1.Y) // y1
+	*arr[4] = *arr[4].SetFloat64(p2.Y) // y2
+	*arr[5] = *arr[5].SetFloat64(p3.Y) // y3
 
-		y21 = new(big.Float).SetPrec(prec).Sub(y2, y1)
-		y32 = new(big.Float).SetPrec(prec).Sub(y3, y2)
+	*arr[6] = *arr[6].Sub(arr[4], arr[3]) // y21
+	*arr[7] = *arr[7].Sub(arr[5], arr[4]) // y32
 
-		x21 = new(big.Float).SetPrec(prec).Sub(x2, x1)
-		x32 = new(big.Float).SetPrec(prec).Sub(x3, x2)
+	*arr[8] = *arr[8].Sub(arr[1], arr[0]) // x21
+	*arr[9] = *arr[9].Sub(arr[2], arr[1]) // x32
 
-		left  = new(big.Float).SetPrec(prec).Mul(y21, x32)
-		right = new(big.Float).SetPrec(prec).Mul(x21, y32)
+	*arr[10] = *arr[10].Mul(arr[6], arr[9]) // left
+	*arr[11] = *arr[11].Mul(arr[8], arr[7]) // right
 
-		s = new(big.Float).SetPrec(prec).Sub(left, right)
-	)
+	*arr[12] = *arr[12].Sub(arr[10], arr[11])
 
-	v, _ := s.Float64()
+	v, _ := (*arr[12]).Float64()
 
 	switch {
 	case math.Abs(v) < Eps:
