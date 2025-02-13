@@ -61,8 +61,8 @@ func PointPoint3d(
 	return Distance3d(p0, p1) < Eps3D
 }
 
-// BorderPoints return (min..max) points coordinates
-func BorderPoints(ps ...Point3d) (min, max Point3d) {
+// BorderPoints3d return (min..max) points coordinates
+func BorderPoints3d(ps ...Point3d) (min, max Point3d) {
 	initialized := false
 	for _, p := range ps {
 		if !initialized {
@@ -83,8 +83,8 @@ func BorderPoints(ps ...Point3d) (min, max Point3d) {
 
 // BorderIntersection return true only if Borders are intersect
 func BorderIntersection(ps1, ps2 []Point3d) (intersect bool) {
-	mi1, ma1 := BorderPoints(ps1...)
-	mi2, ma2 := BorderPoints(ps2...)
+	mi1, ma1 := BorderPoints3d(ps1...)
+	mi2, ma2 := BorderPoints3d(ps2...)
 	for k := 0; k < 3; k++ {
 		if ma2[k] < mi1[k] || ma1[k] < mi2[k] {
 			return

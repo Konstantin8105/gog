@@ -73,12 +73,12 @@ func (src Model) Copy() (dst Model) {
 // Mirror return mirror of model
 func (m Model) Mirror(p1, p2 Point) (mir Model, err error) {
 	mir = m.Copy()
-	mir.Points, err = MirrorPoint(p1,p2, mir.Points...)
+	mir.Points, err = MirrorPoint(p1, p2, mir.Points...)
 	for i := range mir.Triangles {
 		t := &mir.Triangles[i]
 		t[0], t[1] = t[1], t[0]
 	}
-	for i := range mir.Quadrs{
+	for i := range mir.Quadrs {
 		q := &mir.Quadrs[i]
 		q[0], q[2] = q[2], q[0]
 	}
@@ -253,6 +253,8 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 		mi = m.AddPoint(middle)
 		en = m.AddPoint(end)
 	)
+	// check arc
+	_, _, _ = Arc(start, middle, end)
 	// do not add line with same id
 	for i := range m.Arcs {
 		if (m.Arcs[i][0] == st && m.Arcs[i][1] == mi && m.Arcs[i][2] == en) ||
@@ -302,7 +304,7 @@ func (m *Model) AddCircle(xc, yc, r float64, tag int) {
 
 // AddModel inject model into model
 func (m *Model) AddModel(from Model) {
-	for _, n := range from.Points{
+	for _, n := range from.Points {
 		m.AddPoint(n)
 	}
 	for _, l := range from.Lines {

@@ -1,6 +1,7 @@
 package gog
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -978,6 +979,9 @@ func ArcSplitByPoint(Arc0, Arc1, Arc2 Point, pi ...Point) (res [][3]Point, err e
 		panic(et)
 	case ClockwisePoints:
 		res, err = ArcSplitByPoint(Arc2, Arc1, Arc0, pi...)
+		if err != nil {
+			return
+		}
 		for i := range res {
 			res[i][0], res[i][2] = res[i][2], res[i][0]
 		}
@@ -1209,8 +1213,9 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	var err error
 	xc, yc, err = Linear(a11, a12, b1, a21, a22, b2)
 	if err != nil {
+		err = errors.Join(err, fmt.Errorf("Arc: %v %v %v", Arc0, Arc1, Arc2))
 		if Log {
-			log.Printf("Arc: %v %v %v", Arc0, Arc1, Arc2)
+			log.Printf("%v", err)
 		}
 		panic(err)
 	}
@@ -1419,9 +1424,28 @@ func TriangleSplitByPoint(
 	return
 }
 
+// BorderPoints2d return (min..max) points coordinates
+func BorderPoints2d(ps ...Point) (min, max Point) {
+	if len(ps) == 0 {
+		panic("empty list of points")
+	}
+	min = ps[0]
+	max = ps[0]
+	for i := range ps {
+		min.X = math.Min(min.X, ps[i].X)
+		min.Y = math.Min(min.Y, ps[i].Y)
+		max.X = math.Max(max.X, ps[i].X)
+		max.Y = math.Max(max.Y, ps[i].Y)
+	}
+	return
+}
+
 // PointInCircle return true only if point inside circle based
 // on 3 circles points
 func PointInCircle(point Point, circle [3]Point) bool {
+	// check by arc
+	// Problem : for long triangle - possible triangle, but
+	// not possible for arc
 	xc, yc, r := Arc(circle[0], circle[1], circle[2])
 	return Distance(Point{xc, yc}, point)+Eps < r
 }

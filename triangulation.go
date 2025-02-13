@@ -1181,6 +1181,8 @@ func (mesh *Mesh) Delanay(triIndexes ...int) (err error) {
 		//       1 0       //       1 2       //       1 1       //
 
 		// is point in circle
+		// Problem : for long triangle - possible triangle, but
+		// not possible for arc
 		if !PointInCircle(
 			mesh.model.Points[mesh.model.Triangles[neartr][2]],
 			[3]Point{
