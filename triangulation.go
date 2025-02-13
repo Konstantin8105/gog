@@ -359,7 +359,7 @@ func (mesh Mesh) Check() (err error) {
 					mesh.model.Triangles[mesh.Triangles[i][j]])
 				fmt.Fprintf(&buf, "1: %v\n", mesh.model.Triangles)
 				fmt.Fprintf(&buf, "2: %v\n", mesh.Triangles)
-				_ = et.Add(fmt.Errorf(buf.String()))
+				_ = et.Add(fmt.Errorf("%s", buf.String()))
 			}
 		}
 	}

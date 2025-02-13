@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/Konstantin8105/gog"
@@ -15,7 +14,7 @@ func main() {
 	var state int
 	// view result in dxf format
 	view := func() {
-		if err := ioutil.WriteFile(
+		if err := os.WriteFile(
 			fmt.Sprintf("stage%02d.dxf", state),
 			[]byte(m.Dxf()),
 			0644,
@@ -28,8 +27,8 @@ func main() {
 	m.AddCircle(0, 0, 1, 1)
 	m.AddCircle(0, 0, 0.5, 1)
 	m.AddCircle(0, 0, 0.75, 1)
-	m.AddLine(gog.Point{-1, 0}, gog.Point{1, 0}, 2)
-	m.AddLine(gog.Point{0, -1}, gog.Point{0, 1}, 3)
+	m.AddLine(gog.Point{X: -1, Y: 0}, gog.Point{X: 1, Y: 0}, 2)
+	m.AddLine(gog.Point{X: 0, Y: -1}, gog.Point{X: 0, Y: 1}, 3)
 	view() // 0
 	m.Intersection()
 	view() // 1
