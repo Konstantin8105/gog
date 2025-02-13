@@ -1209,6 +1209,8 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 		a22        = 2 * (y1 - y3)
 		b1         = (pow.E2(x1) - pow.E2(x2)) + (pow.E2(y1) - pow.E2(y2))
 		b2         = (pow.E2(x1) - pow.E2(x3)) + (pow.E2(y1) - pow.E2(y3))
+	// b1 = math.FMA(x1, x1, -pow.E2(x2)) + math.FMA(y1, y1, -pow.E2(y2))
+	// b2 = math.FMA(x1, x1, -pow.E2(x3)) + math.FMA(y1, y1, -pow.E2(y3))
 	)
 	var err error
 	xc, yc, err = Linear(a11, a12, b1, a21, a22, b2)
@@ -1443,6 +1445,21 @@ func BorderPoints2d(ps ...Point) (min, max Point) {
 // PointInCircle return true only if point inside circle based
 // on 3 circles points
 func PointInCircle(point Point, circle [3]Point) bool {
+	{
+		// by Wiki
+		// https://ru.wikipedia.org/wiki/%D0%9E%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BE%D0%BA%D1%80%D1%83%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D1%8C
+		a := Distance(circle[0], circle[1])
+		b := Distance(circle[1], circle[2])
+		c := Distance(circle[2], circle[0])
+		p := (a + b + c) * 0.5
+		S := math.Sqrt(p * (p - a) * (p - b) * (p - c))
+		R := a * b * c / (4.0 * S)
+		for i := range circle {
+			if 2.0*R < Distance(circle[i], point) {
+				return false
+			}
+		}
+	}
 	// check by arc
 	// Problem : for long triangle - possible triangle, but
 	// not possible for arc

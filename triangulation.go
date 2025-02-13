@@ -11,6 +11,8 @@ import (
 	eTree "github.com/Konstantin8105/errors"
 )
 
+const pointFactor = 10
+
 // Mesh is based structure of triangulation.
 // Triangle is data structure "Nodes, ribs и triangles" created by
 // book "Algoritm building and analyse triangulation", A.B.Skvorcov
@@ -225,7 +227,7 @@ func (mesh Mesh) Check() (err error) {
 			if i <= j {
 				continue
 			}
-			if Distance(mesh.model.Points[i], mesh.model.Points[j]) < Eps {
+			if Distance(mesh.model.Points[i], mesh.model.Points[j]) < Eps*pointFactor {
 				_ = et.Add(fmt.Errorf("same points %v and %v", i, j))
 			}
 		}
@@ -692,8 +694,8 @@ func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err er
 	}
 	// outside of triangles or on corners
 	if Debug {
-		if err := mesh.Check(); err != nil {
-			err = eTree.New("Check at the end").Add(err)
+		if errc := mesh.Check(); err != nil {
+			err = eTree.New("Check at the end").Add(errc)
 		}
 	}
 	return
@@ -760,6 +762,11 @@ func (mesh *Mesh) repairTriangles(ap int, rt []int, state int) (updateTr []int, 
 	}
 	var chains []chain
 	tc := [2]int{Undefined, Undefined} // index of corner triangle
+	if Debug {
+		if tc[0] != Undefined || tc[1] != Undefined {
+			panic("not set default values")
+		}
+	}
 
 	// amount triangles before added
 	size := len(mesh.Triangles)

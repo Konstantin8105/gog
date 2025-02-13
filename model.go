@@ -253,8 +253,6 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 		mi = m.AddPoint(middle)
 		en = m.AddPoint(end)
 	)
-	// check arc
-	_, _, _ = Arc(start, middle, end)
 	// do not add line with same id
 	for i := range m.Arcs {
 		if (m.Arcs[i][0] == st && m.Arcs[i][1] == mi && m.Arcs[i][2] == en) ||
@@ -582,7 +580,7 @@ func (m *Model) Intersection() {
 							pi...)
 						if err != nil {
 							// TODO	panic(err)
-							err = nil
+							// err = nil
 						} else {
 							for i := range res {
 								intersectArcs[ja] = true
@@ -681,7 +679,7 @@ func (m *Model) Intersection() {
 							pi...)
 						if err != nil {
 							// TODO	panic(err)
-							err = nil
+							// err = nil
 						} else {
 							for i := range res {
 								intersectArcs[ja] = true
@@ -795,7 +793,7 @@ func (m *Model) Intersection() {
 					)
 					if err != nil {
 						// TODO	panic(err)
-						err = nil
+						// err = nil
 					} else {
 						for i := range res {
 							intersectTr[jt] = true
