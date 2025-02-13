@@ -381,9 +381,9 @@ func TestMirror3d(t *testing.T) {
 	}
 	for _, v := range vers {
 		plane := [3]Point3d{
-			Point3d{1, 0, (d - a*1 - b*0) / c},
-			Point3d{1, 1, (d - a*1 - b*1) / c},
-			Point3d{0, 1, (d - a*0 - b*1) / c},
+			{1, 0, (d - a*1 - b*0) / c},
+			{1, 1, (d - a*1 - b*1) / c},
+			{0, 1, (d - a*0 - b*1) / c},
 		}
 		mir := Mirror3d(plane, v)
 		mir2 := Mirror3d(plane, mir[0])

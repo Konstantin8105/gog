@@ -88,10 +88,10 @@ func TestModel(t *testing.T) {
 	}
 	//
 	for _, p := range []Point{
-		Point{+0.5, +0.5},
-		Point{+0.5, -0.5},
-		Point{-0.5, -0.5},
-		Point{-0.5, +0.5},
+		{+0.5, +0.5},
+		{+0.5, -0.5},
+		{-0.5, -0.5},
+		{-0.5, +0.5},
 	} {
 		mat, err := mesh.GetMaterials(p)
 		if err != nil {

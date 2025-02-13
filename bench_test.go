@@ -63,10 +63,10 @@ import (
 func Benchmark(b *testing.B) {
 	b.Run("LineLine3d", func(b *testing.B) {
 		pps := []Point3d{
-			Point3d{1, 1, 0}, // 0
-			Point3d{4, 4, 0}, // 1
-			Point3d{0, 5, 0}, // 2
-			Point3d{5, 0, 0}, // 3
+			{1, 1, 0}, // 0
+			{4, 4, 0}, // 1
+			{0, 5, 0}, // 2
+			{5, 0, 0}, // 3
 		}
 		ra, rb, tint := LineLine3d(
 			pps[0], pps[1],
@@ -84,10 +84,10 @@ func Benchmark(b *testing.B) {
 	})
 	b.Run("LineLine", func(b *testing.B) {
 		pps := []Point{
-			Point{X: 1, Y: 1}, // 0
-			Point{X: 4, Y: 4}, // 1
-			Point{X: 0, Y: 5}, // 2
-			Point{X: 5, Y: 0}, // 3
+			{X: 1, Y: 1}, // 0
+			{X: 4, Y: 4}, // 1
+			{X: 0, Y: 5}, // 2
+			{X: 5, Y: 0}, // 3
 		}
 
 		if err := Check(pps...); err != nil {
@@ -118,10 +118,10 @@ func Benchmark(b *testing.B) {
 	})
 	b.Run("Split", func(b *testing.B) {
 		pps := []Point{
-			Point{X: 1, Y: 1}, // 0
-			Point{X: 4, Y: 4}, // 1
-			Point{X: 0, Y: 5}, // 2
-			Point{X: 5, Y: 0}, // 3
+			{X: 1, Y: 1}, // 0
+			{X: 4, Y: 4}, // 1
+			{X: 0, Y: 5}, // 2
+			{X: 5, Y: 0}, // 3
 		}
 		var dist float64 = 0.1
 		for n := 0; n < b.N; n++ {
@@ -191,10 +191,10 @@ func Benchmark(b *testing.B) {
 	})
 	b.Run("Triangulation", func(b *testing.B) {
 		pps := []Point{
-			Point{X: 1, Y: 1}, // 0
-			Point{X: 4, Y: 4}, // 1
-			Point{X: 0, Y: 5}, // 2
-			Point{X: 5, Y: 0}, // 3
+			{X: 1, Y: 1}, // 0
+			{X: 4, Y: 4}, // 1
+			{X: 0, Y: 5}, // 2
+			{X: 5, Y: 0}, // 3
 		}
 
 		for n := 0; n < b.N; n++ {

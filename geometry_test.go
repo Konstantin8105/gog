@@ -132,10 +132,10 @@ func Example() {
 	//  /  \    //
 	// *1   *3  //
 	pps := []Point{
-		Point{X: 1, Y: 1}, // 0
-		Point{X: 4, Y: 4}, // 1
-		Point{X: 0, Y: 5}, // 2
-		Point{X: 5, Y: 0}, // 3
+		{X: 1, Y: 1}, // 0
+		{X: 4, Y: 4}, // 1
+		{X: 0, Y: 5}, // 2
+		{X: 5, Y: 0}, // 3
 	}
 
 	if err := Check(pps...); err != nil {
@@ -185,10 +185,10 @@ var tcs = []TestCase{
 		// |      //
 		// *2     //
 		ps: []Point{
-			Point{X: 0, Y: 8}, // 1
-			Point{X: 0, Y: 2}, // 2
-			Point{X: 0, Y: 8}, // 3
-			Point{X: 0, Y: 8}, // 4
+			{X: 0, Y: 8}, // 1
+			{X: 0, Y: 2}, // 2
+			{X: 0, Y: 8}, // 3
+			{X: 0, Y: 8}, // 4
 		},
 		itA: VerticalSegment | OnPoint0Segment,
 		itB: ZeroLengthSegment | VerticalSegment | HorizontalSegment |
@@ -202,10 +202,10 @@ var tcs = []TestCase{
 		// |   |  //
 		// *2  *4 //
 		ps: []Point{
-			Point{X: 0, Y: 8}, // 1
-			Point{X: 0, Y: 2}, // 2
-			Point{X: 0, Y: 8}, // 3
-			Point{X: 0, Y: 2}, // 4
+			{X: 0, Y: 8}, // 1
+			{X: 0, Y: 2}, // 2
+			{X: 0, Y: 8}, // 3
+			{X: 0, Y: 2}, // 4
 		},
 		itA: VerticalSegment | OnPoint0Segment | OnPoint1Segment | Collinear,
 		itB: VerticalSegment | OnPoint0Segment | OnPoint1Segment | Collinear,
@@ -218,10 +218,10 @@ var tcs = []TestCase{
 		// |   |  //
 		// *2  *4 //
 		ps: []Point{
-			Point{X: 2, Y: 8}, // 1
-			Point{X: 0, Y: 2}, // 2
-			Point{X: 2, Y: 8}, // 3
-			Point{X: 0, Y: 2}, // 4
+			{X: 2, Y: 8}, // 1
+			{X: 0, Y: 2}, // 2
+			{X: 2, Y: 8}, // 3
+			{X: 0, Y: 2}, // 4
 		},
 		itA: OnPoint0Segment | OnPoint1Segment | Collinear,
 		itB: OnPoint0Segment | OnPoint1Segment | Collinear,
@@ -234,10 +234,10 @@ var tcs = []TestCase{
 		// |   |  //
 		// *2  *4 //
 		ps: []Point{
-			Point{X: 0, Y: 8}, // 1
-			Point{X: 0, Y: 2}, // 2
-			Point{X: 4, Y: 8}, // 3
-			Point{X: 4, Y: 2}, // 4
+			{X: 0, Y: 8}, // 1
+			{X: 0, Y: 2}, // 2
+			{X: 4, Y: 8}, // 3
+			{X: 4, Y: 2}, // 4
 		},
 		itA: VerticalSegment | Parallel,
 		itB: VerticalSegment | Parallel,
@@ -252,10 +252,10 @@ var tcs = []TestCase{
 		// |   //
 		// *4  //
 		ps: []Point{
-			Point{X: 2, Y: 8}, // 1
-			Point{X: 2, Y: 7}, // 2
-			Point{X: 2, Y: 6}, // 3
-			Point{X: 2, Y: 5}, // 4
+			{X: 2, Y: 8}, // 1
+			{X: 2, Y: 7}, // 2
+			{X: 2, Y: 6}, // 3
+			{X: 2, Y: 5}, // 4
 		},
 		itA: VerticalSegment | Collinear,
 		itB: VerticalSegment | Collinear,
@@ -270,10 +270,10 @@ var tcs = []TestCase{
 		// |   //
 		// *4  //
 		ps: []Point{
-			Point{X: 5, Y: 5}, // 1
-			Point{X: 4, Y: 4}, // 2
-			Point{X: 3, Y: 3}, // 3
-			Point{X: 2, Y: 2}, // 4
+			{X: 5, Y: 5}, // 1
+			{X: 4, Y: 4}, // 2
+			{X: 3, Y: 3}, // 3
+			{X: 2, Y: 2}, // 4
 		},
 		itA: Collinear,
 		itB: Collinear,
@@ -286,10 +286,10 @@ var tcs = []TestCase{
 		// |   //
 		// *4  //
 		ps: []Point{
-			Point{X: 2, Y: 8}, // 1
-			Point{X: 2, Y: 6}, // 2
-			Point{X: 2, Y: 6}, // 3
-			Point{X: 2, Y: 5}, // 4
+			{X: 2, Y: 8}, // 1
+			{X: 2, Y: 6}, // 2
+			{X: 2, Y: 6}, // 3
+			{X: 2, Y: 5}, // 4
 		},
 		itA: VerticalSegment | OnPoint1Segment | Collinear,
 		itB: VerticalSegment | OnPoint0Segment | Collinear,
@@ -303,10 +303,10 @@ var tcs = []TestCase{
 		// |   //
 		// *4  //
 		ps: []Point{
-			Point{X: 5, Y: 5}, // 1
-			Point{X: 4, Y: 4}, // 2
-			Point{X: 4, Y: 4}, // 3
-			Point{X: 2, Y: 2}, // 4
+			{X: 5, Y: 5}, // 1
+			{X: 4, Y: 4}, // 2
+			{X: 4, Y: 4}, // 3
+			{X: 2, Y: 2}, // 4
 		},
 		itA: OnPoint1Segment | Collinear,
 		itB: OnPoint0Segment | Collinear,
@@ -316,10 +316,10 @@ var tcs = []TestCase{
 	{ // 8
 		// *1,2,3,4  //
 		ps: []Point{
-			Point{X: 5, Y: 5}, // 1
-			Point{X: 5, Y: 5}, // 2
-			Point{X: 5, Y: 5}, // 3
-			Point{X: 5, Y: 5}, // 4
+			{X: 5, Y: 5}, // 1
+			{X: 5, Y: 5}, // 2
+			{X: 5, Y: 5}, // 3
+			{X: 5, Y: 5}, // 4
 		},
 		itA: ZeroLengthSegment | VerticalSegment | HorizontalSegment | OnPoint0Segment | OnPoint1Segment,
 		itB: ZeroLengthSegment | VerticalSegment | HorizontalSegment | OnPoint0Segment | OnPoint1Segment,
@@ -332,10 +332,10 @@ var tcs = []TestCase{
 		//  /  \   //
 		// *1   *4 //
 		ps: []Point{
-			Point{X: 1, Y: 1}, // 1
-			Point{X: 4, Y: 4}, // 2
-			Point{X: 2, Y: 2}, // 3
-			Point{X: 5, Y: 0}, // 4
+			{X: 1, Y: 1}, // 1
+			{X: 4, Y: 4}, // 2
+			{X: 2, Y: 2}, // 3
+			{X: 5, Y: 0}, // 4
 		},
 		itA: OnSegment,
 		itB: OnPoint0Segment,
@@ -349,10 +349,10 @@ var tcs = []TestCase{
 		//  /  \    //
 		// *2   *4  //
 		ps: []Point{
-			Point{X: 1, Y: 1}, // 1
-			Point{X: 4, Y: 4}, // 2
-			Point{X: 0, Y: 5}, // 3
-			Point{X: 5, Y: 0}, // 4
+			{X: 1, Y: 1}, // 1
+			{X: 4, Y: 4}, // 2
+			{X: 0, Y: 5}, // 3
+			{X: 5, Y: 0}, // 4
 		},
 		itA: OnSegment,
 		itB: OnSegment,
@@ -366,10 +366,10 @@ var tcs = []TestCase{
 		//  /  \   //
 		// *2   *3 //
 		ps: []Point{
-			Point{X: 1, Y: 1}, // 1
-			Point{X: 4, Y: 4}, // 2
-			Point{X: 5, Y: 0}, // 3
-			Point{X: 2, Y: 2}, // 4
+			{X: 1, Y: 1}, // 1
+			{X: 4, Y: 4}, // 2
+			{X: 5, Y: 0}, // 3
+			{X: 2, Y: 2}, // 4
 		},
 		itA: OnSegment,
 		itB: OnPoint1Segment,
@@ -383,10 +383,10 @@ var tcs = []TestCase{
 		//  /  \   //
 		// *3   *2 //
 		ps: []Point{
-			Point{X: 2, Y: 2}, // 1
-			Point{X: 5, Y: 0}, // 2
-			Point{X: 4, Y: 4}, // 3
-			Point{X: 1, Y: 1}, // 4
+			{X: 2, Y: 2}, // 1
+			{X: 5, Y: 0}, // 2
+			{X: 4, Y: 4}, // 3
+			{X: 1, Y: 1}, // 4
 		},
 		itA: OnPoint0Segment,
 		itB: OnSegment,
@@ -400,10 +400,10 @@ var tcs = []TestCase{
 		//  /  \   //
 		// *3   *1 //
 		ps: []Point{
-			Point{X: 5, Y: 0}, // 1
-			Point{X: 2, Y: 2}, // 2
-			Point{X: 4, Y: 4}, // 3
-			Point{X: 1, Y: 1}, // 4
+			{X: 5, Y: 0}, // 1
+			{X: 2, Y: 2}, // 2
+			{X: 4, Y: 4}, // 3
+			{X: 1, Y: 1}, // 4
 		},
 		itA: OnPoint1Segment,
 		itB: OnSegment,
@@ -418,10 +418,10 @@ var tcs = []TestCase{
 		//  /   |  //
 		// *1   *3 //
 		ps: []Point{
-			Point{X: 1, Y: 1}, // 1
-			Point{X: 2, Y: 2}, // 2
-			Point{X: 5, Y: 0}, // 3
-			Point{X: 5, Y: 9}, // 4
+			{X: 1, Y: 1}, // 1
+			{X: 2, Y: 2}, // 2
+			{X: 5, Y: 0}, // 3
+			{X: 5, Y: 9}, // 4
 		},
 		// itA: ,
 		itB: VerticalSegment,
@@ -436,10 +436,10 @@ var tcs = []TestCase{
 		//  /   |  //
 		// *2   *3 //
 		ps: []Point{
-			Point{X: 2, Y: 2}, // 1
-			Point{X: 1, Y: 1}, // 2
-			Point{X: 5, Y: 0}, // 3
-			Point{X: 5, Y: 9}, // 4
+			{X: 2, Y: 2}, // 1
+			{X: 1, Y: 1}, // 2
+			{X: 5, Y: 0}, // 3
+			{X: 5, Y: 9}, // 4
 		},
 		// itA: ,
 		itB: VerticalSegment,
@@ -454,10 +454,10 @@ var tcs = []TestCase{
 		//  /   |  //
 		// *3   *1 //
 		ps: []Point{
-			Point{X: 5, Y: 0}, // 1
-			Point{X: 5, Y: 9}, // 2
-			Point{X: 1, Y: 1}, // 3
-			Point{X: 2, Y: 2}, // 4
+			{X: 5, Y: 0}, // 1
+			{X: 5, Y: 9}, // 2
+			{X: 1, Y: 1}, // 3
+			{X: 2, Y: 2}, // 4
 		},
 		itA: VerticalSegment,
 		// itB: ,
@@ -472,10 +472,10 @@ var tcs = []TestCase{
 		//  /   |  //
 		// *4   *1 //
 		ps: []Point{
-			Point{X: 5, Y: 0}, // 1
-			Point{X: 5, Y: 9}, // 2
-			Point{X: 2, Y: 2}, // 3
-			Point{X: 1, Y: 1}, // 4
+			{X: 5, Y: 0}, // 1
+			{X: 5, Y: 9}, // 2
+			{X: 2, Y: 2}, // 3
+			{X: 1, Y: 1}, // 4
 		},
 		itA: VerticalSegment,
 		// itB: ,
@@ -484,10 +484,10 @@ var tcs = []TestCase{
 	},
 	{ // 18 : Test data - no intersection
 		ps: []Point{
-			Point{X: 1.098, Y: 0},
-			Point{X: -1.5449, Y: 12.53},
-			Point{X: 1.2, Y: 2},
-			Point{X: 5, Y: 5},
+			{X: 1.098, Y: 0},
+			{X: -1.5449, Y: 12.53},
+			{X: 1.2, Y: 2},
+			{X: 5, Y: 5},
 		},
 		// itB: ,
 		pi:  []Point{},
@@ -495,10 +495,10 @@ var tcs = []TestCase{
 	},
 	{ // 19 : Test data - no intersection
 		ps: []Point{
-			Point{X: 5.108, Y: 0},
-			Point{X: 8.339, Y: 16.17},
-			Point{X: 9, Y: 2},
-			Point{X: 5, Y: 5},
+			{X: 5.108, Y: 0},
+			{X: 8.339, Y: 16.17},
+			{X: 9, Y: 2},
+			{X: 5, Y: 5},
 		},
 		itA: OnSegment,
 		itB: OnSegment,
@@ -514,10 +514,10 @@ var tcs = []TestCase{
 		// |   //
 		// *4  //
 		ps: []Point{
-			Point{X: 5, Y: 5}, // 1
-			Point{X: 3, Y: 3}, // 2
-			Point{X: 4, Y: 4}, // 3
-			Point{X: 2, Y: 2}, // 4
+			{X: 5, Y: 5}, // 1
+			{X: 3, Y: 3}, // 2
+			{X: 4, Y: 4}, // 3
+			{X: 2, Y: 2}, // 4
 		},
 		itA: Collinear,
 		itB: Collinear,
@@ -581,7 +581,7 @@ var tcs = []TestCase{
 			{-2, 1}, {2, 1},
 			{0, -1}, {1, 0}, {0, 1}},
 
-		pi:  []Point{Point{0, 1}},
+		pi:  []Point{{0, 1}},
 		itA: HorizontalSegment | OnSegment,
 		itB: OnPoint1Segment,
 	},
@@ -625,7 +625,7 @@ var tcs = []TestCase{
 			{1, 1}, {1, -1},
 			{0, 0}, {1, 1}, {0, 2}},
 
-		pi:  []Point{Point{1, 1}},
+		pi:  []Point{{1, 1}},
 		itA: VerticalSegment | OnPoint0Segment,
 		itB: OnSegment,
 	},
@@ -698,7 +698,7 @@ var tcs = []TestCase{
 			{+0.0, -2.2}, {+0.0, -0.20},
 			{+1.0, -1.2}, {+0.0, -2.20}, {1.0, -3.2},
 		},
-		pi:  []Point{Point{0, -2.2}},
+		pi:  []Point{{0, -2.2}},
 		itA: VerticalSegment | OnPoint0Segment,
 		itB: OnSegment,
 	},
@@ -842,8 +842,8 @@ func Test(t *testing.T) {
 				t.Fatal("not valid data")
 			}
 			for index, s := range [][2]State{
-				[2]State{itA, tc.itA},
-				[2]State{itB, tc.itB},
+				{itA, tc.itA},
+				{itB, tc.itB},
 			} {
 				if s[0] != s[1] {
 					t.Errorf("Not same types: %d", index)
@@ -917,10 +917,10 @@ func Test(t *testing.T) {
 
 func TestCheckError(t *testing.T) {
 	tcs := [][]Point{
-		[]Point{Point{X: 1.0, Y: math.NaN()}},
-		[]Point{Point{X: math.NaN(), Y: 1.0}},
-		[]Point{Point{X: math.Inf(1), Y: 1.0}},
-		[]Point{Point{X: 1.0, Y: math.Inf(1)}},
+		{{X: 1.0, Y: math.NaN()}},
+		{{X: math.NaN(), Y: 1.0}},
+		{{X: math.Inf(1), Y: 1.0}},
+		{{X: 1.0, Y: math.Inf(1)}},
 	}
 	for i := range tcs {
 		if err := Check(tcs[i]...); err == nil {
@@ -1021,19 +1021,19 @@ func TestMirrorLine(t *testing.T) {
 		expect  []Point
 	}{
 		{
-			segment: [2]Point{Point{X: 4, Y: 4}, Point{X: -4, Y: -4}},
-			mirror:  [2]Point{Point{X: -1, Y: 0}, Point{X: 5, Y: 0}},
-			expect:  []Point{Point{4, -4}, Point{X: -4, Y: 4}},
+			segment: [2]Point{{X: 4, Y: 4}, {X: -4, Y: -4}},
+			mirror:  [2]Point{{X: -1, Y: 0}, {X: 5, Y: 0}},
+			expect:  []Point{{X: 4, Y: -4}, {X: -4, Y: 4}},
 		},
 		{
-			segment: [2]Point{Point{X: 4, Y: 5}, Point{X: -4, Y: -3}},
-			mirror:  [2]Point{Point{X: -1, Y: 1}, Point{X: 5, Y: 1}},
-			expect:  []Point{Point{4, -3}, Point{X: -4, Y: 5}},
+			segment: [2]Point{{X: 4, Y: 5}, {X: -4, Y: -3}},
+			mirror:  [2]Point{{X: -1, Y: 1}, {X: 5, Y: 1}},
+			expect:  []Point{{X: 4, Y: -3}, {X: -4, Y: 5}},
 		},
 		{
-			segment: [2]Point{Point{X: 4, Y: 10}, Point{X: 4, Y: 0}},
-			mirror:  [2]Point{Point{X: 0, Y: 0}, Point{X: 1, Y: 1}},
-			expect:  []Point{Point{10, 4}, Point{X: 0, Y: 4}},
+			segment: [2]Point{{X: 4, Y: 10}, {X: 4, Y: 0}},
+			mirror:  [2]Point{{X: 0, Y: 0}, {X: 1, Y: 1}},
+			expect:  []Point{{X: 10, Y: 4}, {X: 0, Y: 4}},
 		},
 	}
 	eps := 0.001
@@ -1063,34 +1063,34 @@ func TestOrientation(t *testing.T) {
 		ps [3]Point
 		or OrientationPoints
 	}{{ // 0
-		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, 2}},
+		ps: [3]Point{{0, 0}, {1, 1}, {2, 2}},
 		or: CollinearPoints,
 	}, { // 1
-		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, 20}},
+		ps: [3]Point{{0, 0}, {1, 1}, {2, 20}},
 		or: CounterClockwisePoints,
 	}, { // 2
-		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{2, -2}},
+		ps: [3]Point{{0, 0}, {1, 1}, {2, -2}},
 		or: ClockwisePoints,
 	}, { // 3
-		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{1, 0}},
+		ps: [3]Point{{0, 0}, {1, 1}, {1, 0}},
 		or: ClockwisePoints,
 	}, { // 4
-		ps: [3]Point{Point{0, 0}, Point{1, 0}, Point{0.5, -0.5}},
+		ps: [3]Point{{0, 0}, {1, 0}, {0.5, -0.5}},
 		or: ClockwisePoints,
 	}, { // 5
-		ps: [3]Point{Point{0, 0}, Point{1, 1}, Point{0, 1}},
+		ps: [3]Point{{0, 0}, {1, 1}, {0, 1}},
 		or: CounterClockwisePoints,
 	}, { // 6
-		ps: [3]Point{Point{0, 0}, Point{0.5, 0.5}, Point{1, 0}},
+		ps: [3]Point{{0, 0}, {0.5, 0.5}, {1, 0}},
 		or: ClockwisePoints,
 	}, { // 7
-		ps: [3]Point{Point{1, 0}, Point{0.5, 0.5}, Point{0, 0}},
+		ps: [3]Point{{1, 0}, {0.5, 0.5}, {0, 0}},
 		or: CounterClockwisePoints,
 	}, { // 8
-		ps: [3]Point{Point{0, 0}, Point{0.5, 0.5}, Point{1, 1}},
+		ps: [3]Point{{0, 0}, {0.5, 0.5}, {1, 1}},
 		or: CollinearPoints,
 	}, { // 9
-		ps: [3]Point{Point{1, 1}, Point{0.5, 0.5}, Point{0, 0}},
+		ps: [3]Point{{1, 1}, {0.5, 0.5}, {0, 0}},
 		or: CollinearPoints,
 	}}
 	for i, tc := range tcs {
@@ -1350,40 +1350,40 @@ func TestAngleBetween(t *testing.T) {
 
 func TestArcSplitByPoint(t *testing.T) {
 	tcs := [][]Point{
-		[]Point{ // 0
-			Point{-2, 0}, Point{0, +2}, Point{+2, 0},
+		{ // 0
+			{-2, 0}, {0, +2}, {+2, 0},
 		},
-		[]Point{ // 1
-			Point{+2, 0}, Point{0, +2}, Point{-2, 0},
+		{ // 1
+			{+2, 0}, {0, +2}, {-2, 0},
 		},
-		[]Point{ // 2
-			Point{-2, 0}, Point{0, +2}, Point{+2, 0},
-			Point{0, +2},
+		{ // 2
+			{-2, 0}, {0, +2}, {+2, 0},
+			{0, +2},
 		},
-		[]Point{ // 3
-			Point{+2, 0}, Point{0, +2}, Point{-2, 0},
-			Point{0, +2},
+		{ // 3
+			{+2, 0}, {0, +2}, {-2, 0},
+			{0, +2},
 		},
-		[]Point{ // 4
-			Point{-2, 0}, Point{0, +2}, Point{+2, 0},
-			Point{+1.41421, +1.41421},
+		{ // 4
+			{-2, 0}, {0, +2}, {+2, 0},
+			{+1.41421, +1.41421},
 		},
-		[]Point{ // 5
-			Point{0, 1}, Point{-1, 0}, Point{0, -1},
-			Point{-1, 0},
+		{ // 5
+			{0, 1}, {-1, 0}, {0, -1},
+			{-1, 0},
 		},
-		[]Point{ // 6
-			Point{0, -1}, Point{1, 0}, Point{0, 1},
-			Point{1, 0},
+		{ // 6
+			{0, -1}, {1, 0}, {0, 1},
+			{1, 0},
 		},
-		[]Point{ // 7
-			Point{0, -1}, Point{-1, 0}, Point{0, 1},
-			Point{-1, 0},
+		{ // 7
+			{0, -1}, {-1, 0}, {0, 1},
+			{-1, 0},
 		},
-		[]Point{ // 8
-			Point{-7.39920e-02, -8.67401e-02},
-			Point{-6.63436e-02, -8.84357e-02},
-			Point{-5.07500e-02, -8.98000e-02},
+		{ // 8
+			{-7.39920e-02, -8.67401e-02},
+			{-6.63436e-02, -8.84357e-02},
+			{-5.07500e-02, -8.98000e-02},
 		},
 	}
 	// move center

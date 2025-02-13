@@ -540,9 +540,9 @@ func MirrorPoint(mp0, mp1 Point, sp ...Point) (
 type OrientationPoints int8
 
 const (
-	CollinearPoints        OrientationPoints = -1
-	ClockwisePoints                          = 0
-	CounterClockwisePoints                   = 1
+	CollinearPoints OrientationPoints = -1 + iota
+	ClockwisePoints
+	CounterClockwisePoints
 )
 
 func Orientation(p1, p2, p3 Point) OrientationPoints {
