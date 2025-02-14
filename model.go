@@ -247,6 +247,12 @@ func (m *Model) AddMultiline(tag int, ps ...Point) {
 
 // AddArc add arc into model with specific tag
 func (m *Model) AddArc(start, middle, end Point, tag int) {
+	if Orientation(start, middle, end) == CollinearPoints {
+		// Problem: after splitting arc possible too
+		// small then arc as like line
+		m.AddLine(start, end, tag)
+		return
+	}
 	// add points
 	var (
 		st = m.AddPoint(start)

@@ -131,7 +131,7 @@ func Check(pps ...Point) error {
 
 var (
 	// Eps is epsilon - precision of intersection
-	Eps = 1e-10
+	Eps = 1e-8 //10
 )
 
 // PointPoint return states between two points.
@@ -1200,6 +1200,18 @@ func Linear(
 
 // Arc return parameters of circle
 func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
+	if SamePoints(Arc0, Arc1) {
+		panic("arc points 0,1 are same")
+	}
+	if SamePoints(Arc1, Arc2) {
+		panic("arc points 1,2 are same")
+	}
+	if SamePoints(Arc0, Arc2) {
+		panic("arc points 0,2 are same")
+	}
+	if Orientation(Arc0, Arc1, Arc2) == CollinearPoints {
+		panic(fmt.Errorf("arc on one line: %v %v %v", Arc0, Arc1, Arc2))
+	}
 	var (
 		x1, x2, x3 = Arc0.X, Arc1.X, Arc2.X
 		y1, y2, y3 = Arc0.Y, Arc1.Y, Arc2.Y
@@ -1214,21 +1226,21 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 	)
 	var err error
 	xc, yc, err = Linear(a11, a12, b1, a21, a22, b2)
-	if err != nil {
-		err = errors.Join(err, fmt.Errorf("Arc: %v %v %v", Arc0, Arc1, Arc2))
-		if Log {
-			log.Printf("%v", err)
-		}
-		panic(err)
+	if err == nil {
+		//	(xi-xc)^2+(yi-yc)^2 = R^2
+		r1 := math.Hypot(x1-xc, y1-yc)
+		r2 := math.Hypot(x2-xc, y2-yc)
+		r3 := math.Hypot(x3-xc, y3-yc)
+		r = (r1 + r2 + r3) / 3.0
+		return
 	}
+	// alternative algorithm
 
-	//	(xi-xc)^2+(yi-yc)^2 = R^2
-	r1 := math.Hypot(x1-xc, y1-yc)
-	r2 := math.Hypot(x2-xc, y2-yc)
-	r3 := math.Hypot(x3-xc, y3-yc)
-	r = (r1 + r2 + r3) / 3.0
-	// find angles
-	return
+	err = errors.Join(err, fmt.Errorf("Arc: %v %v %v", Arc0, Arc1, Arc2))
+	if Log {
+		log.Printf("%v", err)
+	}
+	panic(err)
 }
 
 // AngleBetween return true for angle case from <= a <= to
@@ -1556,5 +1568,5 @@ func SamePoints(p0, p1 Point) bool {
 	if p0.X == p1.X && p0.Y == p1.Y {
 		return true
 	}
-	return Distance(p0, p1) < Eps
+	return Distance(p0, p1) < Eps*pointFactor
 }

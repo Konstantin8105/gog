@@ -2,6 +2,7 @@ package gog
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -1144,6 +1145,12 @@ func (mesh *Mesh) Delanay(triIndexes ...int) (err error) {
 			et := eTree.New("Delanay")
 			_ = et.Add(err)
 			err = et
+		}
+	}()
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.Join(err,
+				fmt.Errorf("%v\n%s", r, string(debug.Stack())))
 		}
 	}()
 	// triangle is success by delanay, if all points is outside of circle

@@ -811,6 +811,61 @@ func init() {
 }
 
 func Test(t *testing.T) {
+	// t.Run("Arc", func(t *testing.T) {
+	// 	xc, yc, R := Arc(
+	// 		Point{
+	// 			1.271935453415e+00,
+	// 			6.487236379510e-01,
+	// 		},
+	// 		Point{
+	// 			1.271933593750e+00,
+	// 			6.487236379510e-01,
+	// 		},
+	// 		Point{
+	// 			1.271935424805e+00,
+	// 			6.487236379510e-01,
+	// 		},
+	// 	)
+	// 	var buf bytes.Buffer
+	// 	fmt.Fprintf(&buf, "Xc = %.12e\n", xc)
+	// 	fmt.Fprintf(&buf, "Yc = %.12e\n", yc)
+	// 	fmt.Fprintf(&buf, "R  = %.12e\n", R)
+	// 	compare.Test(
+	// 		t,
+	// 		filepath.Join("testdata", "arc"),
+	// 		buf.Bytes(),
+	// 	)
+	// })
+	t.Run("ArcSplit", func(t *testing.T) {
+		var (
+			Arc0 = Point{1.209650000000e+00, -7.144709581222e-02}
+			Arc1 = Point{1.238760541256e+00, -5.938911481591e-02}
+			Arc2 = Point{1.270000000000e+00, -5.527636204900e-02}
+			pi   = Point{1.269000000000e+00, -5.528050462216e-02}
+		)
+		if Orientation(Arc0, Arc1, Arc2) == CollinearPoints {
+			t.Errorf("collinear points main arc")
+		}
+		res, err := ArcSplitByPoint(Arc0, Arc1, Arc2, pi)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var buf bytes.Buffer
+		for i := range res {
+			fmt.Fprintf(&buf, "%d\n", i)
+			for _, p := range res[i] {
+				fmt.Fprintf(&buf, "%.12e\n", p)
+			}
+			if Orientation(res[i][0], res[i][1], res[i][2]) == CollinearPoints {
+				t.Errorf("collinear points: %d", i)
+			}
+		}
+		compare.Test(
+			t,
+			filepath.Join("testdata", "arc_split_by_point"),
+			buf.Bytes(),
+		)
+	})
 	names := getStates()
 	var types [64]int
 	for _, tc := range tcs {
