@@ -12,8 +12,6 @@ import (
 	eTree "github.com/Konstantin8105/errors"
 )
 
-const pointFactor = 10
-
 // Mesh is based structure of triangulation.
 // Triangle is data structure "Nodes, ribs и triangles" created by
 // book "Algoritm building and analyse triangulation", A.B.Skvorcov
@@ -228,7 +226,7 @@ func (mesh Mesh) Check() (err error) {
 			if i <= j {
 				continue
 			}
-			if Distance(mesh.model.Points[i], mesh.model.Points[j]) < Eps*pointFactor {
+			if Distance(mesh.model.Points[i], mesh.model.Points[j]) < Eps {
 				_ = et.Add(fmt.Errorf("same points %v and %v", i, j))
 			}
 		}
@@ -621,16 +619,14 @@ func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err er
 
 		// find intersect side and near triangle if exist
 		switch len(res) {
-		// only for point on side
-		case 2:
-			// point on some line
+		case 2: // point on some side
 			if mesh.Triangles[i][state] != Boundary {
 				removedTriangles = append(removedTriangles, mesh.Triangles[i][state])
 				status = 100 + state
 			} else {
 				status = 200 + state
 			}
-		case 3:
+		case 3: // point in triangle
 			status = 300
 		}
 
@@ -658,9 +654,18 @@ func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err er
 		return true, nil
 	}
 
-	found := false
+	if len(triIndexes) == 0 {
+		triIndexes = make([]int, len(mesh.model.Triangles))
+		for i := range mesh.model.Triangles {
+			triIndexes[i] = i
+		}
+	}
+	counter := 0
 	for _, tri := range triIndexes {
 		if tri < 0 || len(mesh.Triangles)-1 < tri {
+			continue
+		}
+		if mesh.model.Triangles[tri][0] == Removed {
 			continue
 		}
 		var added bool
@@ -668,35 +673,65 @@ func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err er
 		if err != nil {
 			et := eTree.New("triangle indexes")
 			_ = et.Add(err)
-			_ = et.Add(fmt.Errorf("list: %v", triIndexes))
+			if 20 < len(triIndexes) {
+				_ = et.Add(fmt.Errorf("list triIndexes: %v ... more %d", triIndexes[:10], len(triIndexes)))
+			} else {
+				_ = et.Add(fmt.Errorf("list triIndexes: %v", triIndexes))
+			}
 			err = et
 			return
 		}
 		if added {
-			found = true
-			break
+			counter++
 		}
 	}
-	if !found {
-		if 0 < len(triIndexes) {
-			err = fmt.Errorf("wrong triangle indexes: %v", triIndexes)
-			return
-		}
-		for i, size := 0, len(mesh.Triangles); i < size; i++ {
-			var added bool
-			added, err = addInTriangle(i)
-			if err != nil {
-				return
-			}
-			if added {
-				break
-			}
-		}
+	if counter == 0 {
+		err = fmt.Errorf("not found triangle: %v", idp)
+		return
+	}
+	if 1 < counter {
+		err = fmt.Errorf("not found trinagle: %v with counter %v", idp, counter)
+		return
 	}
 	// outside of triangles or on corners
 	if Debug {
 		if errc := mesh.Check(); err != nil {
 			err = eTree.New("Check at the end").Add(errc)
+		}
+		for itr, tps := range mesh.model.Triangles {
+			if tps[0] == Removed {
+				continue
+			}
+			same := false
+			for i := 0; i < 3; i++ {
+				if SamePoints(mesh.model.Points[idp], mesh.model.Points[tps[i]]) {
+					same = true
+				}
+			}
+			if same {
+				continue
+			}
+			res, lineIntersect, err := TriangleSplitByPoint(
+				mesh.model.Points[idp],
+				mesh.model.Points[tps[0]],
+				mesh.model.Points[tps[1]],
+				mesh.model.Points[tps[2]],
+			)
+			if err != nil {
+				continue
+			}
+			if len(res) == 0 {
+				continue
+			}
+			err = errors.Join(
+				fmt.Errorf("idp: %d", idp),
+				fmt.Errorf("point: %.8e", mesh.model.Points[idp]),
+				fmt.Errorf("# tri %v", itr),
+				fmt.Errorf("tri: %v", tps),
+				fmt.Errorf("line intersect: %v", lineIntersect),
+				fmt.Errorf("res: %v", res),
+			)
+			panic(err)
 		}
 	}
 	return
@@ -2165,11 +2200,10 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		err = fmt.Errorf("AddLine: points are same")
 		return
 	}
-
 	var list []int
-	if list, err = func() (_ []int, err error) {
+	{
 		// add points of points
-		var idp1, idp2 int
+		var idp1 int
 		idp1, err = mesh.AddPoint(inp1, Fixed)
 		if err != nil {
 			et := eTree.New("add p1")
@@ -2177,6 +2211,7 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 			err = et
 			return
 		}
+		var idp2 int
 		idp2, err = mesh.AddPoint(inp2, Fixed)
 		if err != nil {
 			et := eTree.New("add p2")
@@ -2187,15 +2222,64 @@ func (mesh *Mesh) AddLine(inp1, inp2 Point) (err error) {
 		// put fixed lines
 		mesh.model.AddLine(inp1, inp2, Fixed)
 		// triangle edges on line
-		return []int{idp1, idp2}, nil
-	}(); err != nil {
-		et := eTree.New("generate list")
-		_ = et.Add(err)
-		err = et
-		return
+		list = []int{idp1, idp2}
 	}
 	// triangle edges on line
 again:
+	if Debug {
+		for _, idp := range list {
+			found := false
+			for _, tps := range mesh.model.Triangles {
+				if tps[0] == Removed {
+					continue
+				}
+				for i := 0; i < 3; i++ {
+					if tps[i] == idp {
+						found = true
+					}
+				}
+				if found {
+					break
+				}
+			}
+			if !found {
+				err = fmt.Errorf("No found point %d in triangle list", idp)
+				panic(err)
+			}
+		}
+		for _, idp := range list {
+			for _, tps := range mesh.model.Triangles {
+				if tps[0] == Removed {
+					continue
+				}
+				found := false
+				for i := 0; i < 3; i++ {
+					if idp != tps[i] {
+						continue
+					}
+					if SamePoints(mesh.model.Points[idp], mesh.model.Points[tps[i]]) {
+						found = true
+					}
+				}
+				if found {
+					continue
+				}
+				res, lineIntersect, err := TriangleSplitByPoint(
+					mesh.model.Points[idp],
+					mesh.model.Points[tps[0]],
+					mesh.model.Points[tps[1]],
+					mesh.model.Points[tps[2]],
+				)
+				if err != nil {
+					continue
+				}
+				if len(res) == 0 {
+					continue
+				}
+				panic(fmt.Errorf(":RRR: %v %v", lineIntersect, res))
+			}
+		}
+	}
 	for i := 1; i < len(list); i++ {
 		// find triangle with that points
 		idp1 := list[i-1]
@@ -2207,22 +2291,87 @@ again:
 			err = et
 			return
 		}
-		found := false
-		for _, tri := range mesh.model.Triangles {
-			if tri[0] == Removed {
-				continue
-			}
-			if idp1 != tri[0] && idp1 != tri[1] && idp1 != tri[2] {
-				continue
-			}
-			if idp2 != tri[0] && idp2 != tri[1] && idp2 != tri[2] {
-				continue
-			}
-			found = true
-			break
+		if SamePoints(mesh.model.Points[idp1], mesh.model.Points[idp2]) {
+			et := eTree.New("same point")
+			_ = et.Add(fmt.Errorf("idp = %d", idp1))
+			_ = et.Add(fmt.Errorf("list = %v", list))
+			err = et
+			return
 		}
-		if found {
-			continue
+		{
+			found := false
+			for _, tri := range mesh.model.Triangles {
+				if tri[0] == Removed {
+					continue
+				}
+				if (idp1 == tri[0] || idp1 == tri[1] || idp1 == tri[2]) &&
+					(idp2 == tri[0] || idp2 == tri[1] || idp2 == tri[2]) {
+					found = true
+					break
+				}
+			}
+			if found {
+				continue
+			}
+		}
+		{
+			found := false
+			for _, tri := range mesh.model.Triangles {
+				if tri[0] == Removed {
+					continue
+				}
+				start := idp1
+				last := idp2
+				var pi []Point
+				var stA, stB State
+				if idp1 == tri[0] {
+					pi, stA, stB = LineLine(
+						mesh.model.Points[start],
+						mesh.model.Points[last],
+						mesh.model.Points[tri[1]],
+						mesh.model.Points[tri[2]],
+					)
+				}
+				if idp1 == tri[1] {
+					pi, stA, stB = LineLine(
+						mesh.model.Points[start],
+						mesh.model.Points[last],
+						mesh.model.Points[tri[0]],
+						mesh.model.Points[tri[2]],
+					)
+				}
+				if idp1 == tri[2] {
+					pi, stA, stB = LineLine(
+						mesh.model.Points[start],
+						mesh.model.Points[last],
+						mesh.model.Points[tri[0]],
+						mesh.model.Points[tri[1]],
+					)
+				}
+				if len(pi) != 1 {
+					continue
+				}
+				if stA.Has(OnSegment) || stB.Has(OnSegment) {
+					mid := pi[0]
+					var idp int
+					idp, err = mesh.AddPoint(mid, Fixed)
+					if err != nil {
+						et := eTree.New("add intersection")
+						_ = et.Add(fmt.Errorf("mid = %e", mid))
+						_ = et.Add(fmt.Errorf("len(list) = %d", len(list)))
+						_ = et.Add(fmt.Errorf("list = %v", list))
+						_ = et.Add(err)
+						err = et
+						return
+					}
+					list = append(list[:i], append([]int{idp}, list[i:]...)...)
+					found = true
+					goto again
+				}
+			}
+			if found {
+				continue
+			}
 		}
 		var (
 			p1  = mesh.model.Points[idp1]

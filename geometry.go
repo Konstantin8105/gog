@@ -131,7 +131,7 @@ func Check(pps ...Point) error {
 
 var (
 	// Eps is epsilon - precision of intersection
-	Eps = 1e-8 //10
+	Eps = 1e-10
 )
 
 // PointPoint return states between two points.
@@ -1210,7 +1210,7 @@ func Arc(Arc0, Arc1, Arc2 Point) (xc, yc, r float64) {
 		panic("arc points 0,2 are same")
 	}
 	if Orientation(Arc0, Arc1, Arc2) == CollinearPoints {
-		panic(fmt.Errorf("arc on one line: %v %v %v", Arc0, Arc1, Arc2))
+		panic(fmt.Errorf("arc on one line: %.12e %.12e %.12e", Arc0, Arc1, Arc2))
 	}
 	var (
 		x1, x2, x3 = Arc0.X, Arc1.X, Arc2.X
@@ -1472,6 +1472,20 @@ func PointInCircle(point Point, circle [3]Point) bool {
 			}
 		}
 	}
+	// А.В. Скворцов, Н.С. Мирза АЛГОРИТМЫ ПОСТРОЕНИЯ И АНАЛИЗА ТРИАНГУЛЯЦИИ
+	// Модифицированная проверка суммы противолежащих углов
+	// {
+	// 	sa := (point.X-circle[0].X)*(point.X-circle[2].X) +
+	// 		(point.Y-circle[0].Y)*(point.Y-circle[2].Y)
+	// 	sb := (circle[1].X-circle[0].X)*(circle[1].X-circle[2].X) +
+	// 		(circle[1].Y-circle[0].Y)*(circle[1].Y-circle[2].Y)
+	// 	if sa < 0 && sb < 0 {
+	// 		return false
+	// 	}
+	// 	if 0 <= sa && 0 <= sb {
+	// 		return true
+	// 	}
+	// }
 	// check by arc
 	// Problem : for long triangle - possible triangle, but
 	// not possible for arc
@@ -1568,5 +1582,5 @@ func SamePoints(p0, p1 Point) bool {
 	if p0.X == p1.X && p0.Y == p1.Y {
 		return true
 	}
-	return Distance(p0, p1) < Eps*pointFactor
+	return Distance(p0, p1) < Eps
 }

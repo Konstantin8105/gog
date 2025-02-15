@@ -273,6 +273,11 @@ func (m *Model) AddArc(start, middle, end Point, tag int) {
 
 // AddTriangle add triangle into model with specific tag/material
 func (m *Model) AddTriangle(start, middle, end Point, tag int) {
+	if Debug {
+		if Orientation(start, middle, end) == CollinearPoints {
+			panic(fmt.Errorf("%.6e %.6e %.6e", start, middle, end))
+		}
+	}
 	// add points
 	var (
 		st = m.AddPoint(start)
