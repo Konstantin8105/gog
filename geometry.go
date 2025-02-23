@@ -1515,7 +1515,7 @@ func ConvexHull(points []Point, withoutCollinearPoints bool) (chain []int, res [
 			if j == len(indexes) {
 				continue
 			}
-			if math.Abs(points[indexes[j]].Y-points[indexes[i]].Y) < Eps3D/10 &&
+			if math.Abs(points[indexes[j]].Y-points[indexes[i]].Y) < Eps/10 &&
 				points[indexes[j]].X < points[indexes[i]].X {
 				indexes[i], indexes[j] = indexes[j], indexes[i]
 				change = true
