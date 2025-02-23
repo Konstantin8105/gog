@@ -594,6 +594,9 @@ func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err er
 		if mesh.model.Triangles[i][0] == Removed {
 			return
 		}
+		if i < 0 || len(mesh.Triangles)-1 < i {
+			return
+		}
 		// split triangle
 		var res [][3]Point
 		var state int
@@ -662,12 +665,6 @@ func (mesh *Mesh) AddPoint(p Point, tag int, triIndexes ...int) (idp int, err er
 	}
 	counter := 0
 	for _, tri := range triIndexes {
-		if tri < 0 || len(mesh.Triangles)-1 < tri {
-			continue
-		}
-		if mesh.model.Triangles[tri][0] == Removed {
-			continue
-		}
 		var added bool
 		added, err = addInTriangle(tri)
 		if err != nil {

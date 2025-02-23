@@ -1324,23 +1324,10 @@ func TriangleSplitByPoint(
 		}
 	}
 	// point in triangle box ?
-	{
-		var (
-			xmax = -math.MaxFloat64
-			ymax = -math.MaxFloat64
-			xmin = +math.MaxFloat64
-			ymin = +math.MaxFloat64
-		)
-		for _, tr := range []Point{tr0, tr1, tr2} {
-			xmax = math.Max(xmax, tr.X)
-			ymax = math.Max(ymax, tr.Y)
-			xmin = math.Min(xmin, tr.X)
-			ymin = math.Min(ymin, tr.Y)
-		}
-		if pt.X < xmin || xmax < pt.X || pt.Y < ymin || ymax < pt.Y {
-			// point outside triangle
-			return
-		}
+	if min, max := BorderPoints2d(tr0, tr1, tr2); pt.X < min.X || max.X < pt.X ||
+		pt.Y < min.Y || max.Y < pt.Y {
+		// point outside triangle
+		return
 	}
 	// point on corner ?
 	for _, c := range [...]struct {
