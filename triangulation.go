@@ -96,7 +96,7 @@ func New(model Model) (mesh *Mesh, err error) {
 	// convex
 	_, cps := ConvexHull(model.Points, true) // points on convex hull
 	if len(cps) < 3 {
-		err = fmt.Errorf("not enought points for convex")
+		err = fmt.Errorf("not enought points for convex. Amount: %d", len(cps))
 		return
 	}
 	// add last point for last triangle
@@ -1527,6 +1527,7 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			if mesh.model.Triangles[it][0] == Removed {
 				continue
 			}
+
 			var res [][3]Point
 			var lineIntersect int
 			res, lineIntersect, err = TriangleSplitByPoint(p,
@@ -1537,15 +1538,14 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 			if err != nil {
 				return
 			}
-			if len(res) == 3 {
+			switch len(res) {
+			case 3:
 				materials = append(materials, tri[3])
 				if Log {
 					log.Printf("GetMaterials triangle %d %v in triangle: %v",
 						it, tri, materials)
 				}
-				continue
-			}
-			if len(res) == 2 {
+			case 2:
 				j := lineIntersect
 				// on edge
 				if mesh.Triangles[it][j] == Boundary {
@@ -1602,7 +1602,7 @@ func (mesh *Mesh) GetMaterials(ps ...Point) (materials []int, err error) {
 				)
 				if xmin <= p.X && p.X <= xmax &&
 					ymin <= p.Y && p.Y <= ymax {
-					log.Printf("Triangle %#v in box", tri)
+					log.Printf("Triangle %d %#v in box", it, tri)
 					for s := 0; s < 3; s++ {
 						log.Printf("Point %d: %#v", s, mesh.model.Points[tri[s]])
 					}

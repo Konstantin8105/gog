@@ -188,14 +188,15 @@ func PointLine(
 		return
 	}
 
-	if orient := Orientation(pt, pb0, pb1); orient != CollinearPoints {
+	if orient := Orientation(pb0, pt, pb1); orient != CollinearPoints {
 		// points is not on line
 		return
 	}
 
 	// is point on line
-	if math.Min(pb0.X, pb1.X) <= pt.X+Eps && pt.X-Eps <= math.Max(pb0.X, pb1.X) &&
-		math.Min(pb0.Y, pb1.Y) <= pt.Y+Eps && pt.Y-Eps <= math.Max(pb0.Y, pb1.Y) {
+	if (math.Min(pb0.X, pb1.X) <= pt.X+Eps && pt.X-Eps <= math.Max(pb0.X, pb1.X) &&
+		math.Min(pb0.Y, pb1.Y) <= pt.Y+Eps && pt.Y-Eps <= math.Max(pb0.Y, pb1.Y)) ||
+		math.Abs(Distance(pb0, pb1)-Distance(pb0, pt)-Distance(pb1, pt)) < Eps {
 		stA |= OnPoint0Segment | OnPoint1Segment
 		stB |= OnSegment
 		pi = []Point{pt}

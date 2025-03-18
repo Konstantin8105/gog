@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"runtime/debug"
 	"testing"
@@ -292,7 +293,7 @@ func TestTriangulation(t *testing.T) {
 			ts.model.Intersection()
 			ts.model.Split(dist)
 			ts.model.ArcsToLines()
-			if err := ioutil.WriteFile(
+			if err := os.WriteFile(
 				filepath.Join("testdata", "."+ts.name+".model.dxf"),
 				[]byte(ts.model.Dxf()),
 				0644,

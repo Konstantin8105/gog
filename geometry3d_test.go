@@ -1,9 +1,13 @@
 package gog
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/Konstantin8105/compare"
 )
 
 func ExamplePlane() {
@@ -49,47 +53,17 @@ func ExamplePlane() {
 	// 1.0e-29	-0.000000e+00 2.000000e+02 4.000000e+01 -2.000000e+02
 }
 
-func ExamplePointPoint3d() {
+func TestPointPoint3d(t *testing.T) {
+	var buf bytes.Buffer
 	p := Point3d{1, 1, 1}
 	delta := 1.0
 	for i := 0; i < 30; i++ {
 		pf := Point3d{1, 1, 1 + delta}
 		value := PointPoint3d(p, pf)
-		fmt.Fprintf(os.Stdout, "%.1e\t%v\n", delta, value)
+		fmt.Fprintf(&buf, "%.1e\t%v\n", delta, value)
 		delta /= 10.0
 	}
-
-	// Output:
-	// 1.0e+00	false
-	// 1.0e-01	false
-	// 1.0e-02	false
-	// 1.0e-03	false
-	// 1.0e-04	false
-	// 1.0e-05	false
-	// 1.0e-06	false
-	// 1.0e-07	false
-	// 1.0e-08	false
-	// 1.0e-09	false
-	// 1.0e-10	false
-	// 1.0e-11	true
-	// 1.0e-12	true
-	// 1.0e-13	true
-	// 1.0e-14	true
-	// 1.0e-15	true
-	// 1.0e-16	true
-	// 1.0e-17	true
-	// 1.0e-18	true
-	// 1.0e-19	true
-	// 1.0e-20	true
-	// 1.0e-21	true
-	// 1.0e-22	true
-	// 1.0e-23	true
-	// 1.0e-24	true
-	// 1.0e-25	true
-	// 1.0e-26	true
-	// 1.0e-27	true
-	// 1.0e-28	true
-	// 1.0e-29	true
+	compare.Test(t, filepath.Join("testdata", "PointPoint3d"), buf.Bytes())
 }
 
 func Test3D(t *testing.T) {

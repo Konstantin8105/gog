@@ -1159,50 +1159,20 @@ func TestOrientation(t *testing.T) {
 			}
 		})
 	}
-}
-
-func ExampleOrientation() {
-	var (
-		delta = 1.0
-		s     = Point{0, 1}
-		f     = Point{0, 0}
-	)
-	for i := 1; i < 30; i++ {
-		value := Orientation(s, Point{delta, 0}, f)
-		fmt.Fprintf(os.Stdout, "%.1e\t%+d\n", delta, value)
-		delta /= 10.0
-	}
-
-	// Output:
-	// 1.0e+00	+0
-	// 1.0e-01	+0
-	// 1.0e-02	+0
-	// 1.0e-03	+0
-	// 1.0e-04	+0
-	// 1.0e-05	+0
-	// 1.0e-06	+0
-	// 1.0e-07	+0
-	// 1.0e-08	+0
-	// 1.0e-09	+0
-	// 1.0e-10	+0
-	// 1.0e-11	-1
-	// 1.0e-12	-1
-	// 1.0e-13	-1
-	// 1.0e-14	-1
-	// 1.0e-15	-1
-	// 1.0e-16	-1
-	// 1.0e-17	-1
-	// 1.0e-18	-1
-	// 1.0e-19	-1
-	// 1.0e-20	-1
-	// 1.0e-21	-1
-	// 1.0e-22	-1
-	// 1.0e-23	-1
-	// 1.0e-24	-1
-	// 1.0e-25	-1
-	// 1.0e-26	-1
-	// 1.0e-27	-1
-	// 1.0e-28	-1
+	t.Run("linear", func(t *testing.T) {
+		var (
+			buf   bytes.Buffer
+			delta = 1.0
+			s     = Point{0, 1}
+			f     = Point{0, 0}
+		)
+		for i := 1; i < 30; i++ {
+			value := Orientation(s, Point{delta, 0}, f)
+			fmt.Fprintf(&buf, "%.1e\t%+d\n", delta, value)
+			delta /= 10.0
+		}
+		compare.Test(t, filepath.Join("testdata", "Orientation"), buf.Bytes())
+	})
 }
 
 type TestTria struct {
