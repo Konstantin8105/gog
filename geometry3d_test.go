@@ -12,7 +12,7 @@ import (
 
 func ExamplePlane() {
 	delta := 1.0
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		A, B, C, D := Plane(
 			Point3d{-10, -1, 10}, Point3d{10, -1, 10}, Point3d{0, 1 + delta, 0},
 		)

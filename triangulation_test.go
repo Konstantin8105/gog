@@ -347,8 +347,8 @@ func TestTriangulation(t *testing.T) {
 			if err != nil {
 				t.Fatalf("check 5: %v", err)
 			}
-			for i := range mesh.model.Triangles {
-				mesh.model.Triangles[i][3] = 42
+			for i := range mesh.InternalModel.Triangles {
+				mesh.InternalModel.Triangles[i][3] = 42
 			}
 			err = mesh.Check()
 			if err != nil {
