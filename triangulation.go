@@ -1719,7 +1719,7 @@ func (mesh *Mesh) Materials() (err error) {
 			continue
 		}
 		if mesh.InternalModel.Triangles[i][3] != Undefined {
-			err = fmt.Errorf("Unmarked undefined triangle for triangle: %#v",
+			err = fmt.Errorf("unmarked undefined triangle for triangle: %#v",
 				mesh.InternalModel.Triangles[i])
 			return
 		}
@@ -2230,7 +2230,7 @@ again:
 				if tps[0] == Removed {
 					continue
 				}
-				for i := 0; i < 3; i++ {
+				for i := range 3 {
 					if tps[i] == idp {
 						found = true
 					}
@@ -2240,7 +2240,7 @@ again:
 				}
 			}
 			if !found {
-				err = fmt.Errorf("No found point %d in triangle list", idp)
+				err = fmt.Errorf("no found point %d in triangle list", idp)
 				panic(err)
 			}
 		}
@@ -2250,7 +2250,7 @@ again:
 					continue
 				}
 				found := false
-				for i := 0; i < 3; i++ {
+				for i := range 3 {
 					if idp != tps[i] {
 						continue
 					}

@@ -3,7 +3,7 @@ package gog
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -48,7 +48,7 @@ func TestModel(t *testing.T) {
 	)
 	// view result in dxf format
 	view := func() {
-		if err := ioutil.WriteFile(
+		if err := os.WriteFile(
 			fmt.Sprintf(filepath.Join("testdata", ".ExampleModelOnState%02d.dxf"), state),
 			[]byte(m.Dxf()),
 			0644,

@@ -123,7 +123,7 @@ func Benchmark(b *testing.B) {
 			{X: 0, Y: 5}, // 2
 			{X: 5, Y: 0}, // 3
 		}
-		var dist float64 = 0.1
+		dist := float64(0.1)
 		for n := 0; n < b.N; n++ {
 			var model Model
 			for i := range pps {
@@ -171,7 +171,7 @@ func Benchmark(b *testing.B) {
 		}
 
 		// distance
-		var dist float64 = 1.0
+		dist := float64(1.0)
 		model.Split(dist)
 		model.Intersection()
 

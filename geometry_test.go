@@ -21,9 +21,9 @@ func ExampleLineLine() {
 		Point{0.15352383914054077, 0}, Point{-1.8772126877812385, 2.167050797333941},
 		Point{0, 0}, Point{6.123233995736757e-17, 1},
 	)
-	fmt.Fprintf(os.Stdout, "pi = %.5f\n", pi)
-	fmt.Fprintf(os.Stdout, "stA\n%s\n", stA)
-	fmt.Fprintf(os.Stdout, "stB\n%s\n", stB)
+	_, _ = fmt.Fprintf(os.Stdout, "pi = %.5f\n", pi)
+	_, _ = fmt.Fprintf(os.Stdout, "stA\n%s\n", stA)
+	_, _ = fmt.Fprintf(os.Stdout, "stB\n%s\n", stB)
 	// Output:
 	// pi = [{-0.00000 0.16383}]
 	// stA
@@ -145,9 +145,9 @@ func Example() {
 		pps[0], pps[1],
 		pps[2], pps[3],
 	)
-	fmt.Fprintf(os.Stdout, "Intersection point: %s\n", pi)
-	fmt.Fprintf(os.Stdout, "Intersection state A:\n%s\n", stA)
-	fmt.Fprintf(os.Stdout, "Intersection state B:\n%s\n", stB)
+	_, _ = fmt.Fprintf(os.Stdout, "Intersection point: %s\n", pi)
+	_, _ = fmt.Fprintf(os.Stdout, "Intersection state A:\n%s\n", stA)
+	_, _ = fmt.Fprintf(os.Stdout, "Intersection state B:\n%s\n", stB)
 	// Output:
 	// Intersection point: [[2.50000e+00,2.50000e+00]]
 	// Intersection state A:
@@ -990,28 +990,28 @@ func TestCodeStyle(t *testing.T) {
 
 func ExampleLinear() {
 	var (
-		a11, a12, b1 float64 = +8.1, 2 * math.Pi, +38.5e3
-		a21, a22, b2 float64 = math.Pi, -5.8, -1.75
+		a11, a12, b1 = +8.1, 2 * math.Pi, +38.5e3
+		a21, a22, b2 = math.Pi, -5.8, -1.75
 	)
 	x, y, err := Linear(
 		a11, a12, b1,
 		a21, a22, b2,
 	)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "%v", err)
+		_, _ = fmt.Fprintf(os.Stdout, "%v", err)
 		return
 	}
 
-	fmt.Fprintf(os.Stdout, "Result:\nx=%.20e\ny=%.20e\n", x, y)
+	_, _ = fmt.Fprintf(os.Stdout, "Result:\nx=%.20e\ny=%.20e\n", x, y)
 	tols := []float64{
 		math.FMA(a11, x, math.FMA(a12, y, -b1)),
 		math.FMA(a21, x, math.FMA(a22, y, -b2)),
 		a11*x + a12*y - b1,
 		a21*x + a22*y - b2,
 	}
-	fmt.Fprintf(os.Stdout, "Tolerance:\n")
+	_, _ = fmt.Fprintf(os.Stdout, "Tolerance:\n")
 	for _, tol := range tols {
-		fmt.Fprintf(os.Stdout, "%.20e\n", tol)
+		_, _ = fmt.Fprintf(os.Stdout, "%.20e\n", tol)
 	}
 
 	// Output:
@@ -1634,12 +1634,12 @@ func ExampleMiddlePoint() {
 				}
 			}
 		}
-		fmt.Fprintf(os.Stdout, "factor: %5.1e success %5d of %5d - %.3f%%\n",
+		_, _ = fmt.Fprintf(os.Stdout, "factor: %5.1e success %5d of %5d - %.3f%%\n",
 			factor, success, amount, float64(success)/float64(amount))
 		factor *= 10.0
 	}
 
-	fmt.Fprintf(os.Stdout, "calculate average of 2 float values\n")
+	_, _ = fmt.Fprintf(os.Stdout, "calculate average of 2 float values\n")
 	a := math.Pow(float64(math.Pi), math.Pi*10.0) * 1e45
 	b := float64(math.E)
 	var mid float64
@@ -1662,11 +1662,11 @@ func ExampleMiddlePoint() {
 		{name: "simple", value: (a + b) / 2.0},
 		{name: "long simple", value: a*0.5 + b*0.5},
 	} {
-		fmt.Fprintf(os.Stdout, "Name: %20s\tValue: %.25e\tDelta: %.5e\n",
+		_, _ = fmt.Fprintf(os.Stdout, "Name: %20s\tValue: %.25e\tDelta: %.5e\n",
 			v.name, v.value, v.value-mid,
 		)
 	}
-	fmt.Fprintf(os.Stdout, "no need big math\n")
+	_, _ = fmt.Fprintf(os.Stdout, "no need big math\n")
 
 	// Output:
 	// factor: 1.0e+00 success  9300 of  9300 - 1.000%

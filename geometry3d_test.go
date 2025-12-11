@@ -16,7 +16,7 @@ func ExamplePlane() {
 		A, B, C, D := Plane(
 			Point3d{-10, -1, 10}, Point3d{10, -1, 10}, Point3d{0, 1 + delta, 0},
 		)
-		fmt.Fprintf(os.Stdout, "%.1e\t%e %e %e %e\n", delta, A, B, C, D)
+		_, _ = fmt.Fprintf(os.Stdout, "%.1e\t%e %e %e %e\n", delta, A, B, C, D)
 		delta /= 10.0
 	}
 
